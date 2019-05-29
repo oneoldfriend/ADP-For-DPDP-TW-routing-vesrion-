@@ -30,7 +30,7 @@ void AVI::approximation(ValueFunction *valueFunction)
         MDP simulation = MDP(fileName);
         vector<pair<Eigen::Vector4d, double> > valueAtThisSimulation;
         //开始mdp模拟
-        while (!simulation.sequenceData.empty() || !simulation.currentState.newCustomers.empty())
+        while (!simulation.sequenceData.empty() || !simulation.currentState.notServicedCustomer.empty())
         {
             Action bestAction;
             double value;
@@ -44,7 +44,6 @@ void AVI::approximation(ValueFunction *valueFunction)
         //对lookup table 进行更新
         cout << totalSimulationCount << " ";
         valueFunction->updateValue(valueAtThisSimulation, startApproximate);
-        //cout << totalSimulationCount << " " << simulation.solution.cost + simulation.cumRejectionReward << endl;
         for (auto iter = simulation.customers.begin(); iter != simulation.customers.end(); ++iter)
         {
             delete iter->second;

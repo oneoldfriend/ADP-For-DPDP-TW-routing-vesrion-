@@ -14,7 +14,7 @@ Solution::Solution()
 
 bool Solution::greedyInsertion(Action a)
 {
-    vector<Customer *> customerToBeInserted;
+    /*vector<Customer *> customerToBeInserted;
     //获得需要插入的顾客信息
     for (auto iter = a.customerConfirmation.begin(); iter != a.customerConfirmation.end(); ++iter)
     {
@@ -69,7 +69,7 @@ bool Solution::greedyInsertion(Action a)
             bestRoute->routeUpdate();
         }
     }
-    this->cost = this->calcCost();
+    this->cost = this->calcCost();*/
     return true;
 }
 

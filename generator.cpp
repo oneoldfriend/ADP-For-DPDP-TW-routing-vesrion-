@@ -20,7 +20,7 @@ void Generator::instanceGenenrator(double trainDayNum)
     double staticCustomer = double(CUSTOMER_NUMBER) * (1 - DOD);
     while (count++ < trainDayNum)
     {
-        list<pair<double, Customer *> > generatedCustomers;
+        list<pair<double, Customer *>> generatedCustomers;
         int customerCount = 0;
         double staticCustomerCount = 0.0;
         while (customerCount++ < CUSTOMER_NUMBER)
@@ -29,7 +29,20 @@ void Generator::instanceGenenrator(double trainDayNum)
             double appearTime = ratio(e) * (MAX_WORK_TIME - timeWindowLength - blankLength);
             if (staticCustomerCount++ < staticCustomer)
             {
-                appearTime = 0;
+                customer->origin.x = shopPosX(e);
+                customer->origin.y = shopPosY(e);
+                uniform_real_distribution<double> customerPosX(customer->origin.x - serviceRange, customer->origin.x + serviceRange);
+                uniform_real_distribution<double> customerPosy(customer->origin.y - serviceRange, customer->origin.y + serviceRange);
+                customer->dest.x = customerPosX(e);
+                customer->dest.y = customerPosy(e);
+                customer->startTime = 0;
+                customer->endTime = MAX_WORK_TIME;
+                customer->weight = ratio(e) * maxDemand;
+                char idString[] = {char(customerCount / 1000 + 48), char(customerCount % 1000 / 100 + 48),
+                                   char(customerCount % 100 / 10 + 48), char(customerCount % 10 + 48)};
+                customer->id = idString;
+                generatedCustomers.push_back(make_pair(0, customer));
+                continue;
             }
             customer->origin.x = shopPosX(e);
             customer->origin.y = shopPosY(e);

@@ -163,12 +163,10 @@ double ValueFunction::getValue(State S, Action a)
 {
     Solution tempSolution = Solution();
     tempSolution.solutionCopy(S.pointSolution);
-    tempSolution.greedyInsertion(a);
-    //对执行动作后的解进行相关的信息提取
     tempSolution.calcAttribute();
     double value = this->attributesWeight.transpose() * tempSolution.attribute;
     tempSolution.solutionDelete();
-    if (MYOPIC == 1)
+    if (MYOPIC)
     {
         return 0;
     }

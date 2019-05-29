@@ -10,21 +10,21 @@
 using namespace std;
 
 class ValueFunction;
+typedef class Order *PointOrder;
 
 class Action
 {
 public:
-  map<Customer *, bool> customerConfirmation;
-  double rejectionReward();
+  PointOrder positionToVisit;
 };
 
 class State
 {
 public:
-  Solution *pointSolution;
+  Route *currentRoute;
   double currentTime;
-  vector<string> notServicedCustomer;
-  vector<string> newCustomers;
+  Solution *pointSolution;
+  vector<PointOrder> notServicedCustomer;
   State();
 };
 
@@ -42,5 +42,7 @@ public:
   void transition(Action a);
   double reward(State S, Action a);
   void observation(double lastDecisionTime);
+  void executeAction(Action a);
+  void undoAction(Action a);
   MDP(string fileName);
 };
