@@ -32,6 +32,7 @@ void Solver::solve()
     //online solving
     int instanceNum = 0;
     vector<double> testResult;
+    vector<double> rejection;
     while (instanceNum++ < MAX_TEST_INSTANCE)
     {
         char dayNum[] = {char(instanceNum / 1000000 + 48), char(instanceNum % 1000000 / 100000 + 48), char(instanceNum % 100000 / 10000 + 48),
@@ -50,13 +51,18 @@ void Solver::solve()
         }
         simulation.solution.calcCost();
         testResult.push_back(simulation.solution.cost);
+        rejection.push_back(simulation.currentState.notServicedCustomer.size() * MAX_WORK_TIME);
         cout << simulation.solution.cost << " " << simulation.solution.penalty << " " << simulation.solution.waitTime << " " << simulation.solution.travelTime << " " << simulation.currentState.notServicedCustomer.size() * MAX_WORK_TIME << endl;
     }
-    double resultSum = 0;
+    double resultSum = 0, rejectionSum = 0;
     for (auto iter = testResult.begin(); iter != testResult.end(); ++iter)
     {
         resultSum += *iter;
     }
-    cout << "Test Average Cost: " << resultSum / double(testResult.size()) << endl;
+    for (auto iter = rejection.begin(); iter != rejection.end(); ++iter)
+    {
+        rejectionSum += *iter;
+    }
+    cout << "Test Average Cost: " << resultSum / double(testResult.size()) << " " << rejectionSum / double(rejection.size()) << endl;
     return;
 }

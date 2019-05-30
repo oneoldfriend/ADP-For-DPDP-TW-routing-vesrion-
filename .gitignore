@@ -2,3 +2,5 @@
 *.o
 myopic.txt
 adp
+TrainingData.txt
+*.txt
