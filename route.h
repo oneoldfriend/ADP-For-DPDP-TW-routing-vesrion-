@@ -28,7 +28,7 @@ public:
   Customer *depot;
   PointOrder head;
   PointOrder tail;
-  double cost;
+  double cost, waitTime, penalty, travelTime;
   PointOrder currentPos;
   void routeUpdate();
   void insertOrder(PointOrder p);

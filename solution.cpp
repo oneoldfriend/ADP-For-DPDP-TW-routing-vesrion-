@@ -10,6 +10,9 @@ Solution::Solution()
         this->routes.push_back(*route);
     }
     this->cost = 0;
+    this->waitTime = 0;
+    this->travelTime = 0;
+    this->penalty = 0;
 }
 
 bool Solution::greedyInsertion(Action a)
@@ -78,7 +81,10 @@ double Solution::calcCost()
     double cost = 0;
     for (auto iter = this->routes.begin(); iter != this->routes.end(); ++iter)
     {
-        cost += iter->cost;
+        this->cost += iter->cost;
+        this->penalty += iter->penalty;
+        this->travelTime = iter->travelTime;
+        this->waitTime = iter->waitTime;
     }
     return cost;
 }

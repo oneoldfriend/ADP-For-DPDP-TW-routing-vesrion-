@@ -25,6 +25,7 @@ public:
   double currentTime;
   Solution *pointSolution;
   vector<PointOrder> notServicedCustomer;
+  vector<PointOrder> reachableCustomer;
   State();
 };
 

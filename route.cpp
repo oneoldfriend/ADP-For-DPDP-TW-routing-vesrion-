@@ -35,6 +35,9 @@ Route::Route()
 {
     this->depot = new Customer();
     this->cost = 0;
+    this->waitTime = 0;
+    this->travelTime = 0;
+    this->penalty = 0;
     this->head = new Order(this->depot, true);
     this->tail = new Order(this->depot, true);
     this->head->next = this->tail;
@@ -73,7 +76,7 @@ void Route::routeUpdate()
         }
         p = p->next;
     }
-    this->cost = this->calcCost();
+    this->calcCost();
 }
 
 void Route::removeOrder(PointOrder p)
@@ -204,17 +207,14 @@ double Route::calcCost()
     PointOrder p = this->head;
     while (p != this->tail)
     {
-        if (!p->isOrigin)
+        //若当前位置为顾客点，则查看是否迟到并进行相应惩罚
+        if (p->arrivalTime > p->customer->endTime)
         {
-            //若当前位置为顾客点，则查看是否迟到并进行相应惩罚
-            if (p->arrivalTime > p->customer->endTime)
-            {
-                penalty += p->customer->priority * PENALTY_FACTOR * (p->arrivalTime - p->customer->endTime);
-            }
-            else
-            {
-                waitTime += p->waitTime;
-            }
+            penalty += p->customer->priority * PENALTY_FACTOR * (p->arrivalTime - p->customer->endTime);
+        }
+        else
+        {
+            waitTime += p->waitTime;
         }
         //计算路程开销
         if (p->next != nullptr)
@@ -223,5 +223,9 @@ double Route::calcCost()
         }
         p = p->next;
     }
+    this->cost = penalty + travelTime + waitTime;
+    this->penalty = penalty;
+    this->travelTime = travelTime;
+    this->waitTime = waitTime;
     return penalty + travelTime + waitTime;
 }

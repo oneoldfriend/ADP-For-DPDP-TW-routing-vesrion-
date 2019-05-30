@@ -1,4 +1,4 @@
 TestData
 .vscode
-TrainingData
+*.txt
 *.o

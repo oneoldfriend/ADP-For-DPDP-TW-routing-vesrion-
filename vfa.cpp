@@ -216,7 +216,7 @@ void ValueFunction::updateValue(vector<pair<Eigen::Vector4d, double>> valueAtThi
         //cout << "real value: " << realValue << endl;
         //cout << "estimated value(before update):" << this->attributesWeight.transpose() * iter->first << endl;
         double gammaN = this->lambda + iter->first.transpose() * this->matrixBeta * iter->first,
-               error = this->attributesWeight.transpose() * iter->first - realValue;
+               error = abs(this->attributesWeight.transpose() * iter->first - realValue);
         this->matrixBeta = 1.0 / this->lambda * (this->matrixBeta - 1.0 / gammaN * (this->matrixBeta * iter->first * iter->first.transpose() * this->matrixBeta));
         this->attributesWeight = this->attributesWeight - 1 / gammaN * this->matrixBeta.inverse().inverse() * iter->first * error;
         //cout << "estimated value(after update):" << this->attributesWeight.transpose() * iter->first << endl;
