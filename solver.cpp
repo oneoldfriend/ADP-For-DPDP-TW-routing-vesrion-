@@ -18,16 +18,16 @@ void Solver::solve()
     return;*/
 
     ValueFunction valueFunction;
-    cout << "starting approximation!\n"
-         << endl;
     //offline approximation
     AVI approximateValueIterate;
     if (!MYOPIC)
     {
+        cout << "starting approximation!\n"
+             << endl;
         approximateValueIterate.approximation(&valueFunction);
+        cout << "finished approximation!\n"
+             << endl;
     }
-    cout << "finished approximation!\n"
-         << endl;
 
     //online solving
     int instanceNum = 0;
