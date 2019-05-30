@@ -1,2 +1,4 @@
 # Approximate Dynamic Programming For DPDP-TW
-Version of Approximate value iteration with routing action and dynamic lookup table
+## Approximation methods
+1. Dynamic Lookup Table
+2. Regression Least Square
