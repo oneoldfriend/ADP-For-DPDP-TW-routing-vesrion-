@@ -26,6 +26,8 @@ public:
   Solution *pointSolution;
   vector<PointOrder> notServicedCustomer;
   vector<PointOrder> reachableCustomer;
+  void executeAction(Action a);
+  void undoAction(Action a);
   State();
 };
 
@@ -43,7 +45,5 @@ public:
   void transition(Action a);
   double reward(State S, Action a);
   void observation(double lastDecisionTime);
-  void executeAction(Action a);
-  void undoAction(Action a);
   MDP(string fileName);
 };

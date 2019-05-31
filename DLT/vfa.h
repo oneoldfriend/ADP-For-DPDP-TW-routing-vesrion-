@@ -3,7 +3,7 @@
 #include "customer.h"
 #include "route.h"
 #include "util.h"
-#include "Eigen/Dense"
+//#include "Eigen/Dense"
 #include <vector>
 #define STEP_SIZE 0.5
 #define PARTITION_THRESHOLD 1.0
@@ -51,7 +51,7 @@ public:
 };
 class ValueFunction
 {
-public:
+/*public:
   LookupTable lookupTable;
   double lambda;
   Eigen::Matrix4d matrixBeta;
@@ -61,5 +61,10 @@ public:
   //void updateValue(vector<pair<Aggregation, double>> valueAtThisSimulation, bool startApproximate);
   void updateValue(vector<pair<Eigen::Vector4d, double> > valueAtThisSimulation, bool startApproximate);
   ValueFunction();
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW*/
+public:
+  LookupTable lookupTable;
+  double getValue(Aggregation postDecisionState, double reward);
+  void updateValue(vector<pair<Aggregation, double> > valueAtThisSimulation, bool startApproximate);
+  ValueFunction();
 };

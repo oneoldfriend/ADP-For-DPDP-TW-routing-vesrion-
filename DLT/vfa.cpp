@@ -4,7 +4,7 @@ LookupTable::LookupTable()
 {
     double initialValue = -MAX_EDGE * double(CUSTOMER_NUMBER);
     double xTick = double(MAX_WORK_TIME) / double(LOOKUP_TABLE_INITIAL),
-           yTick = double(MAX_WORK_TIME) * double(MAX_VEHICLE) / double(LOOKUP_TABLE_INITIAL);
+           yTick = double(MAX_WORK_TIME) / double(LOOKUP_TABLE_INITIAL);
     for (int xCount = 0; xCount < LOOKUP_TABLE_INITIAL; xCount++)
     {
         for (int yCount = 0; yCount < LOOKUP_TABLE_INITIAL; yCount++)
@@ -114,25 +114,9 @@ Aggregation::Aggregation()
 
 void Aggregation::aggregate(State S, Action a)
 {
-    Solution tempSolution = Solution();
-    tempSolution.solutionCopy(S.pointSolution);
-    tempSolution.greedyInsertion(a);
     //对执行动作后的解进行相关的信息提取
     this->currentTime = S.currentTime;
-    this->remainTime = 0;
-    //计算每条路径的剩余可规划时间
-    for (auto iter = tempSolution.routes.begin(); iter != tempSolution.routes.end(); ++iter)
-    {
-        if (iter->head->next == iter->tail)
-        {
-            this->remainTime += MAX_WORK_TIME - iter->head->departureTime;
-        }
-        else
-        {
-            this->remainTime += MAX_WORK_TIME - iter->tail->departureTime;
-        }
-    }
-    tempSolution.solutionDelete();
+    this->remainTime = MAX_WORK_TIME - S.currentRoute->tail->arrivalTime;
 }
 
 Entry::Entry()
@@ -146,34 +130,14 @@ Entry::Entry()
 ValueFunction::ValueFunction()
 {
     lookupTable = LookupTable();
-    lambda = 1;
-    for (int i = 0; i < ATTRIBUTES_NUMBER; i++)
-    {
-        attributesWeight[i] = 1.0;
-    }
-    this->matrixBeta = Eigen::Matrix4d::Identity();
 }
 
-/*double ValueFunction::getValue(Aggregation postDecisionState, double reward)
+double ValueFunction::getValue(Aggregation postDecisionState, double reward)
 {
     return this->lookupTable.lookup(postDecisionState);
-}*/
-
-double ValueFunction::getValue(State S, Action a)
-{
-    Solution tempSolution = Solution();
-    tempSolution.solutionCopy(S.pointSolution);
-    tempSolution.calcAttribute();
-    double value = this->attributesWeight.transpose() * tempSolution.attribute;
-    tempSolution.solutionDelete();
-    if (MYOPIC)
-    {
-        return 0;
-    }
-    return value;
 }
 
-/*void ValueFunction::updateValue(vector<pair<Aggregation, double> > valueAtThisSimulation, bool startApproximate)
+void ValueFunction::updateValue(vector<pair<Aggregation, double> > valueAtThisSimulation, bool startApproximate)
 {
     for (auto decisionPoint = valueAtThisSimulation.begin(); decisionPoint != valueAtThisSimulation.end(); ++decisionPoint)
     {
@@ -204,7 +168,35 @@ double ValueFunction::getValue(State S, Action a)
         }
     }
     this->lookupTable.partitionUpdate();
-}*/
+}
+
+
+
+
+/*ValueFunction::ValueFunction()
+{
+    lookupTable = LookupTable();
+    lambda = 1;
+    for (int i = 0; i < ATTRIBUTES_NUMBER; i++)
+    {
+        attributesWeight[i] = 1.0;
+    }
+    this->matrixBeta = Eigen::Matrix4d::Identity();
+}
+
+double ValueFunction::getValue(State S, Action a)
+{
+    Solution tempSolution = Solution();
+    tempSolution.solutionCopy(S.pointSolution);
+    tempSolution.calcAttribute();
+    double value = this->attributesWeight.transpose() * tempSolution.attribute;
+    tempSolution.solutionDelete();
+    if (MYOPIC)
+    {
+        return 0;
+    }
+    return value;
+}
 
 void ValueFunction::updateValue(vector<pair<Eigen::Vector4d, double>> valueAtThisSimulation, bool startApproximate)
 {
@@ -223,4 +215,4 @@ void ValueFunction::updateValue(vector<pair<Eigen::Vector4d, double>> valueAtThi
         errorThisSimulation += error;
     }
     cout << errorThisSimulation << endl;
-}
+}*/

@@ -9,32 +9,32 @@ State::State()
     this->currentRoute = nullptr;
 }
 
-void MDP::executeAction(Action a)
+void State::executeAction(Action a)
 {
     if (a.positionToVisit != nullptr)
     {
-        a.positionToVisit->prior = this->currentState.currentRoute->currentPos;
-        a.positionToVisit->next = this->currentState.currentRoute->currentPos->next;
-        this->currentState.currentRoute->insertOrder(a.positionToVisit);
+        a.positionToVisit->prior = this->currentRoute->currentPos;
+        a.positionToVisit->next = this->currentRoute->currentPos->next;
+        this->currentRoute->insertOrder(a.positionToVisit);
     }
     else
     {
-        this->currentState.currentRoute->currentPos->departureTime += UNIT_TIME;
+        this->currentRoute->currentPos->departureTime += UNIT_TIME;
     }
-    this->currentState.currentRoute->routeUpdate();
+    this->currentRoute->routeUpdate();
 }
 
-void MDP::undoAction(Action a)
+void State::undoAction(Action a)
 {
     if (a.positionToVisit != nullptr)
     {
-        this->currentState.currentRoute->removeOrder(a.positionToVisit);
+        this->currentRoute->removeOrder(a.positionToVisit);
     }
     else
     {
-        this->currentState.currentRoute->currentPos->departureTime -= UNIT_TIME;
+        this->currentRoute->currentPos->departureTime -= UNIT_TIME;
     }
-    this->currentState.currentRoute->routeUpdate();
+    this->currentRoute->routeUpdate();
 }
 
 void MDP::integerToAction(int actionNum, State S, Action *a)
@@ -64,7 +64,9 @@ void MDP::findBestAction(Action *a, ValueFunction valueFunction, double *value)
         if (this->checkActionFeasibility(tempAction, &immediateReward))
         {
             //若动作可行，则进行评估
-            actionValue = immediateReward + valueFunction.getValue(this->currentState, tempAction);
+            Aggregation postDecisionState;
+            postDecisionState.aggregate(this->currentState, tempAction);
+            actionValue = immediateReward + valueFunction.getValue(postDecisionState, immediateReward);
             if (actionValue < bestActionValue)
             {
                 //记录更优的动作
@@ -74,7 +76,7 @@ void MDP::findBestAction(Action *a, ValueFunction valueFunction, double *value)
             }
         }
         //回撤动作继续下一个评估
-        this->undoAction(tempAction);
+        this->currentState.undoAction(tempAction);
         actionNum++;
     }
     this->integerToAction(bestActionNum, this->currentState, a);
@@ -83,7 +85,7 @@ void MDP::findBestAction(Action *a, ValueFunction valueFunction, double *value)
 bool MDP::checkActionFeasibility(Action a, double *reward)
 {
     double currentCost = this->currentState.currentRoute->cost;
-    this->executeAction(a);
+    this->currentState.executeAction(a);
     bool feasibility = this->currentState.currentRoute->checkFeasibility();
     double newCost = this->currentState.currentRoute->cost;
     *reward = newCost - currentCost;
@@ -140,10 +142,10 @@ MDP::MDP(string fileName)
 double MDP::reward(State S, Action a)
 {
     //复制当前解并对副本执行动作计算立即反馈
-    double currentCost = S.currentRoute->cost;
-    this->executeAction(a);
     double newCost = S.currentRoute->cost;
-    this->undoAction(a);
+    this->currentState.undoAction(a);
+    double currentCost = S.currentRoute->cost;
+    this->currentState.executeAction(a);
     return newCost - currentCost;
 }
 
@@ -151,7 +153,7 @@ void MDP::transition(Action a)
 {
     //执行动作
     double lastDecisionTime = this->currentState.currentTime;
-    this->executeAction(a);
+    this->currentState.executeAction(a);
     //更新当前状态
     if (a.positionToVisit != nullptr)
     {
@@ -179,7 +181,7 @@ void MDP::transition(Action a)
         if (this->currentState.currentRoute->tail->departureTime + UNIT_TIME > MAX_WORK_TIME)
         {
             //若车辆不能原地等待则直接返回仓库结束配送
-            this->undoAction(a);
+            this->currentState.undoAction(a);
             this->currentState.currentRoute->currentPos = this->currentState.currentRoute->tail;
         }
     }
@@ -229,6 +231,18 @@ void MDP::observation(double lastDecisionTime)
         }
         this->sequenceData.erase(sequenceIter++);
     }
+    //删除已取消的订单
+    /*if (!this->currentState.notServicedCustomer.empty())
+    {
+        for (auto iter = this->currentState.notServicedCustomer.begin(); iter != this->currentState.notServicedCustomer.end(); ++iter)
+        {
+            if ((*iter)->isOrigin && (*iter)->customer->priority == 0)
+            {
+                this->currentState.notServicedCustomer.erase(iter);
+                iter = this->currentState.notServicedCustomer.begin();
+            }
+        }
+    }*/
     //更新当前车辆可以合法访问的点
     this->currentState.reachableCustomer.clear();
     if (this->currentState.currentRoute != nullptr)

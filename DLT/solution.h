@@ -1,5 +1,5 @@
 #pragma once
-#include "Eigen/Dense"
+//#include "Eigen/Dense"
 #include <vector>
 
 using namespace std;
@@ -10,12 +10,12 @@ class Solution
 {
 public:
   vector<Route> routes;
-  Eigen::Vector4d attribute;
   double cost, penalty, waitTime, travelTime;
-  bool greedyInsertion(Action a);
   void solutionCopy(Solution *source);
   void solutionDelete();
   double calcCost();
-  void calcAttribute();
+  //Eigen::Vector4d attribute;
+  //void calcAttribute();
+  //bool greedyInsertion(Action a);
   Solution();
 };
