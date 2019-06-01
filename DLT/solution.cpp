@@ -22,8 +22,8 @@ double Solution::calcCost()
     {
         this->cost += iter->cost;
         this->penalty += iter->penalty;
-        this->travelTime = iter->travelTime;
-        this->waitTime = iter->waitTime;
+        this->travelTime += iter->travelTime;
+        this->waitTime += iter->waitTime;
     }
     return cost;
 }
