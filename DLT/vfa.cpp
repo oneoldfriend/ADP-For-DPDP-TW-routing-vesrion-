@@ -2,7 +2,7 @@
 
 LookupTable::LookupTable()
 {
-    double initialValue = -MAX_EDGE * double(CUSTOMER_NUMBER);
+    double initialValue = MAX_EDGE * double(CUSTOMER_NUMBER);
     double xTick = double(MAX_WORK_TIME) / double(LOOKUP_TABLE_INITIAL),
            yTick = double(MAX_WORK_TIME) / double(LOOKUP_TABLE_INITIAL);
     for (int xCount = 0; xCount < LOOKUP_TABLE_INITIAL; xCount++)
@@ -17,26 +17,19 @@ LookupTable::LookupTable()
             this->value[newEntry] = initialValue;
         }
     }
-    for (auto iter = this->value.begin(); iter != this->value.end(); ++iter)
+    for (int i = 0; i < int(MAX_WORK_TIME); i++)
     {
-        //cout << iter->first.x << " " << iter->first.y << " " << iter->first.xRange << " " << iter->first.yRange << endl;
+        for (int j = 0; j < int(MAX_WORK_TIME); j++)
+        {
+            this->tableValue[i][j] = initialValue;
+        }
     }
 }
 
 double LookupTable::lookup(Aggregation postDecisionState)
 {
-    //找到aggregation 在lookup table 中对应的entry，并返回其value
-    for (auto iter = this->value.begin(); iter != this->value.end(); ++iter)
-    {
-        if ((postDecisionState.currentTime >= iter->first.x - iter->first.xRange &&
-             postDecisionState.currentTime < iter->first.x + iter->first.xRange) &&
-            (postDecisionState.remainTime >= iter->first.y - iter->first.yRange &&
-             postDecisionState.remainTime < iter->first.y + iter->first.yRange))
-        {
-            this->tableInfo[iter->first].first = this->tableInfo[iter->first].first + 1;
-            return iter->second;
-        }
-    }
+    int lookX = floor(postDecisionState.currentTime), lookY = floor(postDecisionState.remainTime);
+    return this->tableValue[lookX][lookY];
 }
 
 void LookupTable::partitionUpdate()
@@ -137,7 +130,7 @@ double ValueFunction::getValue(Aggregation postDecisionState, double reward)
     return this->lookupTable.lookup(postDecisionState);
 }
 
-void ValueFunction::updateValue(vector<pair<Aggregation, double> > valueAtThisSimulation, bool startApproximate)
+void ValueFunction::updateValue(vector<pair<Aggregation, double>> valueAtThisSimulation, bool startApproximate)
 {
     for (auto decisionPoint = valueAtThisSimulation.begin(); decisionPoint != valueAtThisSimulation.end(); ++decisionPoint)
     {
@@ -163,15 +156,26 @@ void ValueFunction::updateValue(vector<pair<Aggregation, double> > valueAtThisSi
                 {
                     tableIter->second = (1 - STEP_SIZE) * tableIter->second + STEP_SIZE * decisionPoint->second;
                 }
+                int minX = floor(tableIter->first.x - tableIter->first.xRange),
+                    maxX = floor(tableIter->first.x + tableIter->first.xRange),
+                    minY = floor(tableIter->first.y - tableIter->first.yRange),
+                    maxY = floor(tableIter->first.y + tableIter->first.yRange);
+                for (int i = minX; i < maxX; i++)
+                {
+                    for (int j = minY; j < maxY; j++)
+                    {
+                        this->lookupTable.tableValue[i][j] = tableIter->second;
+                    }
+                }
                 break;
             }
         }
     }
+    for (auto iter = this->lookupTable.value.begin(); iter != this->lookupTable.value.end(); ++iter)
+    {
+    }
     this->lookupTable.partitionUpdate();
 }
-
-
-
 
 /*ValueFunction::ValueFunction()
 {

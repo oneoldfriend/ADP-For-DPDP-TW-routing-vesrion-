@@ -5,8 +5,8 @@
 #include "util.h"
 //#include "Eigen/Dense"
 #include <vector>
-#define STEP_SIZE 0.5
-#define PARTITION_THRESHOLD 1.0
+#define STEP_SIZE 0.3
+#define PARTITION_THRESHOLD 1.3
 #define LOOKUP_TABLE_INITIAL 10.0
 #define ATTRIBUTES_NUMBER 4
 
@@ -42,6 +42,7 @@ public:
 class LookupTable
 {
 public:
+  double tableValue[int(MAX_WORK_TIME)][int(MAX_WORK_TIME)];
   map<Entry, double> value;
   map<Entry, pair<int, vector<double> > > tableInfo;
   double lookup(Aggregation postDecisionState);

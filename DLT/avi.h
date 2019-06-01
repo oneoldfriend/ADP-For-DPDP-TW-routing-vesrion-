@@ -1,9 +1,4 @@
 #pragma once
-#include "mdp.h"
-#include "vfa.h"
-#include <math.h>
-#include <fstream>
-
 #define MAX_WORK_TIME 360.0
 #define CAPACITY 5
 #define PENALTY_FACTOR 5
@@ -16,6 +11,11 @@
 #define MAX_TEST_INSTANCE 100
 #define LAG_APPROXIMATE 0
 #define MYOPIC 0
+#include "mdp.h"
+#include "vfa.h"
+#include <math.h>
+#include <fstream>
+
 
 class AVI
 {
