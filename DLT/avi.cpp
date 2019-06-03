@@ -15,7 +15,7 @@ void AVI::approximation(ValueFunction *valueFunction)
         {
             startApproximate = true;
         }
-        
+
         string fileName = "TrainingData.txt";
         Generator::instanceGenenrator(fileName);
         //初始化马尔科夫决策过程
@@ -25,20 +25,20 @@ void AVI::approximation(ValueFunction *valueFunction)
         while (simulation.currentState.currentRoute != nullptr)
         {
             Action bestAction;
-            double value;
-            simulation.findBestAction(&bestAction, *valueFunction, &value);
+            double reward = 0.0;
+            simulation.findBestAction(&bestAction, *valueFunction, &reward);
             Aggregation postDecisionState;
             simulation.currentState.executeAction(bestAction);
             postDecisionState.aggregate(simulation.currentState, bestAction);
             simulation.currentState.undoAction(bestAction);
             //记录这次sample path的信息
-            valueAtThisSimulation.push_back(make_pair(postDecisionState, value));
+            valueAtThisSimulation.push_back(make_pair(postDecisionState, reward));
             //状态转移
             simulation.transition(bestAction);
         }
         //对lookup table 进行更新
         simulation.solution.calcCost();
-        cout << totalSimulationCount << " " << simulation.solution.cost << endl;
+        cout << totalSimulationCount << " " << simulation.solution.cost << " " << simulation.solution.penalty << " " << simulation.solution.waitTime << endl;
         valueFunction->updateValue(valueAtThisSimulation, startApproximate);
         for (auto iter = simulation.customers.begin(); iter != simulation.customers.end(); ++iter)
         {

@@ -20,6 +20,7 @@ void State::executeAction(Action a)
     else
     {
         this->currentRoute->currentPos->departureTime += UNIT_TIME;
+        this->currentRoute->currentPos->waitTime += UNIT_TIME;
     }
     this->currentRoute->routeUpdate();
 }
@@ -33,6 +34,7 @@ void State::undoAction(Action a)
     else
     {
         this->currentRoute->currentPos->departureTime -= UNIT_TIME;
+        this->currentRoute->currentPos->waitTime -= UNIT_TIME;
     }
     this->currentRoute->routeUpdate();
 }
@@ -50,9 +52,9 @@ void MDP::integerToAction(int actionNum, State S, Action *a)
     }
 }
 
-void MDP::findBestAction(Action *a, ValueFunction valueFunction, double *value)
+void MDP::findBestAction(Action *a, ValueFunction valueFunction, double *reward)
 {
-    int actionNum = 0, maxActionNum = this->currentState.reachableCustomer.size(), bestActionNum = -1;
+    int actionNum = -1, maxActionNum = this->currentState.reachableCustomer.size(), bestActionNum = -1;
     double bestActionValue = MAX_COST;
     while (actionNum < maxActionNum)
     {
@@ -64,13 +66,11 @@ void MDP::findBestAction(Action *a, ValueFunction valueFunction, double *value)
         if (this->checkActionFeasibility(tempAction, &immediateReward))
         {
             //若动作可行，则进行评估
-            Aggregation postDecisionState;
-            postDecisionState.aggregate(this->currentState, tempAction);
-            actionValue = immediateReward + valueFunction.getValue(postDecisionState, immediateReward);
+            actionValue = immediateReward + valueFunction.getValue(this->currentState, tempAction);
             if (actionValue < bestActionValue)
             {
                 //记录更优的动作
-                *value = immediateReward;
+                *reward = immediateReward;
                 bestActionValue = actionValue;
                 bestActionNum = actionNum;
             }

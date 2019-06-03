@@ -1,4 +1,5 @@
 #include "vfa.h"
+#include <cmath>
 
 LookupTable::LookupTable()
 {
@@ -125,14 +126,16 @@ ValueFunction::ValueFunction()
     lookupTable = LookupTable();
 }
 
-double ValueFunction::getValue(Aggregation postDecisionState, double reward)
+double ValueFunction::getValue(State S, Action a)
 {
+    Aggregation postDecisionState;
+    postDecisionState.aggregate(S, a);
     return this->lookupTable.lookup(postDecisionState);
 }
 
 void ValueFunction::updateValue(vector<pair<Aggregation, double>> valueAtThisSimulation, bool startApproximate)
 {
-    double realValue = 0.0;
+    double realValue = 0.0, errorThisSim = 0.0;
     for (auto decisionPoint = valueAtThisSimulation.rbegin(); decisionPoint != valueAtThisSimulation.rend(); ++decisionPoint)
     {
         realValue += decisionPoint->second;
@@ -154,6 +157,7 @@ void ValueFunction::updateValue(vector<pair<Aggregation, double>> valueAtThisSim
                 }*/
                 this->lookupTable.tableInfo[tableIter->first].second.push_back(decisionPoint->second);
                 //更新value
+                errorThisSim += abs(tableIter->second - realValue);
                 if (startApproximate)
                 {
                     tableIter->second = (1 - STEP_SIZE) * tableIter->second + STEP_SIZE * realValue;
@@ -173,6 +177,7 @@ void ValueFunction::updateValue(vector<pair<Aggregation, double>> valueAtThisSim
             }
         }
     }
+    cout << errorThisSim << endl;
     this->lookupTable.partitionUpdate();
 }
 

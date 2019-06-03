@@ -1,4 +1,5 @@
 #include "vfa.h"
+#include <iomanip>
 
 LookupTable::LookupTable()
 {
@@ -222,5 +223,5 @@ void ValueFunction::updateValue(vector<pair<Eigen::Vector4d, double>> valueAtThi
         //cout << "estimated value(after update):" << this->attributesWeight.transpose() * iter->first << endl;
         errorThisSimulation += error;
     }
-    cout << errorThisSimulation << endl;
+    //cout << setiosflags(ios::fixed) << errorThisSimulation << endl;
 }

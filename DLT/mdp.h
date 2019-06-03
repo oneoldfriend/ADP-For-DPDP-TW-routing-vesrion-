@@ -40,7 +40,7 @@ public:
   list<pair<double, Customer *> > sequenceData;
   map<string, Customer*> customers;
   bool checkActionFeasibility(Action a, double *reward);
-  void findBestAction(Action *a, ValueFunction valueFunction, double *value);
+  void findBestAction(Action *a, ValueFunction valueFunction, double *reward);
   void integerToAction(int actionNum, State S, Action *a);
   void transition(Action a);
   double reward(State S, Action a);
