@@ -38,7 +38,7 @@ void AVI::approximation(ValueFunction *valueFunction)
         }
         //对lookup table 进行更新
         simulation.solution.calcCost();
-        cout << totalSimulationCount << " " << simulation.solution.cost << " " << simulation.solution.penalty << " " << simulation.solution.waitTime << endl;
+        //cout << totalSimulationCount << " " << simulation.solution.cost << " " << simulation.solution.penalty << " " << simulation.solution.waitTime << endl;
         valueFunction->updateValue(valueAtThisSimulation, startApproximate);
         for (auto iter = simulation.customers.begin(); iter != simulation.customers.end(); ++iter)
         {

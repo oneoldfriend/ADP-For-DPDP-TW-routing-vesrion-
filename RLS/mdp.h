@@ -24,8 +24,10 @@ public:
   Route *currentRoute;
   double currentTime;
   Solution *pointSolution;
+  Eigen::Vector4d attributes;
   vector<PointOrder> notServicedCustomer;
   vector<PointOrder> reachableCustomer;
+  void calcAttribute();
   State();
 };
 

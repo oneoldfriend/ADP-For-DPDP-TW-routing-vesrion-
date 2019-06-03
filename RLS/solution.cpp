@@ -108,15 +108,15 @@ void Solution::solutionDelete()
     }
 }
 
-void Solution::calcAttribute()
+void Solution::calcInfo()
 {
-    this->attribute[0] = MAX_EDGE;
+    this->info[0] = MAX_EDGE;
     int deliveredWeights = 0, availableVehicle = 0;
     double availableTime = 0.0;
     for (auto routeIter = this->routes.begin(); routeIter != this->routes.end(); routeIter++)
     {
         availableTime += MAX_WORK_TIME - routeIter->tail->arrivalTime;
-        if (routeIter->tail->arrivalTime + MAX_EDGE <= MAX_WORK_TIME)
+        if (routeIter->currentPos != routeIter->tail)
         {
             availableVehicle++;
         }
@@ -130,7 +130,7 @@ void Solution::calcAttribute()
             p = p->next;
         }
     }
-    this->attribute[1] = ceil(availableTime / MAX_EDGE);
-    this->attribute[2] = deliveredWeights;
-    this->attribute[3] = availableVehicle;
+    this->info[1] = ceil(availableTime / MAX_EDGE);
+    this->info[2] = deliveredWeights;
+    this->info[3] = availableVehicle;
 }

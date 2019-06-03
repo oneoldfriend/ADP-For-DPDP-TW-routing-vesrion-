@@ -9,6 +9,15 @@ State::State()
     this->currentRoute = nullptr;
 }
 
+void State::calcAttribute()
+{
+    this->pointSolution->calcInfo();
+    this->attributes[0] = this->pointSolution->info[3];
+    this->attributes[1] = this->notServicedCustomer.size();
+    this->attributes[2] = this->currentTime;
+    this->attributes[3] = this->pointSolution->info[2];
+}
+
 void MDP::executeAction(Action a)
 {
     if (a.positionToVisit != nullptr)

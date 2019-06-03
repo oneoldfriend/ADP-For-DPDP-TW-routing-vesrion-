@@ -10,12 +10,12 @@ class Solution
 {
 public:
   vector<Route> routes;
-  Eigen::Vector4d attribute;
+  Eigen::Vector4d info;
   double cost, penalty, waitTime, travelTime;
   bool greedyInsertion(Action a);
   void solutionCopy(Solution *source);
   void solutionDelete();
   double calcCost();
-  void calcAttribute();
+  void calcInfo();
   Solution();
 };

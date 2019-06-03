@@ -150,7 +150,7 @@ ValueFunction::ValueFunction()
     lambda = 1;
     for (int i = 0; i < ATTRIBUTES_NUMBER; i++)
     {
-        attributesWeight[i] = 1.0;
+        attributesWeight[i] = 1.0 / ATTRIBUTES_NUMBER;
     }
     this->matrixBeta = Eigen::Matrix4d::Identity();
 }
@@ -162,11 +162,8 @@ ValueFunction::ValueFunction()
 
 double ValueFunction::getValue(State S, Action a)
 {
-    Solution tempSolution = Solution();
-    tempSolution.solutionCopy(S.pointSolution);
-    tempSolution.calcAttribute();
-    double value = this->attributesWeight.transpose() * tempSolution.attribute;
-    tempSolution.solutionDelete();
+    S.calcAttribute();
+    double value = this->attributesWeight.transpose() * S.attributes;
     if (MYOPIC)
     {
         return 0;
@@ -214,14 +211,13 @@ void ValueFunction::updateValue(vector<pair<Eigen::Vector4d, double>> valueAtThi
     for (auto iter = valueAtThisSimulation.rbegin(); iter != valueAtThisSimulation.rend(); ++iter)
     {
         realValue += iter->second;
-        //cout << "real value: " << realValue << endl;
-        //cout << "estimated value(before update):" << this->attributesWeight.transpose() * iter->first << endl;
+        cout << "real value: " << realValue << endl << "estimated value(before update):" << this->attributesWeight.transpose() * iter->first << endl;
         double gammaN = this->lambda + iter->first.transpose() * this->matrixBeta * iter->first,
-               error = abs(this->attributesWeight.transpose() * iter->first - realValue);
+               error = this->attributesWeight.transpose() * iter->first - realValue;
         this->matrixBeta = 1.0 / this->lambda * (this->matrixBeta - 1.0 / gammaN * (this->matrixBeta * iter->first * iter->first.transpose() * this->matrixBeta));
         this->attributesWeight = this->attributesWeight - 1 / gammaN * this->matrixBeta.inverse().inverse() * iter->first * error;
-        //cout << "estimated value(after update):" << this->attributesWeight.transpose() * iter->first << endl;
-        errorThisSimulation += error;
+        cout << "estimated value(after update):" << this->attributesWeight.transpose() * iter->first << endl;
+        errorThisSimulation += abs(error);
     }
-    //cout << setiosflags(ios::fixed) << errorThisSimulation << endl;
+    cout << setiosflags(ios::fixed) << errorThisSimulation << endl;
 }
