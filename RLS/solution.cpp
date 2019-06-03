@@ -130,7 +130,7 @@ void Solution::calcInfo()
             p = p->next;
         }
     }
-    this->info[1] = ceil(availableTime / MAX_EDGE);
+    this->info[1] = availableTime;
     this->info[2] = deliveredWeights;
     this->info[3] = availableVehicle;
 }
