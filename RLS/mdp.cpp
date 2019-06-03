@@ -15,7 +15,7 @@ void State::calcAttribute()
     this->attributes[0] = this->pointSolution->info[1];
     this->attributes[1] = this->reachableCustomer.size();
     this->attributes[2] = this->notServicedCustomer.size();
-    this->attributes[3] = this->pointSolution->info[2];
+    this->attributes[3] = this->pointSolution->info[3];
 }
 
 void MDP::executeAction(Action a)
@@ -63,7 +63,7 @@ void MDP::integerToAction(int actionNum, State S, Action *a)
 
 void MDP::findBestAction(Action *a, ValueFunction valueFunction, double *reward)
 {
-    int actionNum = -1, maxActionNum = this->currentState.reachableCustomer.size(), bestActionNum = -1;
+    int actionNum = 0, maxActionNum = this->currentState.reachableCustomer.size(), bestActionNum = -1;
     double bestActionValue = MAX_COST;
     while (actionNum < maxActionNum)
     {
@@ -89,6 +89,11 @@ void MDP::findBestAction(Action *a, ValueFunction valueFunction, double *reward)
         actionNum++;
     }
     this->integerToAction(bestActionNum, this->currentState, a);
+    if (bestActionNum == -1)
+    {
+        this->checkActionFeasibility(*a, reward);
+        this->undoAction(*a);
+    }
 }
 
 bool MDP::checkActionFeasibility(Action a, double *reward)
