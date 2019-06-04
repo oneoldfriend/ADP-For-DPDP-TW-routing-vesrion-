@@ -206,18 +206,33 @@ double ValueFunction::getValue(State S, Action a)
 
 void ValueFunction::updateValue(vector<pair<Eigen::Vector4d, double>> valueAtThisSimulation, bool startApproximate)
 {
-    double realValue = 0;
+    //this->matrixBeta = 0.1 * Eigen::Matrix4d::Identity();
+    double lastValue = 0;
     double errorThisSimulation = 0.0;
-    for (auto iter = valueAtThisSimulation.rbegin(); iter != valueAtThisSimulation.rend(); ++iter)
+    /*for (auto iter = valueAtThisSimulation.rbegin(); iter != valueAtThisSimulation.rend(); ++iter)
     {
-        realValue += iter->second;
+        iter->second += lastValue;
+        lastValue = iter->second;
+    }*/
+    for (auto iter = valueAtThisSimulation.begin(); iter != valueAtThisSimulation.end(); ++iter)
+    {
         //cout << "real value: " << realValue << endl << "estimated value(before update):" << this->attributesWeight.transpose() * iter->first << endl;
-        double gammaN = this->lambda + iter->first.transpose() * this->matrixBeta * iter->first,
-               error = this->attributesWeight.transpose() * iter->first - realValue;
-        this->matrixBeta = 1.0 / this->lambda * (this->matrixBeta - 1.0 / gammaN * (this->matrixBeta * iter->first * iter->first.transpose() * this->matrixBeta));
-        this->attributesWeight = this->attributesWeight - 1 / gammaN * this->matrixBeta.inverse().inverse() * iter->first * error;
+        double nextStateValue = 0.0;
+        if (++iter != valueAtThisSimulation.end())
+        {
+            nextStateValue = this->attributesWeight.transpose() * iter->first;
+        }
+        else
+        {
+            nextStateValue = 0.0;
+        }
+        --iter;
+        double gammaN = 1.0 + iter->first.transpose() * this->matrixBeta * iter->first,
+               error = this->attributesWeight.transpose() * iter->first - (iter->second + nextStateValue);
+        this->matrixBeta = this->matrixBeta - 1.0 / gammaN * (this->matrixBeta * iter->first * iter->first.transpose() * this->matrixBeta);
+        this->attributesWeight = this->attributesWeight - 1 / gammaN * this->matrixBeta * iter->first * error;
         //cout << "estimated value(after update):" << this->attributesWeight.transpose() * iter->first << endl;
         errorThisSimulation += abs(error);
     }
-    cout << setiosflags(ios::fixed) << errorThisSimulation << endl;
+    cout << errorThisSimulation << endl;
 }
