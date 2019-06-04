@@ -15,7 +15,7 @@ void AVI::approximation(ValueFunction *valueFunction)
         {
             startApproximate = true;
         }
-        
+
         string fileName = "TrainingData.txt";
         Generator::instanceGenenrator(fileName);
         //初始化马尔科夫决策过程
@@ -27,11 +27,13 @@ void AVI::approximation(ValueFunction *valueFunction)
             Action bestAction;
             double reward = 0.0;
             simulation.findBestAction(&bestAction, *valueFunction, &reward);
+            //记录这次sample path的信息
+            simulation.executeAction(bestAction);
+            simulation.currentState.calcAttribute();
+            simulation.undoAction(bestAction);
+            valueAtThisSimulation.push_back(make_pair(simulation.currentState.attributes, reward));
             //状态转移
             simulation.transition(bestAction);
-            //记录这次sample path的信息
-            simulation.currentState.calcAttribute();
-            valueAtThisSimulation.push_back(make_pair(simulation.currentState.attributes, reward));
         }
         //对lookup table 进行更新
         double valueSum = 0.0;

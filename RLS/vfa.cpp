@@ -206,7 +206,7 @@ double ValueFunction::getValue(State S, Action a)
 
 void ValueFunction::updateValue(vector<pair<Eigen::Vector4d, double>> valueAtThisSimulation, bool startApproximate)
 {
-    //this->matrixBeta = 0.1 * Eigen::Matrix4d::Identity();
+    //this->matrixBeta = Eigen::Matrix4d::Identity();
     double lastValue = 0;
     double errorThisSimulation = 0.0;
     /*for (auto iter = valueAtThisSimulation.rbegin(); iter != valueAtThisSimulation.rend(); ++iter)
@@ -232,7 +232,7 @@ void ValueFunction::updateValue(vector<pair<Eigen::Vector4d, double>> valueAtThi
         this->matrixBeta = this->matrixBeta - 1.0 / gammaN * (this->matrixBeta * iter->first * iter->first.transpose() * this->matrixBeta);
         this->attributesWeight = this->attributesWeight - 1 / gammaN * this->matrixBeta * iter->first * error;
         //cout << "estimated value(after update):" << this->attributesWeight.transpose() * iter->first << endl;
-        errorThisSimulation += abs(error);
+        errorThisSimulation += error;
     }
-    cout << errorThisSimulation << endl;
+    cout << abs(errorThisSimulation) << endl;
 }
