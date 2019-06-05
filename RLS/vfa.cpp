@@ -218,9 +218,12 @@ double ValueFunction::getValue(State S, Action a, bool approx)
     this->lookupTable.partitionUpdate();
 }*/
 
-void ValueFunction::updateValue(vector<pair<Eigen::Vector4d, double>> valueAtThisSimulation, bool startApproximate)
+void ValueFunction::updateValue(vector<pair<Eigen::Vector4d, double> > valueAtThisSimulation, bool startApproximate)
 {
-    //this->matrixBeta = Eigen::Matrix4d::Identity();
+    if (!startApproximate)
+    {
+        this->matrixBeta = Eigen::Matrix4d::Identity();
+    }
     double lastValue = 0;
     double errorThisSimulation = 0.0;
     for (auto iter = valueAtThisSimulation.rbegin(); iter != valueAtThisSimulation.rend(); ++iter)
