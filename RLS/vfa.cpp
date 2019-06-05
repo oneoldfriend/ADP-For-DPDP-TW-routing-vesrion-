@@ -206,18 +206,18 @@ double ValueFunction::getValue(State S, Action a)
 
 void ValueFunction::updateValue(vector<pair<Eigen::Vector4d, double>> valueAtThisSimulation, bool startApproximate)
 {
-    //this->matrixBeta = Eigen::Matrix4d::Identity();
+    this->matrixBeta = Eigen::Matrix4d::Identity();
     double lastValue = 0;
     double errorThisSimulation = 0.0;
-    /*for (auto iter = valueAtThisSimulation.rbegin(); iter != valueAtThisSimulation.rend(); ++iter)
+    for (auto iter = valueAtThisSimulation.rbegin(); iter != valueAtThisSimulation.rend(); ++iter)
     {
         iter->second += lastValue;
         lastValue = iter->second;
-    }*/
+    }
     for (auto iter = valueAtThisSimulation.begin(); iter != valueAtThisSimulation.end(); ++iter)
     {
         //cout << "real value: " << realValue << endl << "estimated value(before update):" << this->attributesWeight.transpose() * iter->first << endl;
-        double nextStateValue = 0.0;
+        /*double nextStateValue = 0.0;
         if (++iter != valueAtThisSimulation.end())
         {
             nextStateValue = this->attributesWeight.transpose() * iter->first;
@@ -226,9 +226,9 @@ void ValueFunction::updateValue(vector<pair<Eigen::Vector4d, double>> valueAtThi
         {
             nextStateValue = 0.0;
         }
-        --iter;
+        --iter;*/
         double gammaN = 1.0 + iter->first.transpose() * this->matrixBeta * iter->first,
-               error = this->attributesWeight.transpose() * iter->first - (iter->second + nextStateValue);
+               error = this->attributesWeight.transpose() * iter->first - iter->second;//(iter->second + nextStateValue);
         this->matrixBeta = this->matrixBeta - 1.0 / gammaN * (this->matrixBeta * iter->first * iter->first.transpose() * this->matrixBeta);
         this->attributesWeight = this->attributesWeight - 1 / gammaN * this->matrixBeta * iter->first * error;
         //cout << "estimated value(after update):" << this->attributesWeight.transpose() * iter->first << endl;
