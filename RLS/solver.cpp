@@ -46,7 +46,7 @@ void Solver::solve()
         {
             Action bestAction;
             double value;
-            simulation.findBestAction(&bestAction, valueFunction, &value, false);
+            simulation.findBestAction(&bestAction, valueFunction, &value, true);
             //状态转移
             simulation.transition(bestAction);
         }

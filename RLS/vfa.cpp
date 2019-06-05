@@ -163,12 +163,19 @@ ValueFunction::ValueFunction()
 double ValueFunction::getValue(State S, Action a)
 {
     S.calcAttribute();
-    double value = this->attributesWeight.transpose() * S.attributes;
+    double value = 0.0; //this->attributesWeight.transpose() * S.attributes;
     if (MYOPIC)
     {
         return 0;
     }
-    return value;
+    else
+    {
+        for (int i = 0; i < ATTRIBUTES_NUMBER; i++)
+        {
+            value += S.attributes[i];
+        }
+        return value;
+    }
 }
 
 /*void ValueFunction::updateValue(vector<pair<Aggregation, double> > valueAtThisSimulation, bool startApproximate)
@@ -228,7 +235,7 @@ void ValueFunction::updateValue(vector<pair<Eigen::Vector4d, double>> valueAtThi
         }
         --iter;*/
         double gammaN = 1.0 + iter->first.transpose() * this->matrixBeta * iter->first,
-               error = this->attributesWeight.transpose() * iter->first - iter->second;//(iter->second + nextStateValue);
+               error = this->attributesWeight.transpose() * iter->first - iter->second; //(iter->second + nextStateValue);
         this->matrixBeta = this->matrixBeta - 1.0 / gammaN * (this->matrixBeta * iter->first * iter->first.transpose() * this->matrixBeta);
         this->attributesWeight = this->attributesWeight - 1 / gammaN * this->matrixBeta * iter->first * error;
         //cout << "estimated value(after update):" << this->attributesWeight.transpose() * iter->first << endl;
