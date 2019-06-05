@@ -160,7 +160,7 @@ ValueFunction::ValueFunction()
     return this->lookupTable.lookup(postDecisionState);
 }*/
 
-double ValueFunction::getValue(State S, Action a)
+double ValueFunction::getValue(State S, Action a, bool approx)
 {
     S.calcAttribute();
     double value = 0.0; //this->attributesWeight.transpose() * S.attributes;
@@ -170,11 +170,18 @@ double ValueFunction::getValue(State S, Action a)
     }
     else
     {
-        for (int i = 0; i < ATTRIBUTES_NUMBER; i++)
+        if (approx)
         {
-            value += S.attributes[i];
+            for (int i = 0; i < ATTRIBUTES_NUMBER; i++)
+            {
+                value += S.attributes[i];
+            }
+            return value;
         }
-        return value;
+        else
+        {
+            return this->attributesWeight.transpose() * S.attributes;
+        }
     }
 }
 
@@ -213,7 +220,7 @@ double ValueFunction::getValue(State S, Action a)
 
 void ValueFunction::updateValue(vector<pair<Eigen::Vector4d, double>> valueAtThisSimulation, bool startApproximate)
 {
-    this->matrixBeta = Eigen::Matrix4d::Identity();
+    //this->matrixBeta = Eigen::Matrix4d::Identity();
     double lastValue = 0;
     double errorThisSimulation = 0.0;
     for (auto iter = valueAtThisSimulation.rbegin(); iter != valueAtThisSimulation.rend(); ++iter)

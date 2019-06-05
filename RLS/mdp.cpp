@@ -61,7 +61,7 @@ void MDP::integerToAction(int actionNum, State S, Action *a)
     }
 }
 
-void MDP::findBestAction(Action *a, ValueFunction valueFunction, double *reward, bool rouletteWheel)
+void MDP::findBestAction(Action *a, ValueFunction valueFunction, double *reward, bool rouletteWheel, bool approx)
 {
     int actionNum = 0, maxActionNum = this->currentState.reachableCustomer.size(), bestActionNum = -1;
     double bestActionValue = MAX_COST, totalValue = 0.0;
@@ -76,7 +76,7 @@ void MDP::findBestAction(Action *a, ValueFunction valueFunction, double *reward,
         if (this->checkActionFeasibility(tempAction, &immediateReward))
         {
             //若动作可行，则进行评估
-            actionValue = immediateReward + valueFunction.getValue(this->currentState, tempAction);
+            actionValue = immediateReward + valueFunction.getValue(this->currentState, tempAction, approx);
             if (actionValue < bestActionValue)
             {
                 //记录更优的动作

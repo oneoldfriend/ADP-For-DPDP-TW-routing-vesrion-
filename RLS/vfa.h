@@ -57,7 +57,7 @@ public:
   Eigen::Matrix4d matrixBeta;
   Eigen::Vector4d attributesWeight;
   //double getValue(Aggregation postDecisionState, double reward);
-  double getValue(State S, Action a);
+  double getValue(State S, Action a, bool approx);
   //void updateValue(vector<pair<Aggregation, double>> valueAtThisSimulation, bool startApproximate);
   void updateValue(vector<pair<Eigen::Vector4d, double> > valueAtThisSimulation, bool startApproximate);
   ValueFunction();
