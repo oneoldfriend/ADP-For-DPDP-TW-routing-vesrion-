@@ -16,6 +16,7 @@ void Solver::solve()
         Generator::instanceGenenrator(fileName);
     }
     return;*/
+    srand(time(NULL));
 
     ValueFunction valueFunction;
     //offline approximation
