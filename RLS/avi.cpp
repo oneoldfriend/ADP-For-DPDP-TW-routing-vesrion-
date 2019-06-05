@@ -28,11 +28,11 @@ void AVI::approximation(ValueFunction *valueFunction)
             double reward = 0.0;
             if (startApproximate)
             {
-                simulation.findBestAction(&bestAction, *valueFunction, &reward, true, true);
+                simulation.findBestAction(&bestAction, *valueFunction, &reward, true);
             }
             else
             {
-                simulation.findBestAction(&bestAction, *valueFunction, &reward, true, false);
+                simulation.findBestAction(&bestAction, *valueFunction, &reward, false);
             }
             //记录这次sample path的信息
             simulation.executeAction(bestAction);

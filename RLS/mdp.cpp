@@ -61,7 +61,7 @@ void MDP::integerToAction(int actionNum, State S, Action *a)
     }
 }
 
-void MDP::findBestAction(Action *a, ValueFunction valueFunction, double *reward, bool rouletteWheel, bool approx)
+void MDP::findBestAction(Action *a, ValueFunction valueFunction, double *reward, bool approx)
 {
     int actionNum = 0, maxActionNum = this->currentState.reachableCustomer.size(), bestActionNum = -1;
     double bestActionValue = MAX_COST, totalValue = 0.0;
@@ -91,7 +91,7 @@ void MDP::findBestAction(Action *a, ValueFunction valueFunction, double *reward,
         this->undoAction(tempAction);
         actionNum++;
     }
-    if (rouletteWheel)
+    if (ROULETTE_WHEEL)
     {
         double prob = rand() / double(RAND_MAX), cumProb = 0.0;
         for (auto iter = actionWheel.begin(); iter != actionWheel.end(); ++iter)
