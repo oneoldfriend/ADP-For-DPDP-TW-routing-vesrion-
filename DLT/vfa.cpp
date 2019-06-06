@@ -85,16 +85,17 @@ void LookupTable::partition(int entryNum)
         this->entryRange[newEntryIndex].second = this->entryRange[entryNum].second;
         this->entryInfo[newEntryIndex].first = this->entryInfo[entryNum].first;
         for (int i = (int)this->entryPosition[newEntryIndex].first;
-                 i < (int)this->entryPosition[newEntryIndex].first + this->entryRange[newEntryIndex].first;
-                 i++)
+             i < (int)this->entryPosition[newEntryIndex].first + this->entryRange[newEntryIndex].first;
+             i++)
+        {
+            for (int j = (int)this->entryPosition[newEntryIndex].second;
+                 j < (int)this->entryPosition[newEntryIndex].second + this->entryRange[newEntryIndex].second;
+                 j++)
             {
-                for (int j = (int)this->entryPosition[newEntryIndex].second;
-                     j < (int)this->entryPosition[newEntryIndex].second + this->entryRange[newEntryIndex].second;
-                     j++)
-                {
-                    this->entryIndex[i][j] = newEntryIndex;
-                }
+                this->entryIndex[i][j] = newEntryIndex;
             }
+        }
+        newEntryIndex++;
     }
 }
 
