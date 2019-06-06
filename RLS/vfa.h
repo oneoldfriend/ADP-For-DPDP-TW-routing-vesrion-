@@ -5,10 +5,11 @@
 #include "util.h"
 #include "Eigen/Dense"
 #include <vector>
-#define STEP_SIZE 0.5
+#define STEP_SIZE 0.3
 #define PARTITION_THRESHOLD 1.0
 #define LOOKUP_TABLE_INITIAL 10.0
 #define ATTRIBUTES_NUMBER 4
+#define LAMBDA 0.7
 
 class Aggregation
 {

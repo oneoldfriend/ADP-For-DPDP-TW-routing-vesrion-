@@ -229,7 +229,7 @@ void ValueFunction::updateValue(vector<pair<Eigen::Vector4d, double> > valueAtTh
     for (auto iter = valueAtThisSimulation.rbegin(); iter != valueAtThisSimulation.rend(); ++iter)
     {
         iter->second += lastValue;
-        lastValue = iter->second;
+        lastValue = double(LAMBDA) * iter->second;
     }
     for (auto iter = valueAtThisSimulation.begin(); iter != valueAtThisSimulation.end(); ++iter)
     {
