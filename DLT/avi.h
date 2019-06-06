@@ -11,7 +11,7 @@
 #define MAX_TEST_INSTANCE 1000
 #define LAG_APPROXIMATE 0
 #define ROULETTE_WHEEL 1
-#define MYOPIC 0
+#define MYOPIC 1
 #include "mdp.h"
 #include "vfa.h"
 #include <math.h>

@@ -120,7 +120,7 @@ MDP::MDP(bool approx, string fileName)
 {
     if (approx)
     {
-        Generator::instanceGenenrator(&this->sequenceData);
+        Generator::instanceGenenrator(false, &this->sequenceData, "");
     }
     else
     {

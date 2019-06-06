@@ -8,12 +8,13 @@ void Solver::solve()
     //generate the test instance
     /*for (int instanceNum = 1; instanceNum <= MAX_TEST_INSTANCE; instanceNum++)
     {
-        char dayNum[] = {char(instanceNum / 1000000 + 48), char(instanceNum % 1000000 / 100000 + 48), char(instanceNum % 100000 / 10000 + 48),
+        char dayNum[] = {char(CUSTOMER_NUMBER / 100 + 48), char(CUSTOMER_NUMBER % 100 / 10 + 48), char(CUSTOMER_NUMBER % 10 + 48), '-',
+                         char(instanceNum / 1000000 + 48), char(instanceNum % 1000000 / 100000 + 48), char(instanceNum % 100000 / 10000 + 48),
                          char(instanceNum % 10000 / 1000 + 48), char(instanceNum % 1000 / 100 + 48),
                          char(instanceNum % 100 / 10 + 48), char(instanceNum % 10 + 48), '\0'};
         string fileName = "TestData/";
         fileName = fileName + dayNum + ".txt";
-        Generator::instanceGenenrator(fileName);
+        Generator::instanceGenenrator(true, nullptr, fileName);
     }
     return;*/
     srand(time(NULL));
@@ -36,7 +37,8 @@ void Solver::solve()
     vector<double> rejection;
     while (instanceNum++ < MAX_TEST_INSTANCE)
     {
-        char dayNum[] = {char(instanceNum / 1000000 + 48), char(instanceNum % 1000000 / 100000 + 48), char(instanceNum % 100000 / 10000 + 48),
+        char dayNum[] = {char(CUSTOMER_NUMBER / 100 + 48), char(CUSTOMER_NUMBER % 100 / 10 + 48), char(CUSTOMER_NUMBER % 10 + 48), '-',
+                         char(instanceNum / 1000000 + 48), char(instanceNum % 1000000 / 100000 + 48), char(instanceNum % 100000 / 10000 + 48),
                          char(instanceNum % 10000 / 1000 + 48), char(instanceNum % 1000 / 100 + 48),
                          char(instanceNum % 100 / 10 + 48), char(instanceNum % 10 + 48), '\0'};
         string fileName = "TestData/";
