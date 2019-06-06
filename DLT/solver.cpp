@@ -41,7 +41,7 @@ void Solver::solve()
                          char(instanceNum % 100 / 10 + 48), char(instanceNum % 10 + 48), '\0'};
         string fileName = "TestData/";
         fileName = fileName + dayNum + ".txt";
-        MDP simulation = MDP(fileName);
+        MDP simulation = MDP(false, fileName);
         while (simulation.currentState.currentRoute != nullptr)
         {
             Action bestAction;

@@ -45,5 +45,6 @@ public:
   void transition(Action a);
   double reward(State S, Action a);
   void observation(double lastDecisionTime);
-  MDP(string fileName);
+  MDP(bool approx, string fileName);
+  ~MDP();
 };

@@ -1,5 +1,6 @@
 #include "mdp.h"
 #include "route.h"
+#include "generator.h"
 
 using namespace std;
 
@@ -115,31 +116,38 @@ bool MDP::checkActionFeasibility(Action a, double *reward)
     return feasibility;
 }
 
-MDP::MDP(string fileName)
+MDP::MDP(bool approx, string fileName)
 {
-    this->solution = Solution();
-    ifstream trainFile(fileName, ios::in);
-    double appearTime = 0;
-    while (!trainFile.eof())
+    if (approx)
     {
-        //读取instance数据
-        trainFile >> appearTime;
-        Customer *customer = new Customer();
-        trainFile >> customer->id;
-        trainFile >> customer->origin.x;
-        trainFile >> customer->origin.y;
-        trainFile >> customer->dest.x;
-        trainFile >> customer->dest.y;
-        trainFile >> customer->startTime;
-        trainFile >> customer->endTime;
-        trainFile >> customer->weight;
-        trainFile >> customer->priority;
-        this->sequenceData.push_back(make_pair(appearTime, customer));
+        Generator::instanceGenenrator(&this->sequenceData);
     }
-    auto last = this->sequenceData.rbegin();
-    delete last->second;
-    this->sequenceData.pop_back();
-    trainFile.close();
+    else
+    {
+        ifstream trainFile(fileName, ios::in);
+        double appearTime = 0;
+        while (!trainFile.eof())
+        {
+            //读取instance数据
+            trainFile >> appearTime;
+            Customer *customer = new Customer();
+            trainFile >> customer->id;
+            trainFile >> customer->origin.x;
+            trainFile >> customer->origin.y;
+            trainFile >> customer->dest.x;
+            trainFile >> customer->dest.y;
+            trainFile >> customer->startTime;
+            trainFile >> customer->endTime;
+            trainFile >> customer->weight;
+            trainFile >> customer->priority;
+            this->sequenceData.push_back(make_pair(appearTime, customer));
+        }
+        auto last = this->sequenceData.rbegin();
+        delete last->second;
+        this->sequenceData.pop_back();
+        trainFile.close();
+    }
+    this->solution = Solution();
     this->currentState = State();
     for (auto iter = this->sequenceData.begin(); iter != this->sequenceData.end(); ++iter)
     {
@@ -148,10 +156,7 @@ MDP::MDP(string fileName)
             //加入提前已知的顾客
             this->currentState.notServicedCustomer.push_back(new Order(iter->second, true));
         }
-        else
-        {
-            break;
-        }
+        this->customers[iter->second->id] = iter->second;
     }
     //状态当前车辆初始化为第一辆车
     this->currentState.currentRoute = &this->solution.routes[0];
@@ -159,6 +164,24 @@ MDP::MDP(string fileName)
     for (auto iter = this->currentState.notServicedCustomer.begin(); iter != this->currentState.notServicedCustomer.end(); ++iter)
     {
         this->currentState.reachableCustomer.push_back(*iter);
+    }
+}
+
+MDP::~MDP()
+{
+    for (auto iter = this->solution.routes.begin(); iter != this->solution.routes.end(); iter++)
+    {
+        PointOrder p = iter->head;
+        while (p != nullptr)
+        {
+            PointOrder pNext = p->next;
+            delete p;
+            p = pNext;
+        }
+    }
+    for (auto iter = this->currentState.notServicedCustomer.begin(); iter != this->currentState.notServicedCustomer.end(); ++iter)
+    {
+        delete (*iter);
     }
 }
 
