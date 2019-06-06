@@ -107,8 +107,7 @@ void MDP::findBestAction(Action *a, ValueFunction valueFunction, double *reward,
     this->integerToAction(bestActionNum, this->currentState, a);
     if (bestActionNum == -1)
     {
-        this->checkActionFeasibility(*a, reward);
-        this->undoAction(*a);
+        *reward = 10.0;
     }
 }
 

@@ -4,12 +4,12 @@
 LookupTable::LookupTable()
 {
     double initialValue = MAX_EDGE * double(CUSTOMER_NUMBER);
-    double xTick = double(MAX_WORK_TIME) / double(LOOKUP_TABLE_INITIAL),
-           yTick = double(MAX_WORK_TIME) / double(LOOKUP_TABLE_INITIAL);
+    double xTick = double(MAX_WORK_TIME) / double(X_INITIAL_ENTRY_NUM),
+           yTick = double(MAX_WORK_TIME) / double(Y_INITIAL_ENTRY_NUM);
     int entryCount = 0;
-    for (int xCount = 0; xCount < LOOKUP_TABLE_INITIAL; xCount++)
+    for (int xCount = 0; xCount < X_INITIAL_ENTRY_NUM; xCount++)
     {
-        for (int yCount = 0; yCount < LOOKUP_TABLE_INITIAL; yCount++)
+        for (int yCount = 0; yCount < Y_INITIAL_ENTRY_NUM; yCount++)
         {
             this->entryValue[entryCount] = initialValue;
             this->entryPosition[entryCount].first = floor(double(xCount) * xTick);
@@ -68,7 +68,7 @@ void LookupTable::partitionUpdate()
 void LookupTable::partition(int entryNum)
 {
     //将当前entry 再划分为4个entry，并继承相关信息
-    int newEntryIndex = this->entryValue.size();
+    int newEntryIndex = this->entryValue.size(), entrySize = this->entryValue.size();
     this->entryRange[entryNum].first = this->entryRange[entryNum].first / 2.0;
     this->entryRange[entryNum].second = this->entryRange[entryNum].second / 2.0;
     this->entryInfo[entryNum].first = this->entryInfo[entryNum].first / 4;
@@ -78,7 +78,7 @@ void LookupTable::partition(int entryNum)
     this->entryPosition[newEntryIndex + 1].second = this->entryPosition[entryNum].second;
     this->entryPosition[newEntryIndex + 2].first = floor(this->entryPosition[entryNum].first + this->entryRange[entryNum].first);
     this->entryPosition[newEntryIndex + 2].second = floor(this->entryPosition[entryNum].second + this->entryRange[entryNum].second);
-    while (newEntryIndex < this->entryValue.size() + 3)
+    while (newEntryIndex < entrySize + 3)
     {
         this->entryValue[newEntryIndex] = this->entryValue[entryNum];
         this->entryRange[newEntryIndex].first = this->entryRange[entryNum].first;
