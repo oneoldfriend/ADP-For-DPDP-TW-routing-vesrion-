@@ -11,6 +11,7 @@
 #define Y_INITIAL_ENTRY_NUM 10.0
 #define DYNAMIC_LOOKUP_TABLE 1
 #define ATTRIBUTES_NUMBER 4
+#define LAMBDA 1
 
 class Aggregation
 {
@@ -24,7 +25,7 @@ class LookupTable
 {
 public:
   map<int, double> entryValue;
-  int entryIndex[int(MAX_WORK_TIME)][int(MAX_WORK_TIME)];
+  int entryIndex[int(MAX_WORK_TIME)][int(MAX_VEHICLE * MAX_WORK_TIME)];
   map<int, pair<double, double> > entryPosition;
   map<int, pair<double, double> > entryRange;
   map<int, pair<int, vector<double> > > entryInfo;

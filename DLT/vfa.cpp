@@ -5,7 +5,7 @@ LookupTable::LookupTable()
 {
     double initialValue = MAX_EDGE * double(CUSTOMER_NUMBER);
     double xTick = double(MAX_WORK_TIME) / double(X_INITIAL_ENTRY_NUM),
-           yTick = double(MAX_WORK_TIME) / double(Y_INITIAL_ENTRY_NUM);
+           yTick = double(MAX_VEHICLE * MAX_WORK_TIME) / double(Y_INITIAL_ENTRY_NUM);
     int entryCount = 0;
     for (int xCount = 0; xCount < X_INITIAL_ENTRY_NUM; xCount++)
     {
@@ -110,7 +110,10 @@ void Aggregation::aggregate(State S, Action a)
 {
     //对执行动作后的解进行相关的信息提取
     this->currentTime = S.currentTime;
-    this->remainTime = MAX_WORK_TIME - S.currentRoute->tail->arrivalTime;
+    for (auto iter = S.pointSolution->routes.begin(); iter != S.pointSolution->routes.begin(); ++iter)
+    {
+        this->remainTime += MAX_WORK_TIME - iter->tail->arrivalTime;
+    }
 }
 
 ValueFunction::ValueFunction()
@@ -127,21 +130,26 @@ double ValueFunction::getValue(State S, Action a)
 
 void ValueFunction::updateValue(vector<pair<Aggregation, double>> valueAtThisSimulation, bool startApproximate)
 {
-    double realValue = 0.0, errorThisSim = 0.0;
-    for (auto decisionPoint = valueAtThisSimulation.rbegin(); decisionPoint != valueAtThisSimulation.rend(); ++decisionPoint)
+    double lastValue = 0;
+    double errorThisSimulation = 0.0;
+    for (auto iter = valueAtThisSimulation.rbegin(); iter != valueAtThisSimulation.rend(); ++iter)
     {
-        realValue += decisionPoint->second;
+        iter->second += lastValue;
+        lastValue = double(LAMBDA) * iter->second;
+    }
+    for (auto decisionPoint = valueAtThisSimulation.begin(); decisionPoint != valueAtThisSimulation.end(); ++decisionPoint)
+    {
         int lookX = (int)floor(decisionPoint->first.currentTime), lookY = (int)floor(decisionPoint->first.remainTime);
         int entryNum = this->lookupTable.entryIndex[lookX][lookY];
         this->lookupTable.entryInfo[entryNum].first++;
-        this->lookupTable.entryInfo[entryNum].second.push_back(realValue);
-        errorThisSim += abs(this->lookupTable.entryValue[entryNum] - realValue);
+        this->lookupTable.entryInfo[entryNum].second.push_back(decisionPoint->second);
+        errorThisSimulation += abs(this->lookupTable.entryValue[entryNum] - decisionPoint->second);
         if (startApproximate)
         {
-            this->lookupTable.entryValue[entryNum] = (1 - STEP_SIZE) * this->lookupTable.entryValue[entryNum] + STEP_SIZE * realValue;
+            this->lookupTable.entryValue[entryNum] = (1 - STEP_SIZE) * this->lookupTable.entryValue[entryNum] + STEP_SIZE * decisionPoint->second;
         }
     }
-    cout << errorThisSim << endl;
+    cout << errorThisSimulation << endl;
     if (DYNAMIC_LOOKUP_TABLE)
     {
         this->lookupTable.partitionUpdate();
