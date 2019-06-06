@@ -141,7 +141,7 @@ void ValueFunction::updateValue(vector<pair<Aggregation, double>> valueAtThisSim
         }
     }
     cout << errorThisSim << endl;
-    //this->lookupTable.partitionUpdate();
+    this->lookupTable.partitionUpdate();
 }
 
 /*ValueFunction::ValueFunction()
