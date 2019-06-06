@@ -6,9 +6,9 @@
 #define MAX_EDGE 100.0
 #define UNIT_TIME 10
 #define CUSTOMER_NUMBER 10
-#define MAX_VEHICLE 3
-#define MAX_SIMULATION 30000
-#define MAX_TEST_INSTANCE 100
+#define MAX_VEHICLE 1
+#define MAX_SIMULATION 10000
+#define MAX_TEST_INSTANCE 1000
 #define LAG_APPROXIMATE 0
 #define MYOPIC 0
 #include "mdp.h"

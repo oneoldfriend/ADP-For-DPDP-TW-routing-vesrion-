@@ -6,98 +6,96 @@ LookupTable::LookupTable()
     double initialValue = MAX_EDGE * double(CUSTOMER_NUMBER);
     double xTick = double(MAX_WORK_TIME) / double(LOOKUP_TABLE_INITIAL),
            yTick = double(MAX_WORK_TIME) / double(LOOKUP_TABLE_INITIAL);
+    int entryCount = 0;
     for (int xCount = 0; xCount < LOOKUP_TABLE_INITIAL; xCount++)
     {
         for (int yCount = 0; yCount < LOOKUP_TABLE_INITIAL; yCount++)
         {
-            Entry newEntry;
-            newEntry.x = xTick / 2.0 + double(xCount) * xTick;
-            newEntry.y = yTick / 2.0 + double(yCount) * yTick;
-            newEntry.xRange = xTick / 2.0;
-            newEntry.yRange = yTick / 2.0;
-            this->value[newEntry] = initialValue;
-        }
-    }
-    for (int i = 0; i < int(MAX_WORK_TIME); i++)
-    {
-        for (int j = 0; j < int(MAX_WORK_TIME); j++)
-        {
-            this->tableValue[i][j] = initialValue;
+            this->entryValue[entryCount] = initialValue;
+            this->entryPosition[entryCount].first = floor(double(xCount) * xTick);
+            this->entryPosition[entryCount].second = floor(double(yCount) * yTick);
+            this->entryRange[entryCount].first = xTick;
+            this->entryRange[entryCount].second = yTick;
+            for (int i = (int)this->entryPosition[entryCount].first;
+                 i < (int)floor(this->entryPosition[entryCount].first + this->entryRange[entryCount].first);
+                 i++)
+            {
+                for (int j = (int)this->entryPosition[entryCount].second;
+                     j < (int)floor(this->entryPosition[entryCount].second + this->entryRange[entryCount].second);
+                     j++)
+                {
+                    this->entryIndex[i][j] = entryCount;
+                }
+            }
+            entryCount++;
         }
     }
 }
 
 double LookupTable::lookup(Aggregation postDecisionState)
 {
-    int lookX = floor(postDecisionState.currentTime), lookY = floor(postDecisionState.remainTime);
-    return this->tableValue[lookX][lookY];
+    int lookX = (int)floor(postDecisionState.currentTime), lookY = (int)floor(postDecisionState.remainTime);
+    return this->entryValue[this->entryIndex[lookX][lookY]];
 }
 
 void LookupTable::partitionUpdate()
 {
-    map<Entry, double> entryTheta;
-    int entryNum = this->value.size();
+    map<int, double> entryTheta;
+    int entrySize = this->entryValue.size();
     double totalN = 0, totalTheta = 0;
-    for (auto tableIter = this->value.begin(); tableIter != this->value.end(); ++tableIter)
+    for (int entryCount = 0; entryCount < entrySize; entryCount++)
     {
-        totalN += this->tableInfo[tableIter->first].first;
-        entryTheta[tableIter->first] = Util::standardDeviation(this->tableInfo[tableIter->first].second);
-        totalTheta += entryTheta[tableIter->first];
+        totalN += this->entryInfo[entryCount].first;
+        entryTheta[entryCount] = Util::standardDeviation(this->entryInfo[entryCount].second);
+        totalTheta += entryTheta[entryCount];
     }
     //计算\hat{N}和\hat{theta}
-    double averageN = totalN / entryNum, averageTheta = totalTheta / entryNum;
-    auto tableIter = this->value.begin();
-    for (int count = 0; count < entryNum; count++)
+    double averageN = totalN / entrySize, averageTheta = totalTheta / entrySize;
+    for (int entryCount = 0; entryCount < entrySize; entryCount++)
     {
         //计算N/\hat{N}和theta/\hat{theta}
-        double factor1 = this->tableInfo[tableIter->first].first / averageN;
-        double factor2 = entryTheta[tableIter->first] / averageTheta;
+        double factor1 = this->entryInfo[entryCount].first / averageN;
+        double factor2 = entryTheta[entryCount] / averageTheta;
         if (factor1 * factor2 > PARTITION_THRESHOLD)
         {
             //若该entry 达到threshold，则对entry 进行再划分
             //cout << "partitioned entry: " << tableIter->first.x << " " << tableIter->first.y << endl;
-            this->partition(tableIter);
-            this->value.erase(tableIter++);
-            for (auto iter = this->value.begin(); iter != this->value.end(); ++iter)
-            {
-                //cout << iter->first.x << " " << iter->first.y << endl;
-            }
-        }
-        else
-        {
-            ++tableIter;
+            this->partition(entryCount);
         }
     }
 }
 
-void LookupTable::partition(map<Entry, double>::iterator tableIter)
+void LookupTable::partition(int entryNum)
 {
     //将当前entry 再划分为4个entry，并继承相关信息
-    Entry partition1, partition2, partition3, partition4;
-    partition1.x = tableIter->first.x + tableIter->first.xRange / 2.0;
-    partition1.y = tableIter->first.y + tableIter->first.yRange / 2.0;
-    partition1.xRange = tableIter->first.xRange / 2.0;
-    partition1.yRange = tableIter->first.yRange / 2.0;
-    partition2.x = tableIter->first.x + tableIter->first.xRange / 2.0;
-    partition2.y = tableIter->first.y - tableIter->first.yRange / 2.0;
-    partition2.xRange = tableIter->first.xRange / 2.0;
-    partition2.yRange = tableIter->first.yRange / 2.0;
-    partition3.x = tableIter->first.x - tableIter->first.xRange / 2.0;
-    partition3.y = tableIter->first.y - tableIter->first.yRange / 2.0;
-    partition3.xRange = tableIter->first.xRange / 2.0;
-    partition3.yRange = tableIter->first.yRange / 2.0;
-    partition4.x = tableIter->first.x - tableIter->first.xRange / 2.0;
-    partition4.y = tableIter->first.y + tableIter->first.yRange / 2.0;
-    partition4.xRange = tableIter->first.xRange / 2.0;
-    partition4.yRange = tableIter->first.yRange / 2.0;
-    this->value[partition1] = tableIter->second;
-    this->value[partition2] = tableIter->second;
-    this->value[partition3] = tableIter->second;
-    this->value[partition4] = tableIter->second;
-    this->tableInfo[partition1].first = this->tableInfo[tableIter->first].first / 4;
-    this->tableInfo[partition2].first = this->tableInfo[tableIter->first].first / 4;
-    this->tableInfo[partition3].first = this->tableInfo[tableIter->first].first / 4;
-    this->tableInfo[partition4].first = this->tableInfo[tableIter->first].first / 4;
+    int newEntryIndex = this->entryValue.size();
+    this->entryRange[entryNum].first = this->entryRange[entryNum].first / 2.0;
+    this->entryRange[entryNum].second = this->entryRange[entryNum].second / 2.0;
+    this->entryInfo[entryNum].first = this->entryInfo[entryNum].first / 4;
+    this->entryPosition[newEntryIndex].first = this->entryPosition[entryNum].first;
+    this->entryPosition[newEntryIndex].second = floor(this->entryPosition[entryNum].second + this->entryRange[entryNum].second);
+    this->entryPosition[newEntryIndex + 1].first = floor(this->entryPosition[entryNum].first + this->entryRange[entryNum].first);
+    this->entryPosition[newEntryIndex + 1].second = this->entryPosition[entryNum].second;
+    this->entryPosition[newEntryIndex + 2].first = floor(this->entryPosition[entryNum].first + this->entryRange[entryNum].first);
+    this->entryPosition[newEntryIndex + 2].second = floor(this->entryPosition[entryNum].second + this->entryRange[entryNum].second);
+    while (newEntryIndex < this->entryValue.size() + 3)
+    {
+        this->entryValue[newEntryIndex] = this->entryValue[entryNum];
+        this->entryRange[newEntryIndex].first = this->entryRange[entryNum].first;
+        this->entryRange[newEntryIndex].second = this->entryRange[entryNum].second;
+        this->entryInfo[newEntryIndex].first = this->entryInfo[entryNum].first;
+        for (int i = (int)this->entryPosition[newEntryIndex].first;
+                 i < (int)this->entryPosition[newEntryIndex].first + this->entryRange[newEntryIndex].first;
+                 i++)
+            {
+                for (int j = (int)this->entryPosition[newEntryIndex].second;
+                     j < (int)this->entryPosition[newEntryIndex].second + this->entryRange[newEntryIndex].second;
+                     j++)
+                {
+                    this->entryIndex[i][j] = newEntryIndex;
+                }
+            }
+    }
 }
 
 Aggregation::Aggregation()
@@ -111,14 +109,6 @@ void Aggregation::aggregate(State S, Action a)
     //对执行动作后的解进行相关的信息提取
     this->currentTime = S.currentTime;
     this->remainTime = MAX_WORK_TIME - S.currentRoute->tail->arrivalTime;
-}
-
-Entry::Entry()
-{
-    x = 0.0;
-    y = 0.0;
-    xRange = 0.0;
-    yRange = 0.0;
 }
 
 ValueFunction::ValueFunction()
@@ -139,46 +129,18 @@ void ValueFunction::updateValue(vector<pair<Aggregation, double>> valueAtThisSim
     for (auto decisionPoint = valueAtThisSimulation.rbegin(); decisionPoint != valueAtThisSimulation.rend(); ++decisionPoint)
     {
         realValue += decisionPoint->second;
-        //cout << "point: " << decisionPoint->first.currentTime << " " << decisionPoint->first.remainTime << endl;
-        for (auto tableIter = this->lookupTable.value.begin(); tableIter != this->lookupTable.value.end(); ++tableIter)
+        int lookX = (int)floor(decisionPoint->first.currentTime), lookY = (int)floor(decisionPoint->first.remainTime);
+        int entryNum = this->lookupTable.entryIndex[lookX][lookY];
+        this->lookupTable.entryInfo[entryNum].first++;
+        this->lookupTable.entryInfo[entryNum].second.push_back(realValue);
+        errorThisSim += abs(this->lookupTable.entryValue[entryNum] - realValue);
+        if (startApproximate)
         {
-            //对这次simulation 所查询过的entry 对应的value 进行更新
-            if ((decisionPoint->first.currentTime >= tableIter->first.x - tableIter->first.xRange &&
-                 decisionPoint->first.currentTime < tableIter->first.x + tableIter->first.xRange) &&
-                (decisionPoint->first.remainTime >= tableIter->first.y - tableIter->first.yRange &&
-                 decisionPoint->first.remainTime < tableIter->first.y + tableIter->first.yRange))
-            {
-                //cout << "entry: " << tableIter->first.x << " " << tableIter->first.y << endl;
-                //记录该entry 的相关信息（被查找次数和更新的value）
-                this->lookupTable.tableInfo[tableIter->first].first++;
-                /*for (auto iter = this->lookupTable.tableInfo.begin(); iter != this->lookupTable.tableInfo.end(); ++iter)
-                {
-                    cout << iter->first.x << " " << iter->first.y << " " << iter->second.first << endl;
-                }*/
-                this->lookupTable.tableInfo[tableIter->first].second.push_back(decisionPoint->second);
-                //更新value
-                errorThisSim += abs(tableIter->second - realValue);
-                if (startApproximate)
-                {
-                    tableIter->second = (1 - STEP_SIZE) * tableIter->second + STEP_SIZE * realValue;
-                }
-                int minX = floor(tableIter->first.x - tableIter->first.xRange),
-                    maxX = floor(tableIter->first.x + tableIter->first.xRange),
-                    minY = floor(tableIter->first.y - tableIter->first.yRange),
-                    maxY = floor(tableIter->first.y + tableIter->first.yRange);
-                for (int i = minX; i < maxX; i++)
-                {
-                    for (int j = minY; j < maxY; j++)
-                    {
-                        this->lookupTable.tableValue[i][j] = tableIter->second;
-                    }
-                }
-                break;
-            }
+            this->lookupTable.entryValue[entryNum] = (1 - STEP_SIZE) * this->lookupTable.entryValue[entryNum] + STEP_SIZE * realValue;
         }
     }
     cout << errorThisSim << endl;
-    this->lookupTable.partitionUpdate();
+    //this->lookupTable.partitionUpdate();
 }
 
 /*ValueFunction::ValueFunction()

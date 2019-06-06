@@ -17,37 +17,18 @@ public:
   void aggregate(State S, Action a);
   Aggregation();
 };
-class Entry
-{
-public:
-  double x, y, xRange, yRange;
-  Entry();
-  bool operator<(const Entry &other) const
-  {
-    if (x < other.x)
-    {
-      return true;
-    }
-    else if (x == other.x)
-    {
-      if (y < other.y)
-      {
-        return true;
-      }
-    }
-    return false;
-  }
-};
 
 class LookupTable
 {
 public:
-  double tableValue[int(MAX_WORK_TIME)][int(MAX_WORK_TIME)];
-  map<Entry, double> value;
-  map<Entry, pair<int, vector<double> > > tableInfo;
+  map<int, double> entryValue;
+  int entryIndex[int(MAX_WORK_TIME)][int(MAX_WORK_TIME)];
+  map<int, pair<double, double> > entryPosition;
+  map<int, pair<double, double> > entryRange;
+  map<int, pair<int, vector<double> > > entryInfo;
   double lookup(Aggregation postDecisionState);
   void partitionUpdate();
-  void partition(map<Entry, double>::iterator tableIter);
+  void partition(int entryNum);
   LookupTable();
 };
 class ValueFunction
