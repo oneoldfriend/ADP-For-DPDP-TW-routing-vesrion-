@@ -58,8 +58,9 @@ void LookupTable::partitionUpdate()
         double factor2 = entryTheta[entryCount] / averageTheta;
         if (factor1 * factor2 > PARTITION_THRESHOLD)
         {
+            cout << factor1 << " " << factor2 << " " << PARTITION_THRESHOLD << endl;
             //若该entry 达到threshold，则对entry 进行再划分
-            //cout << "partitioned entry: " << tableIter->first.x << " " << tableIter->first.y << endl;
+            cout << "partitioned entry: " << this->entryPosition[entryCount].first << " " << this->entryPosition[entryCount].second << endl;
             this->partition(entryCount);
         }
     }
@@ -141,7 +142,10 @@ void ValueFunction::updateValue(vector<pair<Aggregation, double>> valueAtThisSim
         }
     }
     cout << errorThisSim << endl;
-    this->lookupTable.partitionUpdate();
+    if (DYNAMIC_LOOKUP_TABLE)
+    {
+        this->lookupTable.partitionUpdate();
+    }
 }
 
 /*ValueFunction::ValueFunction()

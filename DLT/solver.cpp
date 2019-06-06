@@ -16,6 +16,7 @@ void Solver::solve()
         Generator::instanceGenenrator(fileName);
     }
     return;*/
+    srand(time(NULL));
 
     ValueFunction valueFunction;
     //offline approximation
@@ -45,7 +46,7 @@ void Solver::solve()
         {
             Action bestAction;
             double value;
-            simulation.findBestAction(&bestAction, valueFunction, &value);
+            simulation.findBestAction(&bestAction, valueFunction, &value, false);
             //状态转移
             simulation.transition(bestAction);
         }

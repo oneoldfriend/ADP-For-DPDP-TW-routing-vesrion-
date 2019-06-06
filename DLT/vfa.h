@@ -6,9 +6,10 @@
 //#include "Eigen/Dense"
 #include <vector>
 #define STEP_SIZE 0.3
-#define PARTITION_THRESHOLD 1.3
+#define PARTITION_THRESHOLD 1.5
 #define X_INITIAL_ENTRY_NUM 10.0
 #define Y_INITIAL_ENTRY_NUM 10.0
+#define DYNAMIC_LOOKUP_TABLE 1
 #define ATTRIBUTES_NUMBER 4
 
 class Aggregation

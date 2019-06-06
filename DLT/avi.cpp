@@ -26,7 +26,7 @@ void AVI::approximation(ValueFunction *valueFunction)
         {
             Action bestAction;
             double reward = 0.0;
-            simulation.findBestAction(&bestAction, *valueFunction, &reward);
+            simulation.findBestAction(&bestAction, *valueFunction, &reward, true);
             Aggregation postDecisionState;
             simulation.currentState.executeAction(bestAction);
             postDecisionState.aggregate(simulation.currentState, bestAction);
