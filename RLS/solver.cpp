@@ -6,7 +6,6 @@
 void Solver::solve()
 {
     //generate the test instance
-    //generate the test instance
     /*for (int instanceNum = 1; instanceNum <= MAX_TEST_INSTANCE; instanceNum++)
     {
         char dayNum[] = {char(CUSTOMER_NUMBER / 100 + 48), char(CUSTOMER_NUMBER % 100 / 10 + 48), char(CUSTOMER_NUMBER % 10 + 48), '-',
