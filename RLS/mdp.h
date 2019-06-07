@@ -47,5 +47,6 @@ public:
   void observation(double lastDecisionTime);
   void executeAction(Action a);
   void undoAction(Action a);
-  MDP(string fileName);
+  MDP(bool approx, string fileName);
+  ~MDP();
 };

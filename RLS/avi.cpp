@@ -15,11 +15,8 @@ void AVI::approximation(ValueFunction *valueFunction)
         {
             startApproximate = true;
         }
-
-        string fileName = "TrainingData.txt";
-        Generator::instanceGenenrator(fileName);
         //初始化马尔科夫决策过程
-        MDP simulation = MDP(fileName);
+        MDP simulation = MDP(true, "");
         vector<pair<Eigen::Vector4d, double> > valueAtThisSimulation;
         //开始mdp模拟
         while (simulation.currentState.currentRoute != nullptr)

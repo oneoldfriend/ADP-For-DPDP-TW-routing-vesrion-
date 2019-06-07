@@ -7,8 +7,9 @@ bool Generator::sortAscend(const pair<double, Customer *> a, const pair<double, 
     return a.first < b.first;
 }
 
-void Generator::instanceGenenrator(string fileName)
+void Generator::instanceGenenrator(bool testInstanceGenerate, list<pair<double, Customer *>> *sequenceData, string fileName)
 {
+    list<pair<double, Customer *>> generatedCustomers;
     random_device rd;
     default_random_engine e(rd());
     double shopLocation = 25.0, serviceRange = 20.0;
@@ -17,7 +18,6 @@ void Generator::instanceGenenrator(string fileName)
     uniform_real_distribution<double> shopPosY(-shopLocation, shopLocation);
     double cancellationRatio = 0.1, hurryRatio = 0.4, timeWindowLength = (shopLocation + serviceRange), blankLength = 10.0, maxDemand = 5.0, DOD = 0.8;
     double staticCustomer = double(CUSTOMER_NUMBER) * (1 - DOD);
-    list<pair<double, Customer *>> generatedCustomers;
     int customerCount = 0;
     double staticCustomerCount = 0.0;
     while (customerCount++ < CUSTOMER_NUMBER)
@@ -38,7 +38,14 @@ void Generator::instanceGenenrator(string fileName)
             char idString[] = {char(customerCount / 1000 + 48), char(customerCount % 1000 / 100 + 48),
                                char(customerCount % 100 / 10 + 48), char(customerCount % 10 + 48), '\0'};
             customer->id = idString;
-            generatedCustomers.push_back(make_pair(0, customer));
+            if (!testInstanceGenerate)
+            {
+                sequenceData->push_back(make_pair(0, customer));
+            }
+            else
+            {
+                generatedCustomers.push_back(make_pair(0, customer));
+            }
             continue;
         }
         customer->origin.x = shopPosX(e);
@@ -53,7 +60,14 @@ void Generator::instanceGenenrator(string fileName)
         char idString[] = {char(customerCount / 1000 + 48), char(customerCount % 1000 / 100 + 48),
                            char(customerCount % 100 / 10 + 48), char(customerCount % 10 + 48), '\0'};
         customer->id = idString;
-        generatedCustomers.push_back(make_pair(appearTime, customer));
+        if (!testInstanceGenerate)
+        {
+            sequenceData->push_back(make_pair(appearTime, customer));
+        }
+        else
+        {
+            generatedCustomers.push_back(make_pair(appearTime, customer));
+        }
         double isCanceled = ratio(e), isHurry = ratio(e);
         if (isCanceled <= cancellationRatio)
         {
@@ -61,7 +75,14 @@ void Generator::instanceGenenrator(string fileName)
             Util::infoCopy(cancel, customer);
             cancel->priority = 0;
             double cancelTime = customer->startTime - blankLength + ratio(e) * blankLength;
-            generatedCustomers.push_back(make_pair(cancelTime, cancel));
+            if (!testInstanceGenerate)
+            {
+                sequenceData->push_back(make_pair(cancelTime, cancel));
+            }
+            else
+            {
+                generatedCustomers.push_back(make_pair(cancelTime, cancel));
+            }
         }
         if (isHurry <= hurryRatio)
         {
@@ -69,24 +90,42 @@ void Generator::instanceGenenrator(string fileName)
             Util::infoCopy(hurry, customer);
             hurry->priority = 2;
             double hurryTime = customer->startTime + ratio(e) * timeWindowLength;
-            generatedCustomers.push_back(make_pair(hurryTime, hurry));
+            if (!testInstanceGenerate)
+            {
+                sequenceData->push_back(make_pair(hurryTime, hurry));
+            }
+            else
+            {
+                generatedCustomers.push_back(make_pair(hurryTime, hurry));
+            }
         }
     }
-    generatedCustomers.sort(sortAscend);
-    ofstream outFile(fileName, ios::out);
-    for (auto iter = generatedCustomers.begin(); iter != generatedCustomers.end(); ++iter)
+    if (!testInstanceGenerate)
     {
-        outFile << iter->first << " ";
-        outFile << iter->second->id << " ";
-        outFile << iter->second->origin.x << " ";
-        outFile << iter->second->origin.y << " ";
-        outFile << iter->second->dest.x << " ";
-        outFile << iter->second->dest.y << " ";
-        outFile << iter->second->startTime << " ";
-        outFile << iter->second->endTime << " ";
-        outFile << iter->second->weight << " ";
-        outFile << iter->second->priority << endl;
-        delete iter->second;
+        sequenceData->sort(sortAscend);
     }
-    outFile.close();
+    else
+    {
+        generatedCustomers.sort(sortAscend);
+    }
+    if (testInstanceGenerate)
+    {
+        ofstream outFile(fileName, ios::out);
+        for (auto iter = generatedCustomers.begin(); iter != generatedCustomers.end(); ++iter)
+        {
+            outFile << iter->first << " ";
+            outFile << iter->second->id << " ";
+            outFile << iter->second->origin.x << " ";
+            outFile << iter->second->origin.y << " ";
+            outFile << iter->second->dest.x << " ";
+            outFile << iter->second->dest.y << " ";
+            outFile << iter->second->startTime << " ";
+            outFile << iter->second->endTime << " ";
+            outFile << iter->second->weight << " ";
+            outFile << iter->second->priority << endl;
+            delete iter->second;
+        }
+        outFile.close();
+    }
 }
+
