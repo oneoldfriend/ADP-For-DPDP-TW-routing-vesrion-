@@ -220,9 +220,9 @@ double ValueFunction::getValue(State S, Action a, bool approx)
 
 void ValueFunction::updateValue(vector<pair<Eigen::Vector4d, double> > valueAtThisSimulation, bool startApproximate)
 {
-    if (!startApproximate)
+    if (true)
     {
-        this->matrixBeta = Eigen::Matrix4d::Identity();
+	this->matrixBeta = Eigen::Matrix4d::Identity();
     }
     double lastValue = 0;
     double errorThisSimulation = 0.0;

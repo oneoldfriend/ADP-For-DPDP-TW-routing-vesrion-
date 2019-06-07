@@ -91,7 +91,7 @@ void MDP::findBestAction(Action *a, ValueFunction valueFunction, double *reward,
         this->undoAction(tempAction);
         actionNum++;
     }
-    if (ROULETTE_WHEEL)
+    if (false)
     {
         double prob = rand() / double(RAND_MAX), cumProb = 0.0;
         for (auto iter = actionWheel.begin(); iter != actionWheel.end(); ++iter)
