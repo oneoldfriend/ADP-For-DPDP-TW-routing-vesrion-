@@ -150,7 +150,8 @@ ValueFunction::ValueFunction()
     lambda = 1;
     for (int i = 0; i < ATTRIBUTES_NUMBER; i++)
     {
-        attributesWeight[i] = 1.0;
+        this->updatedAttributesWeight[i] = 1.0;
+        this->initialAttributesWeight[i] = 1.0;
     }
     this->matrixBeta = Eigen::Matrix4d::Identity();
 }
@@ -172,15 +173,11 @@ double ValueFunction::getValue(State S, Action a, bool approx)
     {
         if (approx)
         {
-            for (int i = 0; i < ATTRIBUTES_NUMBER; i++)
-            {
-                value += S.attributes[i];
-            }
-            return value;
+            return this->initialAttributesWeight.transpose() * S.attributes;
         }
         else
         {
-            return this->attributesWeight.transpose() * S.attributes;
+            return this->updatedAttributesWeight.transpose() * S.attributes;
         }
     }
 }
@@ -218,11 +215,11 @@ double ValueFunction::getValue(State S, Action a, bool approx)
     this->lookupTable.partitionUpdate();
 }*/
 
-void ValueFunction::updateValue(vector<pair<Eigen::Vector4d, double> > valueAtThisSimulation, bool startApproximate)
+void ValueFunction::updateValue(vector<pair<Eigen::Vector4d, double>> valueAtThisSimulation, bool startApproximate)
 {
     if (true)
     {
-	this->matrixBeta = Eigen::Matrix4d::Identity();
+        this->matrixBeta = Eigen::Matrix4d::Identity();
     }
     double lastValue = 0;
     double errorThisSimulation = 0.0;
@@ -233,22 +230,17 @@ void ValueFunction::updateValue(vector<pair<Eigen::Vector4d, double> > valueAtTh
     }
     for (auto iter = valueAtThisSimulation.begin(); iter != valueAtThisSimulation.end(); ++iter)
     {
-        //cout << "real value: " << realValue << endl << "estimated value(before update):" << this->attributesWeight.transpose() * iter->first << endl;
-        /*double nextStateValue = 0.0;
-        if (++iter != valueAtThisSimulation.end())
-        {
-            nextStateValue = this->attributesWeight.transpose() * iter->first;
-        }
-        else
-        {
-            nextStateValue = 0.0;
-        }
-        --iter;*/
         double gammaN = 1.0 + iter->first.transpose() * this->matrixBeta * iter->first,
-               error = this->attributesWeight.transpose() * iter->first - iter->second; //(iter->second + nextStateValue);
+               error = this->updatedAttributesWeight.transpose() * iter->first - iter->second;
         this->matrixBeta = this->matrixBeta - 1.0 / gammaN * (this->matrixBeta * iter->first * iter->first.transpose() * this->matrixBeta);
-        this->attributesWeight = this->attributesWeight - 1 / gammaN * this->matrixBeta * iter->first * error;
-        //cout << "estimated value(after update):" << this->attributesWeight.transpose() * iter->first << endl;
+        this->updatedAttributesWeight = this->updatedAttributesWeight - 1 / gammaN * this->matrixBeta * iter->first * error;
+        if (!startApproximate)
+        {
+            for (int i = 0; i < ATTRIBUTES_NUMBER; i++)
+            {
+                this->initialAttributesWeight[i] = this->updatedAttributesWeight[i];
+            }
+        }
         errorThisSimulation += error;
     }
     cout << abs(errorThisSimulation) << endl;

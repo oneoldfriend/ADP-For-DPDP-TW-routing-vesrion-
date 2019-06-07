@@ -56,7 +56,8 @@ public:
   LookupTable lookupTable;
   double lambda;
   Eigen::Matrix4d matrixBeta;
-  Eigen::Vector4d attributesWeight;
+  Eigen::Vector4d updatedAttributesWeight;
+  Eigen::Vector4d initialAttributesWeight;
   //double getValue(Aggregation postDecisionState, double reward);
   double getValue(State S, Action a, bool approx);
   //void updateValue(vector<pair<Aggregation, double>> valueAtThisSimulation, bool startApproximate);

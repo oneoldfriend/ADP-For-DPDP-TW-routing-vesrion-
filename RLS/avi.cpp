@@ -23,14 +23,7 @@ void AVI::approximation(ValueFunction *valueFunction)
         {
             Action bestAction;
             double reward = 0.0;
-            if (startApproximate)
-            {
-                simulation.findBestAction(&bestAction, *valueFunction, &reward, true);
-            }
-            else
-            {
-                simulation.findBestAction(&bestAction, *valueFunction, &reward, false);
-            }
+            simulation.findBestAction(&bestAction, *valueFunction, &reward, startApproximate);
             //记录这次sample path的信息
             simulation.executeAction(bestAction);
             simulation.currentState.calcAttribute();
