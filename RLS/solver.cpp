@@ -66,6 +66,6 @@ void Solver::solve()
     {
         rejectionSum += *iter;
     }
-    cout << "Test Average Cost: " << resultSum / double(testResult.size()) << " " << rejectionSum / double(rejection.size()) << endl;
+    cout << "Test Average Cost: " << resultSum / double(testResult.size()) << " " << rejectionSum / double(rejection.size()) << " " << resultSum / double(testResult.size()) + rejectionSum / double(rejection.size()) << endl;
     return;
 }
