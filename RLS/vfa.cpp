@@ -215,7 +215,7 @@ double ValueFunction::getValue(State S, Action a, bool approx)
     this->lookupTable.partitionUpdate();
 }*/
 
-void ValueFunction::updateValue(vector<pair<Eigen::Vector4d, double>> valueAtThisSimulation, bool startApproximate)
+void ValueFunction::updateValue(vector<pair<Eigen::Vector4d, double> > valueAtThisSimulation, bool startApproximate)
 {
     if (true)
     {
@@ -228,6 +228,7 @@ void ValueFunction::updateValue(vector<pair<Eigen::Vector4d, double>> valueAtThi
         iter->second += lastValue;
         lastValue = double(LAMBDA) * iter->second;
     }
+    Eigen::Vector4d oldAttributesWeight = this->updatedAttributesWeight;
     for (auto iter = valueAtThisSimulation.begin(); iter != valueAtThisSimulation.end(); ++iter)
     {
         double gammaN = 1.0 + iter->first.transpose() * this->matrixBeta * iter->first,
@@ -241,7 +242,10 @@ void ValueFunction::updateValue(vector<pair<Eigen::Vector4d, double>> valueAtThi
                 this->initialAttributesWeight[i] = this->updatedAttributesWeight[i];
             }
         }
-        errorThisSimulation += error;
     }
-    cout << abs(errorThisSimulation) << endl;
+    for (int i = 0; i < ATTRIBUTES_NUMBER; i++)
+    {
+        errorThisSimulation += abs(this->updatedAttributesWeight[i] - oldAttributesWeight[i]);
+    }
+    cout << errorThisSimulation << endl;
 }
