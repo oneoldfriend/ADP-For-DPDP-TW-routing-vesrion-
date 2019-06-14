@@ -164,7 +164,6 @@ ValueFunction::ValueFunction()
 double ValueFunction::getValue(State S, Action a, bool approx)
 {
     S.calcAttribute();
-    double value = 0.0; //this->attributesWeight.transpose() * S.attributes;
     if (MYOPIC)
     {
         return 0;
@@ -215,14 +214,11 @@ double ValueFunction::getValue(State S, Action a, bool approx)
     this->lookupTable.partitionUpdate();
 }*/
 
-void ValueFunction::updateValue(vector<pair<Eigen::Vector4d, double> > valueAtThisSimulation, bool startApproximate)
+void ValueFunction::updateValue(vector<pair<Eigen::Vector4d, double>> valueAtThisSimulation, bool startApproximate)
 {
-    if (true)
-    {
-        this->matrixBeta = Eigen::Matrix4d::Identity();
-    }
+    //this->matrixBeta = Eigen::Matrix4d::Identity();
     double lastValue = 0;
-    double errorThisSimulation = 0.0;
+    double weightErrorThisSimulation = 0.0, valueErrorThisSimulation = 0.0;
     for (auto iter = valueAtThisSimulation.rbegin(); iter != valueAtThisSimulation.rend(); ++iter)
     {
         iter->second += lastValue;
@@ -233,8 +229,9 @@ void ValueFunction::updateValue(vector<pair<Eigen::Vector4d, double> > valueAtTh
     {
         double gammaN = 1.0 + iter->first.transpose() * this->matrixBeta * iter->first,
                error = this->updatedAttributesWeight.transpose() * iter->first - iter->second;
-        this->matrixBeta = this->matrixBeta - 1.0 / gammaN * (this->matrixBeta * iter->first * iter->first.transpose() * this->matrixBeta);
         this->updatedAttributesWeight = this->updatedAttributesWeight - 1 / gammaN * this->matrixBeta * iter->first * error;
+        //cout << 1 / gammaN * this->matrixBeta << endl;
+        this->matrixBeta = this->matrixBeta - 1.0 / gammaN * (this->matrixBeta * iter->first * iter->first.transpose() * this->matrixBeta);
         if (!startApproximate)
         {
             for (int i = 0; i < ATTRIBUTES_NUMBER; i++)
@@ -242,10 +239,11 @@ void ValueFunction::updateValue(vector<pair<Eigen::Vector4d, double> > valueAtTh
                 this->initialAttributesWeight[i] = this->updatedAttributesWeight[i];
             }
         }
+        valueErrorThisSimulation += abs(error);
     }
     for (int i = 0; i < ATTRIBUTES_NUMBER; i++)
     {
-        errorThisSimulation += abs(this->updatedAttributesWeight[i] - oldAttributesWeight[i]);
+        weightErrorThisSimulation += abs(this->updatedAttributesWeight[i] - oldAttributesWeight[i]);
     }
-    cout << errorThisSimulation << endl;
+    //cout << weightErrorThisSimulation << " " << valueErrorThisSimulation / valueAtThisSimulation.size() << endl;
 }

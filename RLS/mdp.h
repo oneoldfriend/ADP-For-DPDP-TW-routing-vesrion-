@@ -16,6 +16,9 @@ class Action
 {
 public:
   PointOrder positionToVisit;
+  pair<PointOrder, PointOrder> destPosBeforeExecution;
+  map<Customer *, bool> customerConfirmation;
+  double rejectionReward();
 };
 
 class State
@@ -25,7 +28,8 @@ public:
   double currentTime;
   Solution *pointSolution;
   Eigen::Vector4d attributes;
-  vector<PointOrder> notServicedCustomer;
+  vector<Customer*> newCustomers;
+  map<string, pair<PointOrder, PointOrder> > notServicedCustomer;
   vector<PointOrder> reachableCustomer;
   void calcAttribute();
   State();
@@ -35,14 +39,19 @@ class MDP
 {
 public:
   Solution solution;
-  double cumRejectionReward;
+  double cumOutsourcedCost;
   State currentState;
   list<pair<double, Customer *> > sequenceData;
   map<string, Customer*> customers;
-  bool checkActionFeasibility(Action a, double *reward);
-  void findBestAction(Action *a, ValueFunction valueFunction, double *reward, bool approx);
-  void integerToAction(int actionNum, State S, Action *a);
+  bool checkAssignmentActionFeasibility(Action a, double *reward);
+  bool checkRoutingActionFeasibility(Action a, double *reward);
+  void findBestAssignmentAction(Action *a, ValueFunction valueFunction);
+  void findBestRoutingAction(Action *a, ValueFunction valueFunction, double *reward, bool approx);
+  void integerToRoutingAction(int actionNum, State S, Action *a);
+  void integerToAssignmentAction(int actionNum, State S, Action *a);
   void transition(Action a);
+  void checkIgnorance(Action a);
+  void assignmentConfirmed(Action a);
   double reward(State S, Action a);
   void observation(double lastDecisionTime);
   void executeAction(Action a);

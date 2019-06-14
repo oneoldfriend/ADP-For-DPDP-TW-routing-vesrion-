@@ -17,18 +17,20 @@ void AVI::approximation(ValueFunction *valueFunction)
         }
         //初始化马尔科夫决策过程
         MDP simulation = MDP(true, "");
-        vector<pair<Eigen::Vector4d, double> > valueAtThisSimulation;
+        vector<pair<Eigen::Vector4d, double>> valueAtThisSimulation;
         //开始mdp模拟
         while (simulation.currentState.currentRoute != nullptr)
         {
             Action bestAction;
-            double reward = 0.0;
-            simulation.findBestAction(&bestAction, *valueFunction, &reward, startApproximate);
+            double routingReward = 0.0;
+            simulation.findBestAssignmentAction(&bestAction, *valueFunction);
+            simulation.assignmentConfirmed(bestAction);
+            simulation.findBestRoutingAction(&bestAction, *valueFunction, &routingReward, startApproximate);
             //记录这次sample path的信息
             simulation.executeAction(bestAction);
             simulation.currentState.calcAttribute();
             simulation.undoAction(bestAction);
-            valueAtThisSimulation.push_back(make_pair(simulation.currentState.attributes, reward));
+            valueAtThisSimulation.push_back(make_pair(simulation.currentState.attributes, routingReward));
             //状态转移
             simulation.transition(bestAction);
         }
@@ -39,7 +41,7 @@ void AVI::approximation(ValueFunction *valueFunction)
             valueSum += iter->second;
         }
         simulation.solution.calcCost();
-        //cout << totalSimulationCount << " " << simulation.solution.cost << " " << simulation.solution.penalty << " " << simulation.solution.waitTime << " " << valueSum << endl;
+        cout << totalSimulationCount << " " << simulation.solution.cost << " " << simulation.solution.penalty << " " << simulation.solution.waitTime << " " << simulation.solution.cost + simulation.cumOutsourcedCost << " " << valueSum << endl;
         valueFunction->updateValue(valueAtThisSimulation, startApproximate);
         for (auto iter = simulation.customers.begin(); iter != simulation.customers.end(); ++iter)
         {

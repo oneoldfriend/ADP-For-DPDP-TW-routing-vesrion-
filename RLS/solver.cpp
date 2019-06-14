@@ -47,8 +47,10 @@ void Solver::solve()
         while (simulation.currentState.currentRoute != nullptr)
         {
             Action bestAction;
-            double value;
-            simulation.findBestAction(&bestAction, valueFunction, &value, false);
+            double routingReward = 0.0;
+            simulation.findBestAssignmentAction(&bestAction, valueFunction);
+            simulation.assignmentConfirmed(bestAction);
+            simulation.findBestRoutingAction(&bestAction, valueFunction, &routingReward, false);
             //状态转移
             simulation.transition(bestAction);
         }
