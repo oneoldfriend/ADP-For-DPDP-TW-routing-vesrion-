@@ -245,5 +245,5 @@ void ValueFunction::updateValue(vector<pair<Eigen::Vector4d, double>> valueAtThi
     {
         weightErrorThisSimulation += abs(this->updatedAttributesWeight[i] - oldAttributesWeight[i]);
     }
-    //cout << weightErrorThisSimulation << " " << valueErrorThisSimulation / valueAtThisSimulation.size() << endl;
+    cout << weightErrorThisSimulation << " " << valueErrorThisSimulation / valueAtThisSimulation.size() << endl;
 }

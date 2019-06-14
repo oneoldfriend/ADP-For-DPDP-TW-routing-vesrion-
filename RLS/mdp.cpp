@@ -160,7 +160,7 @@ void MDP::findBestAssignmentAction(Action *a, ValueFunction valueFunction)
 
 void MDP::findBestRoutingAction(Action *a, ValueFunction valueFunction, double *reward, bool approx)
 {
-    int actionNum = -1, maxActionNum = this->currentState.reachableCustomer.size(), bestActionNum = -1;
+    int actionNum = 0, maxActionNum = this->currentState.reachableCustomer.size(), bestActionNum = -1;
     double bestActionValue = MAX_COST, totalValue = 0.0;
     map<int, double> actionWheel;
     while (actionNum < maxActionNum)

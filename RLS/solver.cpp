@@ -56,8 +56,8 @@ void Solver::solve()
         }
         simulation.solution.calcCost();
         testResult.push_back(simulation.solution.cost);
-        rejection.push_back(simulation.currentState.notServicedCustomer.size() * MAX_WORK_TIME);
-        cout << simulation.solution.cost << " " << simulation.solution.penalty << " " << simulation.solution.waitTime << " " << simulation.solution.travelTime << " " << simulation.currentState.notServicedCustomer.size() * MAX_WORK_TIME << endl;
+        rejection.push_back(simulation.cumOutsourcedCost);
+        cout << simulation.solution.cost << " " << simulation.solution.penalty << " " << simulation.solution.waitTime << " " << simulation.cumOutsourcedCost << " " << simulation.solution.cost + simulation.cumOutsourcedCost << endl;
     }
     double resultSum = 0, rejectionSum = 0;
     for (auto iter = testResult.begin(); iter != testResult.end(); ++iter)
