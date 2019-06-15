@@ -24,11 +24,11 @@ void Solver::solve()
     AVI approximateValueIterate;
     if (!MYOPIC)
     {
-        cout << "starting approximation!\n"
-             << endl;
+        //cout << "starting approximation!\n"
+        //     << endl;
         approximateValueIterate.approximation(&valueFunction);
-        cout << "finished approximation!\n"
-             << endl;
+        //cout << "finished approximation!\n"
+        //     << endl;
     }
 
     //online solving
@@ -57,7 +57,7 @@ void Solver::solve()
         simulation.solution.calcCost();
         testResult.push_back(simulation.solution.cost);
         rejection.push_back(simulation.cumOutsourcedCost);
-        cout << simulation.solution.cost << " " << simulation.solution.penalty << " " << simulation.solution.waitTime << " " << simulation.cumOutsourcedCost << " " << simulation.solution.cost + simulation.cumOutsourcedCost << endl;
+        //cout << simulation.solution.cost << " " << simulation.solution.penalty << " " << simulation.solution.waitTime << " " << simulation.cumOutsourcedCost << " " << simulation.solution.cost + simulation.cumOutsourcedCost << endl;
     }
     double resultSum = 0, rejectionSum = 0;
     for (auto iter = testResult.begin(); iter != testResult.end(); ++iter)
@@ -68,6 +68,6 @@ void Solver::solve()
     {
         rejectionSum += *iter;
     }
-    cout << "Test Average Cost: " << resultSum / double(testResult.size()) << " " << rejectionSum / double(rejection.size()) << " " << resultSum / double(testResult.size()) + rejectionSum / double(rejection.size()) << endl;
+    cout << "Test Average Cost: " << resultSum / double(testResult.size()) << " " << rejectionSum / double(rejection.size()) / MAX_WORK_TIME << " " << resultSum / double(testResult.size()) + rejectionSum / double(rejection.size()) << endl;
     return;
 }

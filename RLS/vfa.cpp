@@ -153,7 +153,7 @@ ValueFunction::ValueFunction()
         this->updatedAttributesWeight[i] = 1.0;
         this->initialAttributesWeight[i] = 1.0;
     }
-    this->matrixBeta = Eigen::Matrix4d::Identity();
+    this->matrixBeta = MAX_EDGE * CUSTOMER_NUMBER / MAX_VEHICLE * Eigen::Matrix4d::Identity();
 }
 
 /*double ValueFunction::getValue(Aggregation postDecisionState, double reward)
@@ -216,6 +216,7 @@ double ValueFunction::getValue(State S, Action a, bool approx)
 
 void ValueFunction::updateValue(vector<pair<Eigen::Vector4d, double>> valueAtThisSimulation, bool startApproximate)
 {
+    //this->matrixBeta = MAX_EDGE * CUSTOMER_NUMBER / MAX_VEHICLE * Eigen::Matrix4d::Identity();
     //this->matrixBeta = Eigen::Matrix4d::Identity();
     double lastValue = 0;
     double weightErrorThisSimulation = 0.0, valueErrorThisSimulation = 0.0;
@@ -245,5 +246,5 @@ void ValueFunction::updateValue(vector<pair<Eigen::Vector4d, double>> valueAtThi
     {
         weightErrorThisSimulation += abs(this->updatedAttributesWeight[i] - oldAttributesWeight[i]);
     }
-    cout << weightErrorThisSimulation << " " << valueErrorThisSimulation / valueAtThisSimulation.size() << endl;
+    cout << weightErrorThisSimulation << "," << valueErrorThisSimulation << endl;
 }
