@@ -5,3 +5,6 @@ adp
 TrainingData.txt
 *.txt
 *.out
+*.csv
+Eigen
+TestData
