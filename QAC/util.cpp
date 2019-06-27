@@ -33,3 +33,34 @@ double Util::calcTravelTime(Position a, Position b)
 {
     return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2));
 }
+
+int Util::softmax(map<int, double> data, Eigen::Vector4d *scoreExpectation, map<int, Eigen::Vector4d> actionScoreSample)
+{
+    double maxData = data.begin()->second;
+    for (auto iter = data.begin(); iter != data.end(); ++iter)
+    {
+        if (maxData < iter->second)
+        {
+            maxData = iter->second;
+        }
+    }
+    double denominator = 0;
+    for (auto iter = data.begin(); iter != data.end(); ++iter)
+    {
+        iter->second = exp(iter->second - maxData);
+        denominator += iter->second;
+    }
+    int chosenOne = -1;
+    double prob = rand() / double(RAND_MAX), cumProb = 0.0;
+    for (auto iter = data.begin(); iter != data.end(); ++iter)
+    {
+        cumProb += iter->second / denominator;
+        *scoreExpectation += iter->second / denominator * actionScoreSample[iter->first];
+        if (prob <= cumProb)
+        {
+            chosenOne = iter->first;
+            prob = 2.0;
+        }
+    }
+    return chosenOne;
+}

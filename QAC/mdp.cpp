@@ -162,30 +162,20 @@ void MDP::findBestAssignmentAction(Action *a, ValueFunction valueFunction)
 void MDP::findBestRoutingAction(Action *a, ValueFunction valueFunction, double *reward, bool approx, Eigen::Vector4d *score)
 {
     int actionNum = 0, maxActionNum = this->currentState.reachableCustomer.size(), bestActionNum = -1;
-    double bestActionValue = MAX_COST, totalValue = 0.0;
     map<int, double> actionWheel;
     map<int, Eigen::Vector4d> actionScoreSample;
+    map<int, double> actionReward;
     while (actionNum < maxActionNum)
     {
         //检查每个可能动作的可行性并对可行动作进行评估
         Action tempAction;
-        double actionValue = 0;
         this->integerToRoutingAction(actionNum, this->currentState, &tempAction);
         double immediateReward = 0;
         if (this->checkRoutingActionFeasibility(tempAction, &immediateReward))
         {
-            long double downStreamValue = valueFunction.getValue(this->currentState, tempAction, true);
-            //若动作可行，则进行评估
-            actionValue = immediateReward + downStreamValue;
-            if (actionValue < bestActionValue)
-            {
-                //记录更优的动作
-                *reward = immediateReward;
-                bestActionValue = actionValue;
-                bestActionNum = actionNum;
-            }
-            totalValue += exp(downStreamValue);
-            actionWheel[actionNum] = exp(downStreamValue);
+            double downStreamValue = valueFunction.getValue(this->currentState, tempAction, true);
+            actionWheel[actionNum] = downStreamValue;
+            actionReward[actionNum] = immediateReward;
             this->currentState.calcAttribute();
             actionScoreSample[actionNum] = this->currentState.attributes;
         }
@@ -193,26 +183,11 @@ void MDP::findBestRoutingAction(Action *a, ValueFunction valueFunction, double *
         this->currentState.undoAction(tempAction);
         actionNum++;
     }
-    //softmax
-    if (true)
-    {
-        double prob = rand() / double(RAND_MAX), cumProb = 0.0;
-        for (auto iter = actionWheel.begin(); iter != actionWheel.end(); ++iter)
-        {
-            cumProb += iter->second / totalValue;
-            if (prob <= cumProb)
-            {
-                bestActionNum = iter->first;
-                break;
-            }
-        }
-    }
     Eigen::Vector4d scoreExpectation;
-    for (auto iter = actionScoreSample.begin(); iter != actionScoreSample.end(); ++iter)
-    {
-        scoreExpectation += actionWheel[iter->first] / totalValue * iter->second;
-    }
+
+    bestActionNum = Util::softmax(actionWheel, &scoreExpectation, actionScoreSample);
     *score = actionScoreSample[bestActionNum] - scoreExpectation;
+    *reward = -actionReward[bestActionNum];
     this->integerToRoutingAction(bestActionNum, this->currentState, a);
 }
 

@@ -27,7 +27,6 @@ void AVI::approximation(ValueFunction *valueFunction)
         simulation.findBestAssignmentAction(&bestAction, *valueFunction);
         simulation.assignmentConfirmed(bestAction);
         simulation.findBestRoutingAction(&bestAction, *valueFunction, &routingReward, startApproximate, &currentScore);
-        cout << currentScore << endl;
         //开始mdp模拟
         while (simulation.currentState.currentRoute != nullptr)
         {
@@ -40,6 +39,11 @@ void AVI::approximation(ValueFunction *valueFunction)
             //状态转移
             simulation.transition(bestAction);
             //对下一次状态采样
+            if (simulation.currentState.currentRoute == nullptr)
+            {
+                break;
+            }
+            bestAction = Action();
             simulation.findBestAssignmentAction(&bestAction, *valueFunction);
             simulation.assignmentConfirmed(bestAction);
             simulation.findBestRoutingAction(&bestAction, *valueFunction, &routingReward, startApproximate, &nextScore);

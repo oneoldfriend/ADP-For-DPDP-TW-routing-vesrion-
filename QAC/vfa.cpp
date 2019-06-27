@@ -35,7 +35,15 @@ void ValueFunction::updateValue(pair<Eigen::Vector4d, double> infoAtCurrentState
     nextState.executeAction(actionForNextState);
     nextState.calcAttribute();
     double estimateValueForCurrentState = this->criticWeights.transpose() * infoAtCurrentState.first;
+    cout << estimateValueForCurrentState << endl;
     double error = infoAtCurrentState.second + GAMMA * this->getValue(nextState, actionForNextState, false) - estimateValueForCurrentState;
-    this->actorWeights = this->actorWeights + STEP_SIZE * score * estimateValueForCurrentState;
+    cout << error << endl;
+    this->actorWeights = this->actorWeights - STEP_SIZE * score * estimateValueForCurrentState;
     this->criticWeights = this->criticWeights + BETA * error * infoAtCurrentState.first;
+    cout << error + estimateValueForCurrentState - this->criticWeights.transpose() * infoAtCurrentState.first << endl;
+    cout << "actor weights" << endl;
+    cout << this->actorWeights << endl;
+    cout << "critic weights" << endl;
+    cout << this->criticWeights << endl;
+    nextState.undoAction(actionForNextState);
 }

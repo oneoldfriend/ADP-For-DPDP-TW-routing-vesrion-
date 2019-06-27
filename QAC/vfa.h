@@ -5,13 +5,12 @@
 #include "util.h"
 #include "Eigen/Dense"
 #include <vector>
-#define STEP_SIZE 0.3
 #define PARTITION_THRESHOLD 1.0
 #define LOOKUP_TABLE_INITIAL 10.0
 #define ATTRIBUTES_NUMBER 4
-#define LAMBDA 0.8
-#define GAMMA 0.9
-#define BETA 0.9
+#define STEP_SIZE 0.3
+#define GAMMA 0.98
+#define BETA 0.01
 
 class ValueFunction
 {
