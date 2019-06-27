@@ -8,6 +8,7 @@ ValueFunction::ValueFunction()
         this->actorWeights[i] = 1.0;
         this->criticWeights[i] = 1.0;
     }
+    this->matrixBeta = MAX_EDGE * CUSTOMER_NUMBER / MAX_VEHICLE * Eigen::Matrix4d::Identity();
 }
 
 double ValueFunction::getValue(State S, Action a, bool actor)
@@ -30,20 +31,37 @@ double ValueFunction::getValue(State S, Action a, bool actor)
     }
 }
 
-void ValueFunction::updateValue(pair<Eigen::Vector4d, double> infoAtCurrentState, State nextState, Action actionForNextState, Eigen::Vector4d score)
+void ValueFunction::updateActor(pair<Eigen::Vector4d, double> infoAtCurrentState, State nextState, Action actionForNextState, Eigen::Vector4d score)
 {
     nextState.executeAction(actionForNextState);
     nextState.calcAttribute();
     double estimateValueForCurrentState = this->criticWeights.transpose() * infoAtCurrentState.first;
-    cout << estimateValueForCurrentState << endl;
-    double error = infoAtCurrentState.second + GAMMA * this->getValue(nextState, actionForNextState, false) - estimateValueForCurrentState;
-    cout << error << endl;
     this->actorWeights = this->actorWeights - STEP_SIZE * score * estimateValueForCurrentState;
-    this->criticWeights = this->criticWeights + BETA * error * infoAtCurrentState.first;
-    cout << error + estimateValueForCurrentState - this->criticWeights.transpose() * infoAtCurrentState.first << endl;
-    cout << "actor weights" << endl;
-    cout << this->actorWeights << endl;
-    cout << "critic weights" << endl;
-    cout << this->criticWeights << endl;
     nextState.undoAction(actionForNextState);
 }
+
+
+void ValueFunction::updateCritic(vector<pair<Eigen::Vector4d, double>> valueAtThisSimulation, bool startApproximate)
+{
+    double lastValue = 0;
+    double weightErrorThisSimulation = 0.0, valueErrorThisSimulation = 0.0;
+    for (auto iter = valueAtThisSimulation.rbegin(); iter != valueAtThisSimulation.rend(); ++iter)
+    {
+        iter->second += lastValue;
+        lastValue = double(LAMBDA) * iter->second;
+    }
+    Eigen::Vector4d oldAttributesWeight = this->criticWeights;
+    for (auto iter = valueAtThisSimulation.begin(); iter != valueAtThisSimulation.end(); ++iter)
+    {
+        double gammaN = 1.0 + iter->first.transpose() * this->matrixBeta * iter->first,
+               error = this->criticWeights.transpose() * iter->first - iter->second;
+        this->criticWeights = this->criticWeights - 1 / gammaN * this->matrixBeta * iter->first * error;
+        this->matrixBeta = this->matrixBeta - 1.0 / gammaN * (this->matrixBeta * iter->first * iter->first.transpose() * this->matrixBeta);
+        valueErrorThisSimulation += abs(error);
+    }
+    for (int i = 0; i < ATTRIBUTES_NUMBER; i++)
+    {
+        weightErrorThisSimulation += abs(this->criticWeights[i] - oldAttributesWeight[i]);
+    }
+}
+

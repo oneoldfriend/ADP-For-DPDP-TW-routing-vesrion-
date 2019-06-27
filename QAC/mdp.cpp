@@ -187,7 +187,7 @@ void MDP::findBestRoutingAction(Action *a, ValueFunction valueFunction, double *
 
     bestActionNum = Util::softmax(actionWheel, &scoreExpectation, actionScoreSample);
     *score = actionScoreSample[bestActionNum] - scoreExpectation;
-    *reward = -actionReward[bestActionNum];
+    *reward = actionReward[bestActionNum];
     this->integerToRoutingAction(bestActionNum, this->currentState, a);
 }
 
