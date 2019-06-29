@@ -47,6 +47,7 @@ int Util::softmax(map<int, double> data, Eigen::Vector4d *scoreExpectation, map<
     double denominator = 0;
     for (auto iter = data.begin(); iter != data.end(); ++iter)
     {
+        //cout << iter->second << " " << maxData << endl;
         iter->second = exp(iter->second - maxData);
         denominator += iter->second;
     }
@@ -55,6 +56,7 @@ int Util::softmax(map<int, double> data, Eigen::Vector4d *scoreExpectation, map<
     for (auto iter = data.begin(); iter != data.end(); ++iter)
     {
         cumProb += iter->second / denominator;
+        //cout << iter->second / denominator << " " << cumProb << endl;
         *scoreExpectation += iter->second / denominator * actionScoreSample[iter->first];
         if (prob <= cumProb)
         {
@@ -62,5 +64,6 @@ int Util::softmax(map<int, double> data, Eigen::Vector4d *scoreExpectation, map<
             prob = 2.0;
         }
     }
+    //cout << chosenOne << endl;
     return chosenOne;
 }

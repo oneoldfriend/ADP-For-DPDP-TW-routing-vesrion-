@@ -44,20 +44,34 @@ void Solver::solve()
         string fileName = "TestData/";
         fileName = fileName + dayNum + ".txt";
         MDP simulation = MDP(false, fileName);
+        Eigen::Vector4d currentScore;
+        Eigen::Vector4d nextScore;
+        Action bestAction;
+        double routingReward = 0.0, valueSum = 0.0;
+        simulation.findBestAssignmentAction(&bestAction, valueFunction);
+        simulation.assignmentConfirmed(bestAction);
+        simulation.findBestRoutingAction(&bestAction, valueFunction, &routingReward, true, &currentScore);
+        //开始mdp模拟
         while (simulation.currentState.currentRoute != nullptr)
         {
-            Action bestAction;
-            double routingReward = 0.0;
-            simulation.findBestAssignmentAction(&bestAction, valueFunction);
-            simulation.assignmentConfirmed(bestAction);
-            simulation.findBestRoutingAction(&bestAction, valueFunction, &routingReward, false, nullptr);
+            valueSum += routingReward;
             //状态转移
             simulation.transition(bestAction);
+            //对下一次状态采样
+            if (simulation.currentState.currentRoute == nullptr)
+            {
+                break;
+            }
+            bestAction = Action();
+            simulation.findBestAssignmentAction(&bestAction, valueFunction);
+            simulation.assignmentConfirmed(bestAction);
+            simulation.findBestRoutingAction(&bestAction, valueFunction, &routingReward, true, &nextScore);
+            currentScore = nextScore;
         }
         simulation.solution.calcCost();
         testResult.push_back(simulation.solution.cost);
         rejection.push_back(simulation.cumOutsourcedCost);
-        //cout << simulation.solution.cost << " " << simulation.solution.penalty << " " << simulation.solution.waitTime << " " << simulation.cumOutsourcedCost << " " << simulation.solution.cost + simulation.cumOutsourcedCost << endl;
+        cout << simulation.solution.cost << " " << simulation.solution.penalty << " " << simulation.solution.waitTime << " " << simulation.cumOutsourcedCost << " " << simulation.solution.cost + simulation.cumOutsourcedCost << endl;
     }
     double resultSum = 0, rejectionSum = 0;
     for (auto iter = testResult.begin(); iter != testResult.end(); ++iter)

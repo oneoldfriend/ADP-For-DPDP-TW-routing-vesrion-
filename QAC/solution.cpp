@@ -111,7 +111,7 @@ void Solution::solutionDelete()
 void Solution::calcInfo()
 {
     this->info[0] = MAX_EDGE;
-    int deliveredWeights = 0, availableVehicle = 0;
+    int deliveredParcels = 0, availableVehicle = 0;
     double availableTime = 0.0;
     for (auto routeIter = this->routes.begin(); routeIter != this->routes.end(); routeIter++)
     {
@@ -121,16 +121,16 @@ void Solution::calcInfo()
             availableVehicle++;
         }
         PointOrder p = routeIter->head;
-        while (p != routeIter->currentPos)
+        while (p != routeIter->currentPos->next)
         {
             if (!p->isOrigin)
             {
-                deliveredWeights++;
+                deliveredParcels++;
             }
             p = p->next;
         }
     }
     this->info[1] = availableTime;
-    this->info[2] = deliveredWeights;
+    this->info[2] = deliveredParcels;
     this->info[3] = availableVehicle;
 }

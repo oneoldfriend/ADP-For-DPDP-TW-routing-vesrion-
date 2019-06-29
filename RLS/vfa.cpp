@@ -230,6 +230,7 @@ void ValueFunction::updateValue(vector<pair<Eigen::Vector4d, double>> valueAtThi
     {
         double gammaN = 1.0 + iter->first.transpose() * this->matrixBeta * iter->first,
                error = this->updatedAttributesWeight.transpose() * iter->first - iter->second;
+        //cout << this->updatedAttributesWeight.transpose() * iter->first << endl;
         this->updatedAttributesWeight = this->updatedAttributesWeight - 1 / gammaN * this->matrixBeta * iter->first * error;
         //cout << 1 / gammaN * this->matrixBeta << endl;
         this->matrixBeta = this->matrixBeta - 1.0 / gammaN * (this->matrixBeta * iter->first * iter->first.transpose() * this->matrixBeta);
@@ -246,5 +247,5 @@ void ValueFunction::updateValue(vector<pair<Eigen::Vector4d, double>> valueAtThi
     {
         weightErrorThisSimulation += abs(this->updatedAttributesWeight[i] - oldAttributesWeight[i]);
     }
-    cout << weightErrorThisSimulation << "," << valueErrorThisSimulation << endl;
+    //cout << weightErrorThisSimulation << "," << valueErrorThisSimulation << endl;
 }

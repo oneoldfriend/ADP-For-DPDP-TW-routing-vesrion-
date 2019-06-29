@@ -24,11 +24,15 @@ State::State()
     this->currentRoute = nullptr;
 }
 
-void State::calcAttribute()
+void State::calcAttribute(Action a)
 {
     this->pointSolution->calcInfo();
     this->attributes[0] = this->currentRoute->currentPos->departureTime;
     this->attributes[1] = this->notServicedCustomer.size();
+    if (a.positionToVisit != nullptr && a.positionToVisit->isOrigin)
+    {
+        this->attributes[1]--;
+    }
     this->attributes[2] = this->pointSolution->info[1];
     this->attributes[3] = this->pointSolution->info[3];
 }
@@ -162,7 +166,7 @@ void MDP::findBestAssignmentAction(Action *a, ValueFunction valueFunction)
 void MDP::findBestRoutingAction(Action *a, ValueFunction valueFunction, double *reward, bool approx, Eigen::Vector4d *score)
 {
     int actionNum = 0, maxActionNum = this->currentState.reachableCustomer.size(), bestActionNum = -1;
-    map<int, double> actionWheel;
+    map<int, double> actionQValue;
     map<int, Eigen::Vector4d> actionScoreSample;
     map<int, double> actionReward;
     while (actionNum < maxActionNum)
@@ -174,9 +178,10 @@ void MDP::findBestRoutingAction(Action *a, ValueFunction valueFunction, double *
         if (this->checkRoutingActionFeasibility(tempAction, &immediateReward))
         {
             double downStreamValue = valueFunction.getValue(this->currentState, tempAction, true);
-            actionWheel[actionNum] = downStreamValue;
+            //cout << downStreamValue << endl;
+            actionQValue[actionNum] = -downStreamValue;
             actionReward[actionNum] = immediateReward;
-            this->currentState.calcAttribute();
+            this->currentState.calcAttribute(tempAction);
             actionScoreSample[actionNum] = this->currentState.attributes;
         }
         //回撤动作继续下一个评估
@@ -185,7 +190,7 @@ void MDP::findBestRoutingAction(Action *a, ValueFunction valueFunction, double *
     }
     Eigen::Vector4d scoreExpectation;
 
-    bestActionNum = Util::softmax(actionWheel, &scoreExpectation, actionScoreSample);
+    bestActionNum = Util::softmax(actionQValue, &scoreExpectation, actionScoreSample);
     *score = actionScoreSample[bestActionNum] - scoreExpectation;
     *reward = actionReward[bestActionNum];
     this->integerToRoutingAction(bestActionNum, this->currentState, a);

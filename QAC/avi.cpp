@@ -22,6 +22,7 @@ void AVI::approximation(ValueFunction *valueFunction)
         pair<Eigen::Vector4d, double> infoAtCurrentState;
         Eigen::Vector4d currentScore;
         Eigen::Vector4d nextScore;
+        vector<Eigen::Vector4d> scoreAtThisSimulation;
         //单步初始化
         Action bestAction;
         double routingReward = 0.0;
@@ -34,9 +35,10 @@ void AVI::approximation(ValueFunction *valueFunction)
             valueSum += routingReward;
             //记录这次sample path的信息
             simulation.currentState.executeAction(bestAction);
-            simulation.currentState.calcAttribute();
+            simulation.currentState.calcAttribute(bestAction);
             simulation.currentState.undoAction(bestAction);
             valueAtThisSimulation.push_back(make_pair(simulation.currentState.attributes, routingReward));
+            scoreAtThisSimulation.push_back(currentScore);
             infoAtCurrentState = make_pair(simulation.currentState.attributes, routingReward);
             //状态转移
             simulation.transition(bestAction);
@@ -49,12 +51,12 @@ void AVI::approximation(ValueFunction *valueFunction)
             simulation.findBestAssignmentAction(&bestAction, *valueFunction);
             simulation.assignmentConfirmed(bestAction);
             simulation.findBestRoutingAction(&bestAction, *valueFunction, &routingReward, startApproximate, &nextScore);
-            valueFunction->updateActor(infoAtCurrentState, simulation.currentState, bestAction, currentScore);
+            //valueFunction->updateActor(infoAtCurrentState, simulation.currentState, bestAction, currentScore);
             currentScore = nextScore;
         }
-        valueFunction->updateCritic(valueAtThisSimulation, startApproximate);
+        valueFunction->updateCritic(valueAtThisSimulation, startApproximate, scoreAtThisSimulation);
         simulation.solution.calcCost();
-        cout << totalSimulationCount << " " << simulation.solution.cost << " " << simulation.solution.penalty << " " << simulation.solution.waitTime << " " << simulation.cumOutsourcedCost << " " << simulation.solution.cost + simulation.cumOutsourcedCost << " " << valueSum << endl;
+        //cout << totalSimulationCount << " " << simulation.solution.cost << " " << simulation.solution.penalty << " " << simulation.solution.waitTime << " " << simulation.cumOutsourcedCost << " " << simulation.solution.cost + simulation.cumOutsourcedCost << " " << valueSum << endl;
         for (auto iter = simulation.customers.begin(); iter != simulation.customers.end(); ++iter)
         {
             delete iter->second;
