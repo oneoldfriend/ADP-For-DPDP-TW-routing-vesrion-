@@ -1,5 +1,5 @@
 # The pre-processor and compiler options.   
-MY_CFLAGS =  -std=c++17
+MY_CFLAGS =  -std=c++17 
   
 # The linker options.  
 MY_LIBS   =  
@@ -30,8 +30,8 @@ HDREXTS = .h .H .hh .hpp .HPP .h++ .hxx .hp
   
 # The pre-processor and compiler options.  
 # Users can override those variables from the command line.  
-CFLAGS  = -g -O2  
-CXXFLAGS= -g -O2  
+CFLAGS  = -g -O2  -I/Users/leilinfei/Desktop/ADP-For-DPDP-TW-routing-vesrion-/DNN/mxnet/cpp-package/include  -I/Users/leilinfei/Desktop/ADP-For-DPDP-TW-routing-vesrion-/DNN/mxnet/include
+CXXFLAGS= -g -O2  -I/Users/leilinfei/Desktop/ADP-For-DPDP-TW-routing-vesrion-/DNN/mxnet/cpp-package/include  -I/Users/leilinfei/Desktop/ADP-For-DPDP-TW-routing-vesrion-/DNN/mxnet/include
   
 # The C program compiler.  
 #CC     = gcc  
@@ -53,7 +53,7 @@ CTAGSFLAGS =
   
 ## Stable Section: usually no need to be changed. But you can add more.  
 ##==========================================================================  
-SHELL   = /bin/sh  
+SHELL   = /bin/sh
 EMPTY   =  
 SPACE   = $(EMPTY) $(EMPTY)  
 ifeq ($(PROGRAM),)  

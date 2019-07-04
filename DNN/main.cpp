@@ -1,4 +1,5 @@
 #include "solver.h"
+#include "mxnet-cpp/MxNetCpp.h"
 
 int main()
 {

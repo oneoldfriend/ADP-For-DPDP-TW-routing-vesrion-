@@ -8,3 +8,6 @@ TrainingData.txt
 *.csv
 Eigen
 TestData
+mxnet
+lib
+build
