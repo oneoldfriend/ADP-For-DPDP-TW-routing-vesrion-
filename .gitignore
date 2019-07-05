@@ -11,3 +11,5 @@ TestData
 mxnet
 lib
 build
+CMakeFiles
+*.cmake
