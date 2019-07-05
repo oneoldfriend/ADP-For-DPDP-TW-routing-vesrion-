@@ -20,6 +20,8 @@
 #define ASSIGNMENT 0
 #define MYOPIC 0
 
+using namespace std;
+
 class AVI
 {
 public:

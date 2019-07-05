@@ -2,6 +2,8 @@
 #include "avi.h"
 #include <random>
 
+using namespace std;
+
 class Generator
 {
 public:

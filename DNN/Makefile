@@ -1,14 +1,16 @@
+export LD_LIBRARY_PATH=.:/Users/leilinfei/Desktop/ADP-For-DPDP-TW-routing-vesrion-/DNN/mxnet/lib
+
 # The pre-processor and compiler options.   
-MY_CFLAGS =  -std=c++17 
+MY_CFLAGS =  -std=c++11
   
 # The linker options.  
-MY_LIBS   =  
+MY_LIBS   =  ./mxnet/lib/libmxnet.so
   
 # The pre-processor options used by the cpp (man cpp for more).  
 CPPFLAGS  = -Wall  
   
 # The options used in linking as well as in any direct use of ld.  
-LDFLAGS   =  
+LDFLAGS   =  -L.
   
 # The directories in which source files reside.  
 # If not specified, only the current directory will be serached.  
@@ -30,8 +32,8 @@ HDREXTS = .h .H .hh .hpp .HPP .h++ .hxx .hp
   
 # The pre-processor and compiler options.  
 # Users can override those variables from the command line.  
-CFLAGS  = -g -O2  -I/Users/leilinfei/Desktop/ADP-For-DPDP-TW-routing-vesrion-/DNN/mxnet/cpp-package/include  -I/Users/leilinfei/Desktop/ADP-For-DPDP-TW-routing-vesrion-/DNN/mxnet/include
-CXXFLAGS= -g -O2  -I/Users/leilinfei/Desktop/ADP-For-DPDP-TW-routing-vesrion-/DNN/mxnet/cpp-package/include  -I/Users/leilinfei/Desktop/ADP-For-DPDP-TW-routing-vesrion-/DNN/mxnet/include
+CFLAGS  = -g -O2  
+CXXFLAGS= -g -O2 -I./mxnet/cpp-package/include  -I./mxnet/include -I./mxnet/3rdparty/tvm/nnvm/include -I./mxnet/3rdparty/dmlc-core/include
   
 # The C program compiler.  
 #CC     = gcc  
@@ -171,12 +173,7 @@ else                            # C++ program
 	@echo Type ./$@ to execute the program.  
 endif  
   
-ifndef NODEP  
-ifneq ($(DEPS),)  
-	sinclude $(DEPS)  
 
-endif  
-endif  
   
 clean:  
 	$(RM) $(OBJS) $(PROGRAM) $(PROGRAM).exe  

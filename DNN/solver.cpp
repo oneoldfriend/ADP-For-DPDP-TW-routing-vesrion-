@@ -18,8 +18,8 @@ void Solver::solve()
     }
     return;*/
     srand(time(NULL));
-
-    ValueFunction valueFunction;
+    const vector<int> layers{128, 64, 10};
+    ValueFunction valueFunction(layers);
     //offline approximation
     AVI approximateValueIterate;
     if (!MYOPIC)

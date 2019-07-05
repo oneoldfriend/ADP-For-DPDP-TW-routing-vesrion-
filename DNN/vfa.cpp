@@ -1,14 +1,28 @@
 #include "vfa.h"
 #include <iomanip>
 
-ValueFunction::ValueFunction()
+ValueFunction::ValueFunction(const vector<int> &layers)
 {
-    for (int i = 0; i < ATTRIBUTES_NUMBER; i++)
+    auto x = Symbol::Variable("X");
+    auto label = Symbol::Variable("label");
+
+    vector<Symbol> weights(layers.size());
+    vector<Symbol> biases(layers.size());
+    vector<Symbol> outputs(layers.size());
+ 
+    for (size_t i = 0; i < layers.size(); ++i)
     {
-        this->actorWeights[i] = 1.0;
-        this->criticWeights[i] = 1.0;
+        weights[i] = Symbol::Variable("w" + to_string(i));
+        biases[i] = Symbol::Variable("b" + to_string(i));
+        Symbol fc = FullyConnected(
+            i == 0 ? x : outputs[i - 1],  // data
+            weights[i],
+            biases[i],
+            layers[i]);
+        outputs[i] = i == layers.size() - 1 ? fc : Activation(fc, ActivationActType::kRelu);
     }
-    this->matrixBeta = MAX_EDGE * CUSTOMER_NUMBER / MAX_VEHICLE * Eigen::Matrix4d::Identity();
+ 
+    this->net = SoftmaxOutput(outputs.back(), label);
 }
 
 double ValueFunction::getValue(State S, Action a, bool actor)
