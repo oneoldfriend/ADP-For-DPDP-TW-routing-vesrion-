@@ -18,7 +18,7 @@ void Solver::solve()
     }
     return;*/
     srand(time(NULL));
-    const vector<int> layers{128, 64, 10};
+    const vector<int> layers{FIRST_LAYER, SECOND_LAYER};
     ValueFunction valueFunction(layers);
     //offline approximation
     AVI approximateValueIterate;

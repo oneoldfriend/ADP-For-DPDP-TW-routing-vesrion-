@@ -8,6 +8,10 @@
 #include "mxnet-cpp/model.h"
 #include "mxnet-cpp/op.h"
 #include <vector>
+#define FIRST_LAYER 512
+#define SECOND_LAYER 10
+#define INPUT_DATA_FIRST_D 100
+#define INPUT_DATA_SECOND_D 1
 #define PARTITION_THRESHOLD 1.0
 #define LOOKUP_TABLE_INITIAL 10.0
 #define ATTRIBUTES_NUMBER 4
@@ -21,7 +25,12 @@ using namespace mxnet::cpp;
 class ValueFunction
 {
 public:
+  vector<Symbol> weights;
+  vector<Symbol> biases;
+  vector<Symbol> outputs;
   Symbol net;
+  Executor *exe;
+
   Eigen::Vector4d actorWeights;
   Eigen::Vector4d criticWeights;
   Eigen::Matrix4d matrixBeta;
