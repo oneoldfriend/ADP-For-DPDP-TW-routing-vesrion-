@@ -1,221 +1,224 @@
-# The pre-processor and compiler options.   
-MY_CFLAGS =  -std=c++17
-  
-# The linker options.  
-MY_LIBS   =  
-  
-# The pre-processor options used by the cpp (man cpp for more).  
-CPPFLAGS  = -Wall  
-  
-# The options used in linking as well as in any direct use of ld.  
-LDFLAGS   =  
-  
-# The directories in which source files reside.  
-# If not specified, only the current directory will be serached.  
-SRCDIRS   =  
-  
-# The executable file name.  
-# If not specified, current directory name or `a.out' will be used.  
-PROGRAM   = adp  
-  
-## Implicit Section: change the following only when necessary.  
-##==========================================================================  
-  
-# The source file types (headers excluded).  
-# .c indicates C source files, and others C++ ones.  
-SRCEXTS = .c .C .cc .cpp .CPP .c++ .cxx .cp  
-  
-# The header file types.  
-HDREXTS = .h .H .hh .hpp .HPP .h++ .hxx .hp  
-  
-# The pre-processor and compiler options.  
-# Users can override those variables from the command line.  
-CFLAGS  = -g -O2  
-CXXFLAGS= -g -O2  
-  
-# The C program compiler.  
-#CC     = gcc  
-  
-# The C++ program compiler.  
-#CXX    = g++  
-  
-# Un-comment the following line to compile C programs as C++ ones.  
-#CC     = $(CXX)  
-  
-# The command used to delete file.  
-#RM     = rm -f  
-  
-ETAGS = etags  
-ETAGSFLAGS =  
-  
-CTAGS = ctags  
-CTAGSFLAGS =  
-  
-## Stable Section: usually no need to be changed. But you can add more.  
-##==========================================================================  
-SHELL   = /bin/sh  
-EMPTY   =  
-SPACE   = $(EMPTY) $(EMPTY)  
-ifeq ($(PROGRAM),)  
-	CUR_PATH_NAMES = $(subst /,$(SPACE),$(subst $(SPACE),_,$(CURDIR)))  
-	PROGRAM = $(word $(words $(CUR_PATH_NAMES)),$(CUR_PATH_NAMES))  
-	ifeq ($(PROGRAM),)  
-		PROGRAM = a.out  
-	endif
-endif  
-ifeq ($(SRCDIRS),)
-	SRCDIRS = .  
-endif  
-SOURCES = $(foreach d,$(SRCDIRS),$(wildcard $(addprefix $(d)/*,$(SRCEXTS))))  
-HEADERS = $(foreach d,$(SRCDIRS),$(wildcard $(addprefix $(d)/*,$(HDREXTS))))  
-SRC_CXX = $(filter-out %.c,$(SOURCES))  
-OBJS    = $(addsuffix .o, $(basename $(SOURCES)))  
-DEPS    = $(OBJS:.o=.d)  
-  
-## Define some useful variables.  
-DEP_OPT = $(shell if `$(CC) --version | grep "GCC" >/dev/null`; then \
-		echo "-MM -MP"; else echo "-M"; fi )  
-DEPEND      = $(CC)  $(DEP_OPT)  $(MY_CFLAGS) $(CFLAGS) $(CPPFLAGS)  
-DEPEND.d    = $(subst -g ,,$(DEPEND))  
-COMPILE.c   = $(CC)  $(MY_CFLAGS) $(CFLAGS)   $(CPPFLAGS) -c  
-COMPILE.cxx = $(CXX) $(MY_CFLAGS) $(CXXFLAGS) $(CPPFLAGS) -c  
-LINK.c      = $(CC)  $(MY_CFLAGS) $(CFLAGS)   $(CPPFLAGS) $(LDFLAGS)  
-LINK.cxx    = $(CXX) $(MY_CFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS)  
-  
-.PHONY: all objs tags ctags clean distclean help show  
-  
-# Delete the default suffixes  
-.SUFFIXES:  
-  
-all: $(PROGRAM)  
-  
-# Rules for creating dependency files (.d).  
-#------------------------------------------  
-  
-%.d:%.c  
-	@echo -n $(dir $<) > $@  
-	@$(DEPEND.d) $< >> $@  
-  
-%.d:%.C  
-	@echo -n $(dir $<) > $@  
-	@$(DEPEND.d) $< >> $@  
+#### PROJECT SETTINGS ####
+# The name of the executable to be created
+BIN_NAME := adp
+# Compiler used
+CXX ?= g++
+# Extension of source files used in the project
+SRC_EXT = cpp
+# Path to the source directory, relative to the makefile
+SRC_PATH = .
+# Space-separated pkg-config libraries used by this project
+LIBS =
+# General compiler flags
+COMPILE_FLAGS = -std=c++11 -Wall -Wextra -g
+# Additional release-specific flags
+RCOMPILE_FLAGS = -D NDEBUG
+# Additional debug-specific flags
+DCOMPILE_FLAGS = -D DEBUG
+# Add additional include paths
+INCLUDES = -I $(SRC_PATH)
+# General linker settings
+LINK_FLAGS =
+# Additional release-specific linker settings
+RLINK_FLAGS =
+# Additional debug-specific linker settings
+DLINK_FLAGS =
+# Destination directory, like a jail or mounted system
+DESTDIR = /
+# Install path (bin/ is appended automatically)
+INSTALL_PREFIX = usr/local
+#### END PROJECT SETTINGS ####
 
-%.d:%.cc  
-	@echo -n $(dir $<) > $@  
-	@$(DEPEND.d) $< >> $@  
-  
-%.d:%.cpp  
-	@echo -n $(dir $<) > $@  
-	@$(DEPEND.d) $< >> $@  
-  
-%.d:%.CPP  
-	@echo -n $(dir $<) > $@  
-	@$(DEPEND.d) $< >> $@  
-  
-%.d:%.c++  
-	@echo -n $(dir $<) > $@  
-	@$(DEPEND.d) $< >> $@  
-  
-%.d:%.cp  
-	@echo -n $(dir $<) > $@  
-	@$(DEPEND.d) $< >> $@  
-  
-%.d:%.cxx  
-	@echo -n $(dir $<) > $@  
-	@$(DEPEND.d) $< >> $@  
-  
-# Rules for generating object files (.o).  
-#----------------------------------------  
-objs:$(OBJS)  
-  
-%.o:%.c  
-	$(COMPILE.c) $< -o $@  
-  
-%.o:%.C  
-	$(COMPILE.cxx) $< -o $@  
-  
-%.o:%.cc  
-	$(COMPILE.cxx) $< -o $@  
-  
-%.o:%.cpp  
-	$(COMPILE.cxx) $< -o $@  
-  
-%.o:%.CPP  
-	$(COMPILE.cxx) $< -o $@  
-  
-%.o:%.c++  
-	$(COMPILE.cxx) $< -o $@  
-  
-%.o:%.cp  
-	$(COMPILE.cxx) $< -o $@  
-  
-%.o:%.cxx  
-	$(COMPILE.cxx) $< -o $@  
-  
-# Rules for generating the tags.  
-#-------------------------------------  
-tags: $(HEADERS) $(SOURCES)  
-	$(ETAGS) $(ETAGSFLAGS) $(HEADERS) $(SOURCES)  
-  
-ctags: $(HEADERS) $(SOURCES)  
-	$(CTAGS) $(CTAGSFLAGS) $(HEADERS) $(SOURCES)  
-  
-# Rules for generating the executable.  
-#-------------------------------------  
-$(PROGRAM):$(OBJS)  
-ifeq ($(SRC_CXX),)              # C program  
-	$(LINK.c)   $(OBJS) $(MY_LIBS) -o $@  
-	@echo Type ./$@ to execute the program.  
-else                            # C++ program  
-	$(LINK.cxx) $(OBJS) $(MY_LIBS) -o $@  
-	@echo Type ./$@ to execute the program.  
-endif  
-  
-ifndef NODEP  
-ifneq ($(DEPS),)  
- 
+# Optionally you may move the section above to a separate config.mk file, and
+# uncomment the line below
+# include config.mk
 
-endif  
-endif  
-  
-clean:  
-	$(RM) $(OBJS) $(PROGRAM) $(PROGRAM).exe  
-  
-distclean: clean  
-	$(RM) $(DEPS) TAGS  
-  
-# Show help.  
-help:  
-	@echo 'Generic Makefile for C/C++ Programs (gcmakefile) version 0.5'  
-	@echo 'Copyright (C) 2007, 2008 whyglinux <whyglinux@hotmail.com>'  
-	@echo  
-	@echo 'Usage: make [TARGET]'  
-	@echo 'TARGETS:'  
-	@echo '  all       (=make) compile and link.'  
-	@echo '  NODEP=yes make without generating dependencies.'  
-	@echo '  objs      compile only (no linking).'
-	@echo '  tags      create tags for Emacs editor.'  
-	@echo '  ctags     create ctags for VI editor.'  
-	@echo '  clean     clean objects and the executable file.'  
-	@echo '  distclean clean objects, the executable and dependencies.'  
-	@echo '  show      show variables (for debug use only).'  
-	@echo '  help      print this message.'  
-	@echo  
-	@echo 'Report bugs to <whyglinux AT gmail DOT com>.'  
-  
-# Show variables (for debug use only.)  
-show:  
-	@echo 'PROGRAM     :' $(PROGRAM)  
-	@echo 'SRCDIRS     :' $(SRCDIRS)  
-	@echo 'HEADERS     :' $(HEADERS)  
-	@echo 'SOURCES     :' $(SOURCES)  
-	@echo 'SRC_CXX     :' $(SRC_CXX)  
-	@echo 'OBJS        :' $(OBJS)  
-	@echo 'DEPS        :' $(DEPS)  
-	@echo 'DEPEND      :' $(DEPEND)  
-	@echo 'COMPILE.c   :' $(COMPILE.c)
-	@echo 'COMPILE.cxx :' $(COMPILE.cxx)  
-	@echo 'link.c      :' $(LINK.c)
-	@echo 'link.cxx    :' $(LINK.cxx)  
+# Generally should not need to edit below this line
 
-## End of the Makefile ##  Suggestions are welcome  ## All rights reserved ##  
+# Obtains the OS type, either 'Darwin' (OS X) or 'Linux'
+UNAME_S:=$(shell uname -s)
+
+# Function used to check variables. Use on the command line:
+# make print-VARNAME
+# Useful for debugging and adding features
+print-%: ; @echo $*=$($*)
+
+# Shell used in this makefile
+# bash is used for 'echo -en'
+SHELL = /bin/bash
+# Clear built-in rules
+.SUFFIXES:
+# Programs for installation
+INSTALL = install
+INSTALL_PROGRAM = $(INSTALL)
+INSTALL_DATA = $(INSTALL) -m 644
+
+# Append pkg-config specific libraries if need be
+ifneq ($(LIBS),)
+	COMPILE_FLAGS += $(shell pkg-config --cflags $(LIBS))
+	LINK_FLAGS += $(shell pkg-config --libs $(LIBS))
+endif
+
+# Verbose option, to output compile and link commands
+export V := false
+export CMD_PREFIX := @
+ifeq ($(V),true)
+	CMD_PREFIX :=
+endif
+
+# Combine compiler and linker flags
+release: export CXXFLAGS := $(CXXFLAGS) $(COMPILE_FLAGS) $(RCOMPILE_FLAGS)
+release: export LDFLAGS := $(LDFLAGS) $(LINK_FLAGS) $(RLINK_FLAGS)
+debug: export CXXFLAGS := $(CXXFLAGS) $(COMPILE_FLAGS) $(DCOMPILE_FLAGS)
+debug: export LDFLAGS := $(LDFLAGS) $(LINK_FLAGS) $(DLINK_FLAGS)
+
+# Build and output paths
+release: export BUILD_PATH := build/release
+release: export BIN_PATH := bin/release
+debug: export BUILD_PATH := build/debug
+debug: export BIN_PATH := bin/debug
+install: export BIN_PATH := bin/release
+
+# Find all source files in the source directory, sorted by most
+# recently modified
+ifeq ($(UNAME_S),Darwin)
+	SOURCES = $(shell find $(SRC_PATH) -name '*.$(SRC_EXT)' | sort -k 1nr | cut -f2-)
+else
+	SOURCES = $(shell find $(SRC_PATH) -name '*.$(SRC_EXT)' -printf '%T@\t%p\n' \
+						| sort -k 1nr | cut -f2-)
+endif
+
+# fallback in case the above fails
+rwildcard = $(foreach d, $(wildcard $1*), $(call rwildcard,$d/,$2) \
+						$(filter $(subst *,%,$2), $d))
+ifeq ($(SOURCES),)
+	SOURCES := $(call rwildcard, $(SRC_PATH), *.$(SRC_EXT))
+endif
+
+# Set the object file names, with the source directory stripped
+# from the path, and the build path prepended in its place
+OBJECTS = $(SOURCES:$(SRC_PATH)/%.$(SRC_EXT)=$(BUILD_PATH)/%.o)
+# Set the dependency files that will be used to add header dependencies
+DEPS = $(OBJECTS:.o=.d)
+
+# Macros for timing compilation
+ifeq ($(UNAME_S),Darwin)
+	CUR_TIME = awk 'BEGIN{srand(); print srand()}'
+	TIME_FILE = $(dir $@).$(notdir $@)_time
+	START_TIME = $(CUR_TIME) > $(TIME_FILE)
+	END_TIME = read st < $(TIME_FILE) ; \
+		$(RM) $(TIME_FILE) ; \
+		st=$$((`$(CUR_TIME)` - $$st)) ; \
+		echo $$st
+else
+	TIME_FILE = $(dir $@).$(notdir $@)_time
+	START_TIME = date '+%s' > $(TIME_FILE)
+	END_TIME = read st < $(TIME_FILE) ; \
+		$(RM) $(TIME_FILE) ; \
+		st=$$((`date '+%s'` - $$st - 86400)) ; \
+		echo `date -u -d @$$st '+%H:%M:%S'`
+endif
+
+# Version macros
+# Comment/remove this section to remove versioning
+USE_VERSION := false
+# If this isn't a git repo or the repo has no tags, git describe will return non-zero
+ifeq ($(shell git describe > /dev/null 2>&1 ; echo $$?), 0)
+	USE_VERSION := true
+	VERSION := $(shell git describe --tags --long --dirty --always | \
+		sed 's/v\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\)-\?.*-\([0-9]*\)-\(.*\)/\1 \2 \3 \4 \5/g')
+	VERSION_MAJOR := $(word 1, $(VERSION))
+	VERSION_MINOR := $(word 2, $(VERSION))
+	VERSION_PATCH := $(word 3, $(VERSION))
+	VERSION_REVISION := $(word 4, $(VERSION))
+	VERSION_HASH := $(word 5, $(VERSION))
+	VERSION_STRING := \
+		"$(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_PATCH).$(VERSION_REVISION)-$(VERSION_HASH)"
+	override CXXFLAGS := $(CXXFLAGS) \
+		-D VERSION_MAJOR=$(VERSION_MAJOR) \
+		-D VERSION_MINOR=$(VERSION_MINOR) \
+		-D VERSION_PATCH=$(VERSION_PATCH) \
+		-D VERSION_REVISION=$(VERSION_REVISION) \
+		-D VERSION_HASH=\"$(VERSION_HASH)\"
+endif
+
+# Standard, non-optimized release build
+.PHONY: release
+release: dirs
+ifeq ($(USE_VERSION), true)
+	@echo "Beginning release build v$(VERSION_STRING)"
+else
+	@echo "Beginning release build"
+endif
+	@$(START_TIME)
+	@$(MAKE) all --no-print-directory
+	@echo -n "Total build time: "
+	@$(END_TIME)
+
+# Debug build for gdb debugging
+.PHONY: debug
+debug: dirs
+ifeq ($(USE_VERSION), true)
+	@echo "Beginning debug build v$(VERSION_STRING)"
+else
+	@echo "Beginning debug build"
+endif
+	@$(START_TIME)
+	@$(MAKE) all --no-print-directory
+	@echo -n "Total build time: "
+	@$(END_TIME)
+
+# Create the directories used in the build
+.PHONY: dirs
+dirs:
+	@echo "Creating directories"
+	@mkdir -p $(dir $(OBJECTS))
+	@mkdir -p $(BIN_PATH)
+
+# Installs to the set path
+.PHONY: install
+install:
+	@echo "Installing to $(DESTDIR)$(INSTALL_PREFIX)/bin"
+	@$(INSTALL_PROGRAM) $(BIN_PATH)/$(BIN_NAME) $(DESTDIR)$(INSTALL_PREFIX)/bin
+
+# Uninstalls the program
+.PHONY: uninstall
+uninstall:
+	@echo "Removing $(DESTDIR)$(INSTALL_PREFIX)/bin/$(BIN_NAME)"
+	@$(RM) $(DESTDIR)$(INSTALL_PREFIX)/bin/$(BIN_NAME)
+
+# Removes all build files
+.PHONY: clean
+clean:
+	@echo "Deleting $(BIN_NAME) symlink"
+	@$(RM) $(BIN_NAME)
+	@echo "Deleting directories"
+	@$(RM) -r build
+	@$(RM) -r bin
+
+# Main rule, checks the executable and symlinks to the output
+all: $(BIN_PATH)/$(BIN_NAME)
+	@echo "Making symlink: $(BIN_NAME) -> $<"
+	@$(RM) $(BIN_NAME)
+	@ln -s $(BIN_PATH)/$(BIN_NAME) $(BIN_NAME)
+
+# Link the executable
+$(BIN_PATH)/$(BIN_NAME): $(OBJECTS)
+	@echo "Linking: $@"
+	@$(START_TIME)
+	$(CMD_PREFIX)$(CXX) $(OBJECTS) $(LDFLAGS) -o $@
+	@echo -en "\t Link time: "
+	@$(END_TIME)
+
+# Add dependency files, if they exist
+-include $(DEPS)
+
+# Source file rules
+# After the first compilation they will be joined with the rules from the
+# dependency files to provide header dependencies
+$(BUILD_PATH)/%.o: $(SRC_PATH)/%.$(SRC_EXT)
+	@echo "Compiling: $< -> $@"
+	@$(START_TIME)
+	$(CMD_PREFIX)$(CXX) $(CXXFLAGS) $(INCLUDES) -MP -MMD -c $< -o $@
+	@echo -en "\t Compile time: "
+	@$(END_TIME)
