@@ -27,7 +27,7 @@ public:
   Route *currentRoute;
   double currentTime;
   Solution *pointSolution;
-  Eigen::Vector4d attributes;
+  Eigen::VectorXd attributes;
   vector<Customer*> newCustomers;
   map<string, pair<PointOrder, PointOrder> > notServicedCustomer;
   vector<PointOrder> reachableCustomer;

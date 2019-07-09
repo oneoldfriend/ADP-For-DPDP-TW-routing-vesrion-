@@ -21,6 +21,7 @@ State::State()
 {
     this->currentTime = 0;
     this->currentRoute = nullptr;
+    this->attributes = Eigen::VectorXd(ATTRIBUTES_NUMBER);
 }
 
 void State::calcAttribute()

@@ -38,6 +38,7 @@ double LookupTable::lookup(Aggregation postDecisionState)
             return iter->second;
         }
     }
+    return 0.0;
 }
 
 void LookupTable::partitionUpdate()
@@ -148,12 +149,25 @@ ValueFunction::ValueFunction()
 {
     lookupTable = LookupTable();
     lambda = 1;
+    this->updatedAttributesWeight = Eigen::VectorXd(ATTRIBUTES_NUMBER);
+    this->initialAttributesWeight = Eigen::VectorXd(ATTRIBUTES_NUMBER);
+    this->matrixBeta = Eigen::MatrixXd(ATTRIBUTES_NUMBER, ATTRIBUTES_NUMBER);
     for (int i = 0; i < ATTRIBUTES_NUMBER; i++)
     {
-        this->updatedAttributesWeight[i] = 1.0;
-        this->initialAttributesWeight[i] = 1.0;
+        this->updatedAttributesWeight(i) = 1.0;
+        this->initialAttributesWeight(i) = 1.0;
+        for (int j = 0; j < ATTRIBUTES_NUMBER; j++)
+        {
+            if (i == j)
+            {
+                this->matrixBeta(i, j) = MAX_EDGE * CUSTOMER_NUMBER / MAX_VEHICLE;
+            }
+            else
+            {
+                this->matrixBeta(i, j) = 0;
+            }
+        }
     }
-    this->matrixBeta = MAX_EDGE * CUSTOMER_NUMBER / MAX_VEHICLE * Eigen::Matrix4d::Identity();
 }
 
 /*double ValueFunction::getValue(Aggregation postDecisionState, double reward)
@@ -214,7 +228,7 @@ double ValueFunction::getValue(State S, Action a, bool approx)
     this->lookupTable.partitionUpdate();
 }*/
 
-void ValueFunction::updateValue(vector<pair<Eigen::Vector4d, double>> valueAtThisSimulation, bool startApproximate)
+void ValueFunction::updateValue(vector<pair<Eigen::VectorXd, double>> valueAtThisSimulation, bool startApproximate)
 {
     //this->matrixBeta = MAX_EDGE * CUSTOMER_NUMBER / MAX_VEHICLE * Eigen::Matrix4d::Identity();
     //this->matrixBeta = Eigen::Matrix4d::Identity();
@@ -225,7 +239,7 @@ void ValueFunction::updateValue(vector<pair<Eigen::Vector4d, double>> valueAtThi
         iter->second += lastValue;
         lastValue = double(LAMBDA) * iter->second;
     }
-    Eigen::Vector4d oldAttributesWeight = this->updatedAttributesWeight;
+    Eigen::VectorXd oldAttributesWeight = this->updatedAttributesWeight;
     for (auto iter = valueAtThisSimulation.begin(); iter != valueAtThisSimulation.end(); ++iter)
     {
         double gammaN = 1.0 + iter->first.transpose() * this->matrixBeta * iter->first,

@@ -18,7 +18,7 @@
 #define ROULETTE_WHEEL 0
 #define IGNORANCE_TOLERANCE 30.0
 #define ASSIGNMENT 0
-#define MYOPIC 1
+#define MYOPIC 0
 
 class AVI
 {

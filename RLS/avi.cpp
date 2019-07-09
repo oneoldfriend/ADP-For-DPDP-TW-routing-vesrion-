@@ -17,7 +17,7 @@ void AVI::approximation(ValueFunction *valueFunction)
         }
         //初始化马尔科夫决策过程
         MDP simulation = MDP(true, "");
-        vector<pair<Eigen::Vector4d, double>> valueAtThisSimulation;
+        vector<pair<Eigen::VectorXd, double>> valueAtThisSimulation;
         //开始mdp模拟
         while (simulation.currentState.currentRoute != nullptr)
         {
