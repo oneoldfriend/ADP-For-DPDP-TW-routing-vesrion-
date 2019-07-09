@@ -173,7 +173,7 @@ endif
   
 ifndef NODEP  
 ifneq ($(DEPS),)  
-	sinclude $(DEPS)  
+ 
 
 endif  
 endif  

@@ -16,8 +16,8 @@ void Solver::solve()
         fileName = fileName + dayNum + ".txt";
         Generator::instanceGenenrator(true, nullptr, fileName);
     }
-    return;*/
-    srand(time(NULL));
+    return;
+    srand(time(NULL));*/
 
     ValueFunction valueFunction;
     //offline approximation

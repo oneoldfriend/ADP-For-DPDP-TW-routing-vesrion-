@@ -170,7 +170,7 @@ double ValueFunction::getValue(State S, Action a, bool approx)
     }
     else
     {
-        if (approx)
+        if (false)
         {
             return this->initialAttributesWeight.transpose() * S.attributes;
         }
