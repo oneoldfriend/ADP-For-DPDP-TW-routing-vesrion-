@@ -28,7 +28,7 @@ void AVI::approximation(ValueFunction *valueFunction)
             simulation.findBestRoutingAction(&bestAction, *valueFunction, &routingReward, startApproximate);
             //记录这次sample path的信息
             simulation.executeAction(bestAction);
-            simulation.currentState.calcAttribute();
+            simulation.currentState.calcAttribute(bestAction);
             simulation.undoAction(bestAction);
             valueAtThisSimulation.push_back(make_pair(simulation.currentState.attributes, routingReward));
             //状态转移

@@ -177,7 +177,7 @@ ValueFunction::ValueFunction()
 
 double ValueFunction::getValue(State S, Action a, bool approx)
 {
-    S.calcAttribute();
+    S.calcAttribute(a);
     if (MYOPIC)
     {
         return 0;
