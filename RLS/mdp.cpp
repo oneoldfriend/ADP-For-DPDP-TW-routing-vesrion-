@@ -43,7 +43,7 @@ void State::calcAttribute(Action a)
         }
     }
     this->attributes[1] = this->pointSolution->info[1];
-    //this->attributes[3] = this->pointSolution->info[3];
+    this->attributes[3] = this->currentRoute->currentPos->currentWeight;
 }
 
 void MDP::executeAction(Action a)

@@ -125,7 +125,7 @@ void Solution::calcInfo()
         {
             if (!p->isOrigin)
             {
-                deliveredWeights++;
+                deliveredWeights += p->customer->weight;
             }
             p = p->next;
         }
