@@ -29,20 +29,20 @@ void State::calcAttribute(Action a)
     this->pointSolution->calcInfo();
     //this->attributes[0] = 100;
     this->attributes[0] = this->currentRoute->currentPos->departureTime;
+    //this->attributes[4] = this->pointSolution->info[2];
     if (a.positionToVisit != nullptr && a.positionToVisit->isOrigin)
     {
-        this->attributes[1] = this->notServicedCustomer.size() + 1;
-        this->attributes[1] = this->pointSolution->info[2];
+        //this->attributes[1] = this->notServicedCustomer.size() + 1;
     }
     else
     {
-        this->attributes[1] = this->notServicedCustomer.size();
+        //this->attributes[1] = this->notServicedCustomer.size();
         if (a.positionToVisit != nullptr)
         {
-            this->attributes[1] = this->pointSolution->info[2] + 1;
+            //this->attributes[4] = this->pointSolution->info[2] + 1;
         }
     }
-    this->attributes[2] = this->pointSolution->info[1];
+    this->attributes[1] = this->pointSolution->info[1];
     //this->attributes[3] = this->pointSolution->info[3];
 }
 
