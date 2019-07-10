@@ -27,10 +27,12 @@ State::State()
 void State::calcAttribute()
 {
     this->pointSolution->calcInfo();
+    //this->attributes[0] = 100;
     this->attributes[0] = this->currentRoute->currentPos->departureTime;
     this->attributes[1] = this->notServicedCustomer.size();
     this->attributes[2] = this->pointSolution->info[1];
-    this->attributes[3] = this->pointSolution->info[3];
+    //this->attributes[3] = this->pointSolution->info[3];
+    //this->attributes[1] = this->pointSolution->info[2];
 }
 
 void MDP::executeAction(Action a)
