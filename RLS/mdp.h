@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
-#define PCA_INPUT_COL 9
+#define PCA_INPUT_COL 8
 
 using namespace std;
 

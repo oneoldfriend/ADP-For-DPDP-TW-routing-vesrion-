@@ -31,43 +31,33 @@ void State::calcAttribute(Action a)
     double originMatrix[CUSTOMER_NUMBER * 2][PCA_INPUT_COL];
     double routeCount = 1;
     int rowNumber = 0;
-    for (auto iter = this->pointSolution->routes.begin(); iter != this->pointSolution->routes.end(); ++iter)
+    PointOrder p = this->currentRoute->currentPos;
+    while (p != this->currentRoute->tail)
     {
-        if (iter->head->next == iter->tail)
+        int varCount = 0;
+        originMatrix[rowNumber][varCount++] = p->position.x;
+        originMatrix[rowNumber][varCount++] = p->position.y;
+        originMatrix[rowNumber][varCount++] = p->customer->startTime;
+        originMatrix[rowNumber][varCount++] = p->customer->endTime;
+        if (p->isOrigin)
         {
-            continue;
+            originMatrix[rowNumber][varCount++] = p->customer->weight;
         }
-        PointOrder p = iter->head->next;
-        while (p != iter->tail)
+        else
         {
-            int varCount = 0;
-            originMatrix[rowNumber][varCount++] = routeCount;
-            originMatrix[rowNumber][varCount++] = p->position.x;
-            originMatrix[rowNumber][varCount++] = p->position.y;
-            originMatrix[rowNumber][varCount++] = p->customer->startTime;
-            originMatrix[rowNumber][varCount++] = p->customer->endTime;
-            if (p->isOrigin)
-            {
-                originMatrix[rowNumber][varCount++] = p->customer->weight;
-            }
-            else
-            {
-                originMatrix[rowNumber][varCount++] = -p->customer->weight;
-            }
-            originMatrix[rowNumber][varCount++] = p->arrivalTime;
-            originMatrix[rowNumber][varCount++] = p->departureTime;
-            originMatrix[rowNumber][varCount++] = p->currentWeight;
-            p = p->next;
-            rowNumber++;
+            originMatrix[rowNumber][varCount++] = -p->customer->weight;
         }
-        routeCount++;
+        originMatrix[rowNumber][varCount++] = p->arrivalTime;
+        originMatrix[rowNumber][varCount++] = p->departureTime;
+        originMatrix[rowNumber][varCount++] = p->currentWeight;
+        p = p->next;
+        rowNumber++;
     }
     for (auto iter = this->notServicedCustomer.begin(); iter != this->notServicedCustomer.end(); ++iter)
     {
         if ((*iter).second.first != a.positionToVisit)
         {
             int varCount = 0;
-            originMatrix[rowNumber][varCount++] = 0;
             originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->origin.x;
             originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->origin.y;
             originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->startTime;
@@ -78,7 +68,6 @@ void State::calcAttribute(Action a)
             originMatrix[rowNumber][varCount++] = 0;
             varCount = 0;
             rowNumber++;
-            originMatrix[rowNumber][varCount++] = 0;
             originMatrix[rowNumber][varCount++] = (*iter).second.second->position.x;
             originMatrix[rowNumber][varCount++] = (*iter).second.second->position.y;
             originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->startTime;
