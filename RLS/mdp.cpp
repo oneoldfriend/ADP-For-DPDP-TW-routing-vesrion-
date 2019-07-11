@@ -1,6 +1,8 @@
 #include "mdp.h"
 #include "route.h"
 #include "generator.h"
+#include "pca/ap.h"
+#include "pca/dataanalysis.h"
 
 using namespace std;
 
@@ -26,24 +28,88 @@ State::State()
 
 void State::calcAttribute(Action a)
 {
-    this->pointSolution->calcInfo();
-    //this->attributes[0] = 100;
-    this->attributes[0] = this->currentRoute->currentPos->departureTime;
-    //this->attributes[4] = this->pointSolution->info[2];
-    if (a.positionToVisit != nullptr && a.positionToVisit->isOrigin)
+    double originMatrix[CUSTOMER_NUMBER * 2][PCA_INPUT_COL];
+    double routeCount = 1;
+    int rowNumber = 0;
+    for (auto iter = this->pointSolution->routes.begin(); iter != this->pointSolution->routes.end(); ++iter)
     {
-        //this->attributes[1] = this->notServicedCustomer.size() + 1;
-    }
-    else
-    {
-        //this->attributes[1] = this->notServicedCustomer.size();
-        if (a.positionToVisit != nullptr)
+        if (iter->head->next == iter->tail)
         {
-            //this->attributes[4] = this->pointSolution->info[2] + 1;
+            continue;
+        }
+        PointOrder p = iter->head->next;
+        while (p != iter->tail)
+        {
+            int varCount = 0;
+            originMatrix[rowNumber][varCount++] = routeCount;
+            originMatrix[rowNumber][varCount++] = p->position.x;
+            originMatrix[rowNumber][varCount++] = p->position.y;
+            originMatrix[rowNumber][varCount++] = p->customer->startTime;
+            originMatrix[rowNumber][varCount++] = p->customer->endTime;
+            if (p->isOrigin)
+            {
+                originMatrix[rowNumber][varCount++] = p->customer->weight;
+            }
+            else
+            {
+                originMatrix[rowNumber][varCount++] = -p->customer->weight;
+            }
+            originMatrix[rowNumber][varCount++] = p->arrivalTime;
+            originMatrix[rowNumber][varCount++] = p->departureTime;
+            originMatrix[rowNumber][varCount++] = p->currentWeight;
+            p = p->next;
+            rowNumber++;
+        }
+        routeCount++;
+    }
+    for (auto iter = this->notServicedCustomer.begin(); iter != this->notServicedCustomer.end(); ++iter)
+    {
+        if ((*iter).second.first != a.positionToVisit)
+        {
+            int varCount = 0;
+            originMatrix[rowNumber][varCount++] = 0;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->origin.x;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->origin.y;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->startTime;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->endTime;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->weight;
+            originMatrix[rowNumber][varCount++] = 0;
+            originMatrix[rowNumber][varCount++] = 0;
+            originMatrix[rowNumber][varCount++] = 0;
+            varCount = 0;
+            rowNumber++;
+            originMatrix[rowNumber][varCount++] = 0;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->position.x;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->position.y;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->startTime;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->endTime;
+            originMatrix[rowNumber][varCount++] = -(*iter).second.second->customer->weight;
+            originMatrix[rowNumber][varCount++] = 0;
+            originMatrix[rowNumber][varCount++] = 0;
+            originMatrix[rowNumber][varCount++] = 0;
+            rowNumber++;
         }
     }
-    this->attributes[1] = this->pointSolution->info[1];
-    this->attributes[3] = this->currentRoute->currentPos->currentWeight;
+    alglib::real_2d_array pcaInput;
+    pcaInput.setlength(rowNumber, PCA_INPUT_COL);
+    for (int i = 0; i < rowNumber; i++)
+    {
+        for (int j = 0; j < PCA_INPUT_COL; j++)
+        {
+            pcaInput[i][j] = originMatrix[i][j];
+        }
+    }
+    const alglib::real_2d_array pcaInput1 = pcaInput;
+    alglib::ae_int_t infoOutput;
+    alglib::real_1d_array pcaOutput1;
+    alglib::real_2d_array pcaOutput2;
+    alglib::pcabuildbasis(pcaInput1, rowNumber, PCA_INPUT_COL, infoOutput, pcaOutput1, pcaOutput2);
+    for (int i = 0; i < ATTRIBUTES_NUMBER; i++)
+    {
+        //cout << pcaOutput1[i] << " ";
+        this->attributes[i] = pcaOutput1[i];
+    }
+    //cout << endl;
 }
 
 void MDP::executeAction(Action a)

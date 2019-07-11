@@ -13,3 +13,4 @@ lib
 build
 CMakeFiles
 *.cmake
+bin
