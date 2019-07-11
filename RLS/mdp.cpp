@@ -31,27 +31,30 @@ void State::calcAttribute(Action a)
     double originMatrix[CUSTOMER_NUMBER * 2][PCA_INPUT_COL];
     double routeCount = 1;
     int rowNumber = 0;
-    PointOrder p = this->currentRoute->currentPos;
-    while (p != this->currentRoute->tail)
+    for (auto iter = this->pointSolution->routes.begin(); iter != this->pointSolution->routes.end(); ++iter)
     {
-        int varCount = 0;
-        originMatrix[rowNumber][varCount++] = p->position.x;
-        originMatrix[rowNumber][varCount++] = p->position.y;
-        originMatrix[rowNumber][varCount++] = p->customer->startTime;
-        originMatrix[rowNumber][varCount++] = p->customer->endTime;
-        if (p->isOrigin)
+        PointOrder p = iter->head->next;
+        while (p != iter->tail)
         {
-            originMatrix[rowNumber][varCount++] = p->customer->weight;
+            int varCount = 0;
+            originMatrix[rowNumber][varCount++] = p->position.x;
+            originMatrix[rowNumber][varCount++] = p->position.y;
+            originMatrix[rowNumber][varCount++] = p->customer->startTime;
+            originMatrix[rowNumber][varCount++] = p->customer->endTime;
+            if (p->isOrigin)
+            {
+                originMatrix[rowNumber][varCount++] = p->customer->weight;
+            }
+            else
+            {
+                originMatrix[rowNumber][varCount++] = -p->customer->weight;
+            }
+            originMatrix[rowNumber][varCount++] = p->arrivalTime;
+            originMatrix[rowNumber][varCount++] = p->departureTime;
+            originMatrix[rowNumber][varCount++] = p->currentWeight;
+            p = p->next;
+            rowNumber++;
         }
-        else
-        {
-            originMatrix[rowNumber][varCount++] = -p->customer->weight;
-        }
-        originMatrix[rowNumber][varCount++] = p->arrivalTime;
-        originMatrix[rowNumber][varCount++] = p->departureTime;
-        originMatrix[rowNumber][varCount++] = p->currentWeight;
-        p = p->next;
-        rowNumber++;
     }
     for (auto iter = this->notServicedCustomer.begin(); iter != this->notServicedCustomer.end(); ++iter)
     {
