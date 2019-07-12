@@ -28,6 +28,25 @@ State::State()
 
 void State::calcAttribute(Action a)
 {
+    this->pointSolution->calcInfo();
+    //this->attributes[0] = 100;
+    this->attributes[0] = this->currentRoute->currentPos->departureTime;
+    //this->attributes[4] = this->pointSolution->info[2];
+    if (a.positionToVisit != nullptr && a.positionToVisit->isOrigin)
+    {
+        //this->attributes[1] = this->notServicedCustomer.size() + 1;
+    }
+    else
+    {
+        //this->attributes[1] = this->notServicedCustomer.size();
+        if (a.positionToVisit != nullptr)
+        {
+            //this->attributes[4] = this->pointSolution->info[2] + 1;
+        }
+    }
+    this->attributes[1] = this->pointSolution->info[1];
+    this->attributes[3] = this->currentRoute->currentPos->currentWeight;
+    /*
     double originMatrix[CUSTOMER_NUMBER * 2][PCA_INPUT_COL];
     double routeCount = 1;
     int rowNumber = 0;
@@ -101,7 +120,7 @@ void State::calcAttribute(Action a)
         //cout << pcaOutput1[i] << " ";
         this->attributes[i] = pcaOutput1[i];
     }
-    //cout << endl;
+    //cout << endl;*/
 }
 
 void MDP::executeAction(Action a)
