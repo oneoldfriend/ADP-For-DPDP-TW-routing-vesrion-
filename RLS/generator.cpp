@@ -12,12 +12,12 @@ void Generator::instanceGenenrator(bool testInstanceGenerate, list<pair<double, 
     list<pair<double, Customer *>> generatedCustomers;
     random_device rd;
     default_random_engine e(rd());
-    double shopLocation = 25.0, serviceRange = 20.0;
+    double shopLocation = 20.0, serviceRange = 20.0;
     uniform_real_distribution<double> ratio(0.0, 1.0);
     uniform_real_distribution<double> shopPosX(-shopLocation, shopLocation);
     uniform_real_distribution<double> shopPosY(-shopLocation, shopLocation);
-    double cancellationRatio = 0.1, hurryRatio = 0.4, timeWindowLength = (shopLocation + serviceRange), blankLength = 10.0, maxDemand = 5.0, DOD = 0.8;
-    double staticCustomer = double(CUSTOMER_NUMBER) * (1 - DOD);
+    double cancellationRatio = 0.1, hurryRatio = 0.4, timeWindowLength = 60.0, blankLength = 10.0, maxDemand = 5.0;
+    double staticCustomer = double(CUSTOMER_NUMBER) * (1 - DEGREE_OF_DYNAMISM);
     int customerCount = 0;
     double staticCustomerCount = 0.0;
     while (customerCount++ < CUSTOMER_NUMBER)
@@ -26,15 +26,15 @@ void Generator::instanceGenenrator(bool testInstanceGenerate, list<pair<double, 
         double appearTime = ratio(e) * (MAX_WORK_TIME - timeWindowLength - blankLength);
         if (staticCustomerCount++ < staticCustomer)
         {
-            customer->origin.x = shopPosX(e);
-            customer->origin.y = shopPosY(e);
-            uniform_real_distribution<double> customerPosX(customer->origin.x - serviceRange, customer->origin.x + serviceRange);
-            uniform_real_distribution<double> customerPosy(customer->origin.y - serviceRange, customer->origin.y + serviceRange);
+            customer->origin.x = 0.0;
+            customer->origin.y = 0.0;
+            uniform_real_distribution<double> customerPosX(serviceRange, serviceRange);
+            uniform_real_distribution<double> customerPosy(serviceRange, serviceRange);
             customer->dest.x = customerPosX(e);
             customer->dest.y = customerPosy(e);
             customer->startTime = 0;
             customer->endTime = MAX_WORK_TIME;
-            customer->weight = ratio(e) * maxDemand;
+            customer->weight = ratio(e) * maxDemand * 10.0;
             char idString[] = {char(customerCount / 1000 + 48), char(customerCount % 1000 / 100 + 48),
                                char(customerCount % 100 / 10 + 48), char(customerCount % 10 + 48), '\0'};
             customer->id = idString;
@@ -89,7 +89,7 @@ void Generator::instanceGenenrator(bool testInstanceGenerate, list<pair<double, 
             Customer *hurry = new Customer();
             Util::infoCopy(hurry, customer);
             hurry->priority = 2;
-            double hurryTime = customer->startTime + ratio(e) * timeWindowLength;
+            double hurryTime = customer->startTime + 30.0 + ratio(e) * timeWindowLength / 2.0;
             if (!testInstanceGenerate)
             {
                 sequenceData->push_back(make_pair(hurryTime, hurry));
