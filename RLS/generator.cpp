@@ -89,7 +89,7 @@ void Generator::instanceGenenrator(bool testInstanceGenerate, list<pair<double, 
             Customer *hurry = new Customer();
             Util::infoCopy(hurry, customer);
             hurry->priority = 2;
-            double hurryTime = customer->startTime + 30.0 + ratio(e) * timeWindowLength / 2.0;
+            double hurryTime = customer->startTime + timeWindowLength / 2.0 + ratio(e) * timeWindowLength / 2.0;
             if (!testInstanceGenerate)
             {
                 sequenceData->push_back(make_pair(hurryTime, hurry));

@@ -43,7 +43,7 @@ void State::calcAttribute(Action a)
         if (a.positionToVisit != nullptr)
         {
             this->attributes[2] = this->pointSolution->info[2] + 1;
-	    //this->attributes[1] = this->pointSolution->info[3] + a.positionToVisit->customer->weight;
+            //this->attributes[1] = this->pointSolution->info[3] + a.positionToVisit->customer->weight;
         }
     }
     this->attributes[4] = this->pointSolution->info[1];
@@ -516,7 +516,25 @@ void MDP::observation(double lastDecisionTime)
             else
             {
                 //若观察到顾客退单或催单，则直接对原有顾客信息进行更新
-                this->customers[sequenceIter->second->id]->priority = sequenceIter->second->priority;
+                for (auto notSrvCstm = this->currentState.notServicedCustomer.begin(); notSrvCstm != this->currentState.notServicedCustomer.end();)
+                {
+                    if (notSrvCstm->second.second->customer->id == sequenceIter->second->id)
+                    {
+                        this->customers[sequenceIter->second->id]->priority = sequenceIter->second->priority;
+                        if (sequenceIter->second->priority == 0)
+                        {
+                            this->currentState.notServicedCustomer.erase(notSrvCstm++);
+                        }
+                        else
+                        {
+                            ++notSrvCstm;
+                        }
+                    }
+                    else
+                    {
+                        ++notSrvCstm;
+                    }
+                }
                 delete sequenceIter->second;
             }
         }
@@ -550,13 +568,10 @@ void MDP::observation(double lastDecisionTime)
             }
         }
     }
-}
-
-//update the solution(delete the customers with cancellation)
-/* 
+    //update the solution(delete the customers with cancellation)
     for (auto routeIter = this->solution.routes.begin(); routeIter != this->solution.routes.end(); ++routeIter)
     {
-        PointOrder p = routeIter->currentPos->next;
+        PointOrder p = routeIter->currentPos;
         bool cancellation = false;
         while (p != routeIter->tail)
         {
@@ -565,8 +580,15 @@ void MDP::observation(double lastDecisionTime)
             {
                 cancellation = true;
                 PointOrder tempPtr = p->next;
-                routeIter->removeOrder(p);
-                delete p;
+                if (p == routeIter->currentPos)
+                {
+                    p->currentWeight -= p->customer->weight;
+                }
+                else
+                {
+                    routeIter->removeOrder(p);
+                    delete p;
+                }
                 p = tempPtr;
             }
             else
@@ -579,4 +601,5 @@ void MDP::observation(double lastDecisionTime)
             //若有顾客退单导致解的变化，则更新对应路径的信息
             routeIter->routeUpdate();
         }
-    }*/
+    }
+}
