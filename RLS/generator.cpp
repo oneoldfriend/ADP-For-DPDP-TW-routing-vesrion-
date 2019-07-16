@@ -12,7 +12,7 @@ void Generator::instanceGenenrator(bool testInstanceGenerate, list<pair<double, 
     list<pair<double, Customer *>> generatedCustomers;
     random_device rd;
     default_random_engine e(rd());
-    double shopLocation = 20.0, serviceRange = 20.0;
+    double shopLocation = 10.0, serviceRange = 10.0;
     uniform_real_distribution<double> ratio(0.0, 1.0);
     uniform_real_distribution<double> shopPosX(-shopLocation, shopLocation);
     uniform_real_distribution<double> shopPosY(-shopLocation, shopLocation);

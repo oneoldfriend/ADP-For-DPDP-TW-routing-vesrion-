@@ -46,7 +46,7 @@ void State::calcAttribute(Action a)
 	    //this->attributes[1] = this->pointSolution->info[3] + a.positionToVisit->customer->weight;
         }
     }
-    //this->attributes[2] = this->pointSolution->info[1];
+    this->attributes[4] = this->pointSolution->info[1];
     //this->attributes[3] = this->currentRoute->currentPos->currentWeight;
     /*
     double originMatrix[CUSTOMER_NUMBER * 2][PCA_INPUT_COL];
