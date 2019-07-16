@@ -1,6 +1,7 @@
 #include "generator.h"
 #include "util.h"
 #include <ctime>
+#include <algorithm>
 
 bool Generator::sortAscend(const pair<double, Customer *> a, const pair<double, Customer *> b)
 {
@@ -12,7 +13,7 @@ void Generator::instanceGenenrator(bool testInstanceGenerate, list<pair<double, 
     list<pair<double, Customer *>> generatedCustomers;
     random_device rd;
     default_random_engine e(rd());
-    double shopLocation = 10.0, serviceRange = 10.0;
+    double shopLocation = 10.0, serviceRange = 5.0;
     uniform_real_distribution<double> ratio(0.0, 1.0);
     uniform_real_distribution<double> shopPosX(-shopLocation, shopLocation);
     uniform_real_distribution<double> shopPosY(-shopLocation, shopLocation);
@@ -50,8 +51,12 @@ void Generator::instanceGenenrator(bool testInstanceGenerate, list<pair<double, 
         }
         customer->origin.x = shopPosX(e);
         customer->origin.y = shopPosY(e);
-        uniform_real_distribution<double> customerPosX(-shopLocation, shopLocation);
-        uniform_real_distribution<double> customerPosy(-shopLocation, shopLocation);
+        uniform_real_distribution<double> customerPosX(max(-shopLocation, customer->origin.x - serviceRange),
+                                                       min(shopLocation, customer->origin.x + serviceRange));
+        uniform_real_distribution<double> customerPosy(max(-shopLocation, customer->origin.y - serviceRange),
+                                                       min(shopLocation, customer->origin.y + serviceRange));
+        //uniform_real_distribution<double> customerPosX(-shopLocation, shopLocation);
+        //uniform_real_distribution<double> customerPosy(-shopLocation, shopLocation);
         customer->dest.x = customerPosX(e);
         customer->dest.y = customerPosy(e);
         customer->startTime = appearTime + blankLength;
@@ -128,4 +133,3 @@ void Generator::instanceGenenrator(bool testInstanceGenerate, list<pair<double, 
         outFile.close();
     }
 }
-
