@@ -21,7 +21,7 @@ int main()
     while (i < 720.0)
     {
         i += e_d(lambda);
-        cout << "No. : " << ++count << "  Current Time: " << i << endl;
+        //cout << "No. : " << ++count << "  Current Time: " << i << endl;
     }
     Solver solver;
     solver.solve();

@@ -28,8 +28,8 @@ void Generator::instanceGenenrator(bool testInstanceGenerate, list<pair<double, 
         {
             customer->origin.x = 0.0;
             customer->origin.y = 0.0;
-            uniform_real_distribution<double> customerPosX(serviceRange, serviceRange);
-            uniform_real_distribution<double> customerPosy(serviceRange, serviceRange);
+            uniform_real_distribution<double> customerPosX(-shopLocation, shopLocation);
+            uniform_real_distribution<double> customerPosy(-shopLocation, shopLocation);
             customer->dest.x = customerPosX(e);
             customer->dest.y = customerPosy(e);
             customer->startTime = 0;
@@ -50,8 +50,8 @@ void Generator::instanceGenenrator(bool testInstanceGenerate, list<pair<double, 
         }
         customer->origin.x = shopPosX(e);
         customer->origin.y = shopPosY(e);
-        uniform_real_distribution<double> customerPosX(customer->origin.x - serviceRange, customer->origin.x + serviceRange);
-        uniform_real_distribution<double> customerPosy(customer->origin.y - serviceRange, customer->origin.y + serviceRange);
+        uniform_real_distribution<double> customerPosX(-shopLocation, shopLocation);
+        uniform_real_distribution<double> customerPosy(-shopLocation, shopLocation);
         customer->dest.x = customerPosX(e);
         customer->dest.y = customerPosy(e);
         customer->startTime = appearTime + blankLength;
