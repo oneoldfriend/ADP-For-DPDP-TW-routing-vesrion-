@@ -58,6 +58,18 @@ void Solver::solve()
         testResult.push_back(simulation.solution.cost);
         rejection.push_back(simulation.cumOutsourcedCost);
         //cout << simulation.solution.cost << " " << simulation.solution.penalty << " " << simulation.solution.waitTime << " " << simulation.cumOutsourcedCost << " " << simulation.solution.cost + simulation.cumOutsourcedCost << endl;
+        ofstream outFile("solution.txt", ios::out);
+        for (auto iter = simulation.solution.routes.begin(); iter != simulation.solution.routes.end(); ++iter)
+        {
+            PointOrder p = iter->head;
+            while (p != nullptr)
+            {
+                outFile << p->position.x << ",";
+                outFile << p->position.y << endl;
+                p = p->next;
+            }
+        }
+        outFile.close();
     }
     double resultSum = 0, rejectionSum = 0;
     for (auto iter = testResult.begin(); iter != testResult.end(); ++iter)
