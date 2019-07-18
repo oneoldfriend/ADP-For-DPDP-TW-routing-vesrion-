@@ -19,8 +19,8 @@ void Generator::instanceGenenrator(bool testInstanceGenerate, list<pair<double, 
     double staticCustomer = double(CUSTOMER_NUMBER) * (1 - DEGREE_OF_DYNAMISM);
     int customerCount = 0;
     double staticCustomerCount = 0.0;
-    double cluster[2][4] = {{-5.0, 0.0, 0.0, 5.0}, {0.0, 5.0, -5.0, 0.0}}; //, {0.0, 5.0, 0.0, 5.0}};
-    int clusterNum = 2;
+    double cluster[3][4] = {{-10.0, 0.0, 0.0, 10.0}, {0.0, 10.0, -10.0, 0.0}, {0.0, 10.0, 0.0, 10.0}};
+    int clusterNum = 3;
     int clusterIndex = 0, clusterCount = 0, clusterLimit = CUSTOMER_NUMBER - (int)staticCustomer / clusterNum;
     while (customerCount++ < CUSTOMER_NUMBER)
     {
