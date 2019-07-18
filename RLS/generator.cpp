@@ -22,10 +22,24 @@ void Generator::instanceGenenrator(bool testInstanceGenerate, list<pair<double, 
     double cluster[3][4] = {{-10.0, 0.0, 0.0, 10.0}, {0.0, 10.0, -10.0, 0.0}, {0.0, 10.0, 0.0, 10.0}};
     int clusterNum = 3;
     int clusterIndex = 0, clusterCount = 0, clusterLimit = CUSTOMER_NUMBER - (int)staticCustomer / clusterNum;
+    double lambda = (double)CUSTOMER_NUMBER / ((double)MAX_WORK_TIME - timeWindowLength - blankLength), i = 0.0;
+    vector<double> apStore;
+    while (i < (MAX_WORK_TIME - timeWindowLength - blankLength))
+    {
+        i += -(1 / lambda) * log(ratio(e));
+        apStore.push_back(i);
+    }
     while (customerCount++ < CUSTOMER_NUMBER)
     {
+        /*if (customerCount > apStore.size())
+        {
+            break;
+        }*/
         Customer *customer = new Customer();
-        double appearTime = ratio(e) * (MAX_WORK_TIME - timeWindowLength - blankLength);
+        uniform_real_distribution<double> ap(0, 1.0);
+        double appearTime = (MAX_WORK_TIME - timeWindowLength - blankLength) * ap(e);
+        //double appearTime = apStore[customerCount - 1];
+        //double appearTime = ratio(e) * (MAX_WORK_TIME - timeWindowLength - blankLength);
         if (staticCustomerCount++ < staticCustomer)
         {
             customer->origin.x = 0.0;
@@ -55,16 +69,16 @@ void Generator::instanceGenenrator(bool testInstanceGenerate, list<pair<double, 
             clusterIndex++;
         }
         clusterCount++;
-        uniform_real_distribution<double> shopPosX(cluster[clusterIndex][0], cluster[clusterIndex][1]);
-        uniform_real_distribution<double> shopPosY(cluster[clusterIndex][2], cluster[clusterIndex][3]);
+        uniform_real_distribution<double> shopPosX(-shopLocation, shopLocation);
+        uniform_real_distribution<double> shopPosY(-shopLocation, shopLocation);
         customer->origin.x = shopPosX(e);
         customer->origin.y = shopPosY(e);
         /*uniform_real_distribution<double> customerPosX(max(-shopLocation, customer->origin.x - serviceRange),
                                                        min(shopLocation, customer->origin.x + serviceRange));
         uniform_real_distribution<double> customerPosy(max(-shopLocation, customer->origin.y - serviceRange),
                                                        min(shopLocation, customer->origin.y + serviceRange));*/
-        uniform_real_distribution<double> customerPosX(cluster[clusterIndex][0], cluster[clusterIndex][1]);
-        uniform_real_distribution<double> customerPosy(cluster[clusterIndex][2], cluster[clusterIndex][3]);
+        uniform_real_distribution<double> customerPosX(-shopLocation, shopLocation);
+        uniform_real_distribution<double> customerPosy(-shopLocation, shopLocation);
         customer->dest.x = customerPosX(e);
         customer->dest.y = customerPosy(e);
         customer->startTime = appearTime + blankLength;
