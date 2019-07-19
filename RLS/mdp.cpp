@@ -520,7 +520,7 @@ void MDP::observation(double lastDecisionTime)
                 {
                     if (notSrvCstm->second.second->customer->id == sequenceIter->second->id)
                     {
-                        this->customers[sequenceIter->second->id]->priority = sequenceIter->second->priority;
+                        notSrvCstm->second.second->customer->priority = sequenceIter->second->priority;
                         if (sequenceIter->second->priority == 0)
                         {
                             this->currentState.notServicedCustomer.erase(notSrvCstm++);

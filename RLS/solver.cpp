@@ -1,5 +1,6 @@
 #include "solver.h"
 #include "generator.h"
+#include <algorithm>
 #include <random>
 #include <ctime>
 
@@ -35,6 +36,8 @@ void Solver::solve()
     int instanceNum = 0;
     vector<double> testResult;
     vector<double> rejection;
+    vector<double> visitForNon;
+    vector<double> lateness;
     while (instanceNum++ < MAX_TEST_INSTANCE)
     {
         char dayNum[] = {char(CUSTOMER_NUMBER / 100 + 48), char(CUSTOMER_NUMBER % 100 / 10 + 48), char(CUSTOMER_NUMBER % 10 + 48), '-',
@@ -57,8 +60,27 @@ void Solver::solve()
         simulation.solution.calcCost();
         testResult.push_back(simulation.solution.cost);
         rejection.push_back(simulation.cumOutsourcedCost);
+        double VFNCount = 0.0, latenessTime = 0.0;
+        for (auto iter = simulation.solution.routes.begin(); iter != simulation.solution.routes.end(); ++iter)
+        {
+            PointOrder p = iter->head->next;
+            while (p != iter->tail)
+            {
+                if (p->customer->priority == 0 && p->isOrigin)
+                {
+                    VFNCount++;
+                }
+                if (p->customer->priority == 2 && !p->isOrigin)
+                {
+                    latenessTime += max(0.0, p->arrivalTime - p->customer->endTime);
+                }
+                p = p->next;
+            }
+        }
+        visitForNon.push_back(VFNCount);
+        lateness.push_back(latenessTime);
         //cout << simulation.solution.cost << " " << simulation.solution.penalty << " " << simulation.solution.waitTime << " " << simulation.cumOutsourcedCost << " " << simulation.solution.cost + simulation.cumOutsourcedCost << endl;
-        ofstream outFile("solution.txt", ios::out);
+        /*ofstream outFile("solution.txt", ios::out);
         for (auto iter = simulation.solution.routes.begin(); iter != simulation.solution.routes.end(); ++iter)
         {
             PointOrder p = iter->head;
@@ -69,17 +91,16 @@ void Solver::solve()
                 p = p->next;
             }
         }
-        outFile.close();
+        outFile.close();*/
     }
-    double resultSum = 0, rejectionSum = 0;
-    for (auto iter = testResult.begin(); iter != testResult.end(); ++iter)
+    double resultSum = 0, rejectionSum = 0, VFNSum = 0.0, latenessSum = 0.0;
+    for (int index = 0; index < MAX_TEST_INSTANCE; index++)
     {
-        resultSum += *iter;
+        resultSum += testResult[index];
+        rejectionSum += rejection[index];
+        VFNSum += visitForNon[index];
+        latenessSum += lateness[index];
     }
-    for (auto iter = rejection.begin(); iter != rejection.end(); ++iter)
-    {
-        rejectionSum += *iter;
-    }
-    cout << "Test Average Cost: " << resultSum / double(testResult.size()) << " " << rejectionSum / double(rejection.size()) / MAX_WORK_TIME << " " << resultSum / double(testResult.size()) + rejectionSum / double(rejection.size()) << endl;
+    cout << "Test Average Cost: " << resultSum / double(MAX_TEST_INSTANCE) << " " << resultSum / double(MAX_TEST_INSTANCE) + rejectionSum / double(MAX_TEST_INSTANCE) << " " << VFNSum / (double)MAX_TEST_INSTANCE << " " << latenessSum / (double)MAX_TEST_INSTANCE << endl;
     return;
 }
