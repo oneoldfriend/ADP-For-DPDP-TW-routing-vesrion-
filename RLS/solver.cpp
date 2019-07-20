@@ -66,7 +66,7 @@ void Solver::solve()
             PointOrder p = iter->head->next;
             while (p != iter->tail)
             {
-                if (p->customer->priority == 0 && p->isOrigin)
+                if (p->customer->priority == 0)// && p->isOrigin)
                 {
                     VFNCount++;
                 }
