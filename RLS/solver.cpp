@@ -36,8 +36,8 @@ void Solver::solve()
     int instanceNum = 0;
     vector<double> testResult;
     vector<double> rejection;
-    vector<double> visitForNon;
-    vector<double> lateness;
+    vector<double> latenessForAll;
+    vector<double> latenessForReminder;
     while (instanceNum++ < MAX_TEST_INSTANCE)
     {
         char dayNum[] = {char(CUSTOMER_NUMBER / 100 + 48), char(CUSTOMER_NUMBER % 100 / 10 + 48), char(CUSTOMER_NUMBER % 10 + 48), '-',
@@ -60,25 +60,25 @@ void Solver::solve()
         simulation.solution.calcCost();
         testResult.push_back(simulation.solution.cost);
         rejection.push_back(simulation.cumOutsourcedCost);
-        double VFNCount = 0.0, latenessTime = 0.0;
+        double allLateness = 0.0, reminderLateness = 0.0;
         for (auto iter = simulation.solution.routes.begin(); iter != simulation.solution.routes.end(); ++iter)
         {
             PointOrder p = iter->head->next;
             while (p != iter->tail)
             {
-                if (p->customer->priority == 0)// && p->isOrigin)
+                if (p->customer->startTime != 0 && !p->isOrigin)
                 {
-                    VFNCount++;
+                    allLateness += max(0.0, p->arrivalTime - p->customer->endTime);
                 }
                 if (p->customer->priority == 2 && !p->isOrigin)
                 {
-                    latenessTime += max(0.0, p->arrivalTime - p->customer->endTime);
+                    reminderLateness += max(0.0, p->arrivalTime - p->customer->endTime);
                 }
                 p = p->next;
             }
         }
-        visitForNon.push_back(VFNCount);
-        lateness.push_back(latenessTime);
+        latenessForReminder.push_back(reminderLateness);
+        latenessForAll.push_back(allLateness);
         //cout << simulation.solution.cost << " " << simulation.solution.penalty << " " << simulation.solution.waitTime << " " << simulation.cumOutsourcedCost << " " << simulation.solution.cost + simulation.cumOutsourcedCost << endl;
         /*ofstream outFile("solution.txt", ios::out);
         for (auto iter = simulation.solution.routes.begin(); iter != simulation.solution.routes.end(); ++iter)
@@ -93,14 +93,14 @@ void Solver::solve()
         }
         outFile.close();*/
     }
-    double resultSum = 0, rejectionSum = 0, VFNSum = 0.0, latenessSum = 0.0;
+    double resultSum = 0, rejectionSum = 0, allLatenessSum = 0.0, reminderLatenessSum = 0.0;
     for (int index = 0; index < MAX_TEST_INSTANCE; index++)
     {
         resultSum += testResult[index];
         rejectionSum += rejection[index];
-        VFNSum += visitForNon[index];
-        latenessSum += lateness[index];
+        allLatenessSum += latenessForAll[index];
+        reminderLatenessSum += latenessForReminder[index];
     }
-    cout << "Test Average Cost: " << resultSum / double(MAX_TEST_INSTANCE) << " " << resultSum / double(MAX_TEST_INSTANCE) + rejectionSum / double(MAX_TEST_INSTANCE) << " " << VFNSum / (double)MAX_TEST_INSTANCE << " " << latenessSum / (double)MAX_TEST_INSTANCE << endl;
+    cout << "Test Average Cost: " << resultSum / double(MAX_TEST_INSTANCE) << " " << resultSum / double(MAX_TEST_INSTANCE) + rejectionSum / double(MAX_TEST_INSTANCE) << " " << allLatenessSum / (double)MAX_TEST_INSTANCE << " " << reminderLatenessSum / (double)MAX_TEST_INSTANCE << endl;
     return;
 }
