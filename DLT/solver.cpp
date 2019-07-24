@@ -19,17 +19,14 @@ void Solver::solve()
     }
     return;
     srand(time(NULL));*/
-
     ValueFunction valueFunction;
     //offline approximation
     AVI approximateValueIterate;
     if (!MYOPIC)
     {
-        //cout << "starting approximation!\n"
-        //     << endl;
+        //cout << "starting approximation!\n" << endl;
         approximateValueIterate.approximation(&valueFunction);
-        //cout << "finished approximation!\n"
-        //     << endl;
+        //cout << "finished approximation!\n" << endl;
     }
 
     //online solving

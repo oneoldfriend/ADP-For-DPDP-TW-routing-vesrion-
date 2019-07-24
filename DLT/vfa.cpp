@@ -7,6 +7,17 @@ LookupTable::LookupTable()
     double xTick = double(MAX_WORK_TIME) / double(X_INITIAL_ENTRY_NUM),
            yTick = double(MAX_VEHICLE * MAX_WORK_TIME) / double(Y_INITIAL_ENTRY_NUM);
     int entryCount = 0;
+
+    for (int i = 0; i < MAX_WORK_TIME; i++)
+    {
+        vector<int> secondD;
+        for (int j = 0; j < MAX_VEHICLE * MAX_WORK_TIME; j++)
+        {
+            secondD.push_back(0);
+        }
+        this->entryIndex.push_back(secondD);
+    }
+
     for (int xCount = 0; xCount < X_INITIAL_ENTRY_NUM; xCount++)
     {
         for (int yCount = 0; yCount < Y_INITIAL_ENTRY_NUM; yCount++)
@@ -146,10 +157,10 @@ void ValueFunction::updateValue(vector<pair<Aggregation, double>> valueAtThisSim
         errorThisSimulation += abs(this->lookupTable.entryValue[entryNum] - decisionPoint->second);
         if (startApproximate)
         {
-            this->lookupTable.entryValue[entryNum] = (1 - STEP_SIZE) * this->lookupTable.entryValue[entryNum] + STEP_SIZE * decisionPoint->second;
+            this->lookupTable.entryValue[entryNum] = (1 - STEP_SIZE) * this->lookupTable.entryValue[entryNum] - STEP_SIZE * (this->lookupTable.entryValue[entryNum] - decisionPoint->second);
         }
     }
-    cout << errorThisSimulation << endl;
+    //cout << errorThisSimulation << endl;
     if (DYNAMIC_LOOKUP_TABLE)
     {
         this->lookupTable.partitionUpdate();
