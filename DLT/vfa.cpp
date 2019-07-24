@@ -121,7 +121,7 @@ ValueFunction::ValueFunction()
     lookupTable = LookupTable();
 }
 
-double ValueFunction::getValue(State S, Action a)
+double ValueFunction::getValue(State S, Action a, bool approx)
 {
     Aggregation postDecisionState;
     postDecisionState.aggregate(S, a);

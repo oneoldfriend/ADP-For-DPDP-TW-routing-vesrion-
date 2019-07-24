@@ -15,40 +15,7 @@ Solution::Solution()
     this->penalty = 0;
 }
 
-double Solution::calcCost()
-{
-    double cost = 0;
-    for (auto iter = this->routes.begin(); iter != this->routes.end(); ++iter)
-    {
-        this->cost += iter->cost;
-        this->penalty += iter->penalty;
-        this->travelTime += iter->travelTime;
-        this->waitTime += iter->waitTime;
-    }
-    return cost;
-}
-
-void Solution::solutionCopy(Solution *source)
-{
-    auto thisRouteIter = this->routes.begin();
-    auto sourceRouteIter = source->routes.begin();
-    for (; thisRouteIter != this->routes.end(); ++thisRouteIter, ++sourceRouteIter)
-    {
-        thisRouteIter->routeCopy(*sourceRouteIter);
-    }
-    this->cost = source->cost;
-}
-
-void Solution::solutionDelete()
-{
-    for (auto iter = this->routes.begin(); iter != this->routes.end(); ++iter)
-    {
-        iter->deleteRoute();
-    }
-}
-
-
-/*bool Solution::greedyInsertion(Action a)
+bool Solution::greedyInsertion(Action a)
 {
     vector<Customer *> customerToBeInserted;
     //获得需要插入的顾客信息
@@ -107,32 +74,60 @@ void Solution::solutionDelete()
     }
     this->cost = this->calcCost();
     return true;
-}*/
+}
 
-
-/*void Solution::calcAttribute()
+double Solution::calcCost()
 {
-    this->attribute[0] = MAX_EDGE;
-    int deliveredWeights = 0, availableVehicle = 0;
+    double cost = 0;
+    for (auto iter = this->routes.begin(); iter != this->routes.end(); ++iter)
+    {
+        this->cost += iter->cost;
+        this->penalty += iter->penalty;
+        this->travelTime = iter->travelTime;
+        this->waitTime = iter->waitTime;
+    }
+    return cost;
+}
+
+void Solution::solutionCopy(Solution *source)
+{
+    auto thisRouteIter = this->routes.begin();
+    auto sourceRouteIter = source->routes.begin();
+    for (; thisRouteIter != this->routes.end(); ++thisRouteIter, ++sourceRouteIter)
+    {
+        thisRouteIter->routeCopy(*sourceRouteIter);
+    }
+    this->cost = source->cost;
+}
+
+void Solution::solutionDelete()
+{
+    for (auto iter = this->routes.begin(); iter != this->routes.end(); ++iter)
+    {
+        iter->deleteRoute();
+    }
+}
+
+void Solution::calcInfo()
+{
+    this->info[0] = MAX_EDGE;
+    double deliveredWeights = 0, servicedCustomers = 0;
     double availableTime = 0.0;
     for (auto routeIter = this->routes.begin(); routeIter != this->routes.end(); routeIter++)
     {
         availableTime += MAX_WORK_TIME - routeIter->tail->arrivalTime;
-        if (routeIter->tail->arrivalTime + MAX_EDGE <= MAX_WORK_TIME)
-        {
-            availableVehicle++;
-        }
         PointOrder p = routeIter->head;
         while (p != routeIter->currentPos)
         {
             if (!p->isOrigin)
             {
-                deliveredWeights++;
+		servicedCustomers += 1;
+                deliveredWeights += p->customer->weight;
             }
             p = p->next;
         }
     }
-    this->attribute[1] = ceil(availableTime / MAX_EDGE);
-    this->attribute[2] = deliveredWeights;
-    this->attribute[3] = availableVehicle;
-}*/
+    this->info[1] = availableTime;
+    this->info[3] = deliveredWeights;
+    this->info[2] = servicedCustomers;
+}

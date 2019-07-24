@@ -1,51 +1,193 @@
 #include "mdp.h"
 #include "route.h"
 #include "generator.h"
+#include "vfa.h"
 
 using namespace std;
+
+double Action::rejectionReward()
+{
+    double count = 0;
+    for (auto iter = this->customerConfirmation.begin(); iter != this->customerConfirmation.end(); ++iter)
+    {
+        if (iter->second == false)
+        {
+            count++;
+        }
+    }
+    return count * MAX_WORK_TIME;
+}
 
 State::State()
 {
     this->currentTime = 0;
     this->currentRoute = nullptr;
+    this->attributes = Eigen::VectorXd(ATTRIBUTES_NUMBER);
 }
 
-void State::executeAction(Action a)
+void State::calcAttribute(Action a)
 {
-    if (a.positionToVisit != nullptr)
+    this->pointSolution->calcInfo();
+    this->attributes[0] = 100;
+    this->attributes[1] = this->currentRoute->currentPos->departureTime;
+    //this->attributes[1] = this->pointSolution->info[3];
+    this->attributes[2] = this->pointSolution->info[2];
+    if (a.positionToVisit != nullptr && a.positionToVisit->isOrigin)
     {
-        a.positionToVisit->prior = this->currentRoute->currentPos;
-        a.positionToVisit->next = this->currentRoute->currentPos->next;
-        this->currentRoute->insertOrder(a.positionToVisit);
+        this->attributes[3] = this->notServicedCustomer.size() + 1;
     }
     else
     {
-        this->currentRoute->currentPos->departureTime += UNIT_TIME;
-        this->currentRoute->currentPos->waitTime += UNIT_TIME;
+        this->attributes[3] = this->notServicedCustomer.size();
+        if (a.positionToVisit != nullptr)
+        {
+            this->attributes[2] = this->pointSolution->info[2] + 1;
+            //this->attributes[1] = this->pointSolution->info[3] + a.positionToVisit->customer->weight;
+        }
     }
-    this->currentRoute->routeUpdate();
+    this->attributes[4] = this->pointSolution->info[1];
+    //this->attributes[3] = this->currentRoute->currentPos->currentWeight;
+    /*
+    double originMatrix[CUSTOMER_NUMBER * 2][PCA_INPUT_COL];
+    double routeCount = 1;
+    int rowNumber = 0;
+    for (auto iter = this->pointSolution->routes.begin(); iter != this->pointSolution->routes.end(); ++iter)
+    {
+        PointOrder p = iter->head->next;
+        while (p != iter->tail)
+        {
+            int varCount = 0;
+            originMatrix[rowNumber][varCount++] = p->position.x;
+            originMatrix[rowNumber][varCount++] = p->position.y;
+            originMatrix[rowNumber][varCount++] = p->customer->startTime;
+            originMatrix[rowNumber][varCount++] = p->customer->endTime;
+            if (p->isOrigin)
+            {
+                originMatrix[rowNumber][varCount++] = p->customer->weight;
+            }
+            else
+            {
+                originMatrix[rowNumber][varCount++] = -p->customer->weight;
+            }
+            originMatrix[rowNumber][varCount++] = p->arrivalTime;
+            originMatrix[rowNumber][varCount++] = p->departureTime;
+            originMatrix[rowNumber][varCount++] = p->currentWeight;
+            p = p->next;
+            rowNumber++;
+        }
+    }
+    for (auto iter = this->notServicedCustomer.begin(); iter != this->notServicedCustomer.end(); ++iter)
+    {
+        if ((*iter).second.first != a.positionToVisit)
+        {
+            int varCount = 0;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->origin.x;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->origin.y;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->startTime;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->endTime;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->weight;
+            originMatrix[rowNumber][varCount++] = 0;
+            originMatrix[rowNumber][varCount++] = 0;
+            originMatrix[rowNumber][varCount++] = 0;
+            varCount = 0;
+            rowNumber++;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->position.x;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->position.y;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->startTime;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->endTime;
+            originMatrix[rowNumber][varCount++] = -(*iter).second.second->customer->weight;
+            originMatrix[rowNumber][varCount++] = 0;
+            originMatrix[rowNumber][varCount++] = 0;
+            originMatrix[rowNumber][varCount++] = 0;
+            rowNumber++;
+        }
+    }
+    alglib::real_2d_array pcaInput;
+    pcaInput.setlength(rowNumber, PCA_INPUT_COL);
+    for (int i = 0; i < rowNumber; i++)
+    {
+        for (int j = 0; j < PCA_INPUT_COL; j++)
+        {
+            pcaInput[i][j] = originMatrix[i][j];
+        }
+    }
+    const alglib::real_2d_array pcaInput1 = pcaInput;
+    alglib::ae_int_t infoOutput;
+    alglib::real_1d_array pcaOutput1;
+    alglib::real_2d_array pcaOutput2;
+    alglib::pcabuildbasis(pcaInput1, rowNumber, PCA_INPUT_COL, infoOutput, pcaOutput1, pcaOutput2);
+    for (int i = 0; i < ATTRIBUTES_NUMBER; i++)
+    {
+        //cout << pcaOutput1[i] << " ";
+        this->attributes[i] = pcaOutput1[i];
+    }
+    //cout << endl;*/
 }
 
-void State::undoAction(Action a)
+void MDP::executeAction(Action a)
 {
     if (a.positionToVisit != nullptr)
     {
-        this->currentRoute->removeOrder(a.positionToVisit);
+        if (a.positionToVisit->isOrigin)
+        {
+            a.positionToVisit->prior = this->currentState.currentRoute->currentPos;
+            a.positionToVisit->next = this->currentState.currentRoute->currentPos->next;
+            PointOrder dest = this->currentState.notServicedCustomer[a.positionToVisit->customer->id].second;
+            dest->prior = a.positionToVisit;
+            dest->next = a.positionToVisit->next;
+            this->currentState.currentRoute->insertOrder(a.positionToVisit);
+            this->currentState.currentRoute->insertOrder(dest);
+        }
+        else
+        {
+            this->currentState.currentRoute->removeOrder(a.positionToVisit);
+            a.positionToVisit->prior = this->currentState.currentRoute->currentPos;
+            a.positionToVisit->next = this->currentState.currentRoute->currentPos->next;
+            this->currentState.currentRoute->insertOrder(a.positionToVisit);
+        }
     }
     else
     {
-        this->currentRoute->currentPos->departureTime -= UNIT_TIME;
-        this->currentRoute->currentPos->waitTime -= UNIT_TIME;
+        this->currentState.currentRoute->currentPos->departureTime += UNIT_TIME;
+        this->currentState.currentRoute->currentPos->waitTime += UNIT_TIME;
     }
-    this->currentRoute->routeUpdate();
+    this->currentState.currentRoute->routeUpdate();
 }
 
-void MDP::integerToAction(int actionNum, State S, Action *a)
+void MDP::undoAction(Action a)
+{
+    if (a.positionToVisit != nullptr)
+    {
+        if (a.positionToVisit->isOrigin)
+        {
+            PointOrder dest = a.positionToVisit->next;
+            this->currentState.currentRoute->removeOrder(a.positionToVisit);
+            this->currentState.currentRoute->removeOrder(dest);
+        }
+        else
+        {
+            this->currentState.currentRoute->removeOrder(a.positionToVisit);
+            a.positionToVisit->prior = a.destPosBeforeExecution.first;
+            a.positionToVisit->next = a.destPosBeforeExecution.second;
+            this->currentState.currentRoute->insertOrder(a.positionToVisit);
+        }
+    }
+    else
+    {
+        this->currentState.currentRoute->currentPos->departureTime -= UNIT_TIME;
+        this->currentState.currentRoute->currentPos->waitTime -= UNIT_TIME;
+    }
+    this->currentState.currentRoute->routeUpdate();
+}
+
+void MDP::integerToRoutingAction(int actionNum, State S, Action *a)
 {
     //根据当前动作号进行二进制转换为具体动作
     if (actionNum >= 0)
     {
         a->positionToVisit = S.reachableCustomer[actionNum];
+        a->destPosBeforeExecution.first = S.reachableCustomer[actionNum]->prior;
+        a->destPosBeforeExecution.second = S.reachableCustomer[actionNum]->next;
     }
     else
     {
@@ -53,7 +195,62 @@ void MDP::integerToAction(int actionNum, State S, Action *a)
     }
 }
 
-void MDP::findBestAction(Action *a, ValueFunction valueFunction, double *reward, bool approx)
+void MDP::integerToAssignmentAction(int actionNum, State S, Action *a)
+{
+    //根据当前动作号进行二进制转换为具体动作
+    int leftOver = actionNum;
+    for (auto customerIter = S.newCustomers.begin(); customerIter != S.newCustomers.end(); ++customerIter)
+    {
+        if (leftOver % 2 == 1)
+        {
+            a->customerConfirmation[*customerIter] = true;
+        }
+        else
+        {
+            a->customerConfirmation[*customerIter] = false;
+        }
+        leftOver = leftOver / 2;
+    }
+}
+
+void MDP::findBestAssignmentAction(Action *a, ValueFunction valueFunction)
+{
+    int actionNum = 0, maxActionNum = pow(2, this->currentState.newCustomers.size()), bestActionNum = -1;
+    double bestActionValue = MAX_COST;
+    if (ASSIGNMENT)
+    {
+        if (this->currentState.newCustomers.size() != 0)
+        {
+            //若有新顾客被观察到
+            while (actionNum < maxActionNum)
+            {
+                //检查每个可能动作的可行性并对可行动作进行评估
+                Action tempAction;
+                double actionValue = 0;
+                this->integerToAssignmentAction(actionNum, this->currentState, &tempAction);
+                double immediateReward = 0;
+                if (this->checkAssignmentActionFeasibility(tempAction, &immediateReward))
+                {
+                    actionValue = immediateReward; // + valueFunction.getValue(postDecisionState, immediateReward);
+                    if (actionValue < bestActionValue)
+                    {
+                        //记录更优的动作
+                        bestActionValue = actionValue;
+                        bestActionNum = actionNum;
+                    }
+                }
+                actionNum++;
+            }
+        }
+    }
+    else
+    {
+        bestActionNum = maxActionNum - 1;
+    }
+    this->integerToAssignmentAction(bestActionNum, this->currentState, a);
+}
+
+void MDP::findBestRoutingAction(Action *a, ValueFunction valueFunction, double *reward, bool approx)
 {
     int actionNum = 0, maxActionNum = this->currentState.reachableCustomer.size(), bestActionNum = -1;
     double bestActionValue = MAX_COST, totalValue = 0.0;
@@ -63,12 +260,12 @@ void MDP::findBestAction(Action *a, ValueFunction valueFunction, double *reward,
         //检查每个可能动作的可行性并对可行动作进行评估
         Action tempAction;
         double actionValue = 0;
-        this->integerToAction(actionNum, this->currentState, &tempAction);
+        this->integerToRoutingAction(actionNum, this->currentState, &tempAction);
         double immediateReward = 0;
-        if (this->checkActionFeasibility(tempAction, &immediateReward))
+        if (this->checkRoutingActionFeasibility(tempAction, &immediateReward))
         {
             //若动作可行，则进行评估
-            actionValue = immediateReward + valueFunction.getValue(this->currentState, tempAction);
+            actionValue = immediateReward + valueFunction.getValue(this->currentState, tempAction, approx);
             if (actionValue < bestActionValue)
             {
                 //记录更优的动作
@@ -80,40 +277,68 @@ void MDP::findBestAction(Action *a, ValueFunction valueFunction, double *reward,
             actionWheel[actionNum] = actionValue;
         }
         //回撤动作继续下一个评估
-        this->currentState.undoAction(tempAction);
+        this->undoAction(tempAction);
         actionNum++;
     }
-    if (approx)
+    if (false)
     {
-        if (ROULETTE_WHEEL)
+        double prob = rand() / double(RAND_MAX), cumProb = 0.0;
+        for (auto iter = actionWheel.begin(); iter != actionWheel.end(); ++iter)
         {
-            double prob = rand() / double(RAND_MAX), cumProb = 0.0;
-            for (auto iter = actionWheel.begin(); iter != actionWheel.end(); ++iter)
+            cumProb += iter->second / totalValue;
+            if (prob <= cumProb)
             {
-                cumProb += iter->second / totalValue;
-                if (prob <= cumProb)
-                {
-                    bestActionNum = iter->first;
-                    break;
-                }
+                bestActionNum = iter->first;
+                break;
             }
         }
     }
-    this->integerToAction(bestActionNum, this->currentState, a);
-    if (bestActionNum == -1)
-    {
-        *reward = 10.0;
-    }
+    this->integerToRoutingAction(bestActionNum, this->currentState, a);
 }
 
-bool MDP::checkActionFeasibility(Action a, double *reward)
+bool MDP::checkAssignmentActionFeasibility(Action a, double *reward)
 {
-    double currentCost = this->currentState.currentRoute->cost;
-    this->currentState.executeAction(a);
-    bool feasibility = this->currentState.currentRoute->checkFeasibility();
-    double newCost = this->currentState.currentRoute->cost;
+    Solution tempSolution = Solution();
+    //生成当前解的副本并对副本执行动作进行检查计算
+    tempSolution.solutionCopy(&this->solution);
+    double currentCost = tempSolution.cost;
+    bool feasibility = tempSolution.greedyInsertion(a);
+    double newCost = tempSolution.cost;
+    tempSolution.solutionDelete();
+    newCost += a.rejectionReward();
     *reward = newCost - currentCost;
     return feasibility;
+}
+
+bool MDP::checkRoutingActionFeasibility(Action a, double *reward)
+{
+    double currentCost = this->currentState.currentRoute->cost;
+    this->executeAction(a);
+    bool feasibility = this->currentState.currentRoute->checkFeasibility();
+    double newCost = this->currentState.currentRoute->cost;
+    for (auto iter = this->currentState.notServicedCustomer.begin(); iter != this->currentState.notServicedCustomer.end(); ++iter)
+    {
+        if (iter->second.first != nullptr && a.positionToVisit != iter->second.first &&
+            this->currentState.currentTime - iter->second.first->customer->startTime > IGNORANCE_TOLERANCE)
+        {
+            newCost += MAX_WORK_TIME;
+        }
+    }
+    *reward = newCost - currentCost;
+    return feasibility;
+}
+
+void MDP::assignmentConfirmed(Action a)
+{
+    for (auto iter = a.customerConfirmation.begin(); iter != a.customerConfirmation.end(); ++iter)
+    {
+        if (iter->second)
+        {
+            PointOrder origin = new Order(iter->first, true);
+            this->currentState.reachableCustomer.push_back(origin);
+            this->currentState.notServicedCustomer[iter->first->id] = make_pair(origin, new Order(iter->first, false));
+        }
+    }
 }
 
 MDP::MDP(bool approx, string fileName)
@@ -154,17 +379,14 @@ MDP::MDP(bool approx, string fileName)
         if (iter->first == 0.0)
         {
             //加入提前已知的顾客
-            this->currentState.notServicedCustomer.push_back(new Order(iter->second, true));
+            this->currentState.newCustomers.push_back(iter->second);
         }
         this->customers[iter->second->id] = iter->second;
     }
     //状态当前车辆初始化为第一辆车
     this->currentState.currentRoute = &this->solution.routes[0];
     this->currentState.pointSolution = &this->solution;
-    for (auto iter = this->currentState.notServicedCustomer.begin(); iter != this->currentState.notServicedCustomer.end(); ++iter)
-    {
-        this->currentState.reachableCustomer.push_back(*iter);
-    }
+    this->cumOutsourcedCost = 0.0;
 }
 
 MDP::~MDP()
@@ -179,19 +401,15 @@ MDP::~MDP()
             p = pNext;
         }
     }
-    for (auto iter = this->currentState.notServicedCustomer.begin(); iter != this->currentState.notServicedCustomer.end(); ++iter)
-    {
-        delete (*iter);
-    }
 }
 
 double MDP::reward(State S, Action a)
 {
     //复制当前解并对副本执行动作计算立即反馈
-    double newCost = S.currentRoute->cost;
-    this->currentState.undoAction(a);
     double currentCost = S.currentRoute->cost;
-    this->currentState.executeAction(a);
+    this->executeAction(a);
+    double newCost = S.currentRoute->cost;
+    this->undoAction(a);
     return newCost - currentCost;
 }
 
@@ -199,23 +417,21 @@ void MDP::transition(Action a)
 {
     //执行动作
     double lastDecisionTime = this->currentState.currentTime;
-    this->currentState.executeAction(a);
+    this->executeAction(a);
     //更新当前状态
     if (a.positionToVisit != nullptr)
     {
-        //若执行车辆去某个订单的起点取货
-        if (a.positionToVisit->isOrigin == true)
-        {
-            //将订单终点加入未服务位置集中
-            this->currentState.notServicedCustomer.push_back(new Order(a.positionToVisit->customer, false));
-        }
         //在未服务位置集中删除该位置
         for (auto iter = this->currentState.notServicedCustomer.begin(); iter != this->currentState.notServicedCustomer.end(); ++iter)
         {
-            if (*iter == a.positionToVisit)
+            if (iter->second.second == a.positionToVisit)
             {
                 this->currentState.notServicedCustomer.erase(iter);
                 break;
+            }
+            else if (iter->second.first == a.positionToVisit)
+            {
+                iter->second.first = nullptr;
             }
         }
         //更新当前路径的available position为下一个点
@@ -227,10 +443,11 @@ void MDP::transition(Action a)
         if (this->currentState.currentRoute->tail->departureTime + UNIT_TIME > MAX_WORK_TIME)
         {
             //若车辆不能原地等待则直接返回仓库结束配送
-            this->currentState.undoAction(a);
+            this->undoAction(a);
             this->currentState.currentRoute->currentPos = this->currentState.currentRoute->tail;
         }
     }
+    this->checkIgnorance(a);
     this->currentState.currentTime = MAX_WORK_TIME;
     this->currentState.currentRoute = nullptr;
     //找到下一辆空闲车辆,更新状态相关信息
@@ -251,8 +468,35 @@ void MDP::transition(Action a)
     this->observation(lastDecisionTime);
 }
 
+void MDP::checkIgnorance(Action a)
+{
+    for (auto iter = this->currentState.notServicedCustomer.begin(); iter != this->currentState.notServicedCustomer.end();)
+    {
+        if (iter->second.first != nullptr)
+        {
+            if (a.positionToVisit != iter->second.first &&
+                this->currentState.currentTime - iter->second.first->customer->startTime > IGNORANCE_TOLERANCE)
+            {
+                this->cumOutsourcedCost += MAX_WORK_TIME;
+                delete iter->second.first;
+                delete iter->second.second;
+                this->currentState.notServicedCustomer.erase(iter++);
+            }
+            else
+            {
+                ++iter;
+            }
+        }
+        else
+        {
+            ++iter;
+        }
+    }
+}
+
 void MDP::observation(double lastDecisionTime)
 {
+    this->currentState.newCustomers.clear();
     for (auto sequenceIter = this->sequenceData.begin(); sequenceIter != this->sequenceData.end();)
     {
         if (sequenceIter->first > this->currentState.currentTime)
@@ -266,47 +510,49 @@ void MDP::observation(double lastDecisionTime)
             {
                 //若有新顾客产生，则将其加入到待插入顾客集中
                 this->customers[sequenceIter->second->id] = sequenceIter->second;
-                this->currentState.notServicedCustomer.push_back(new Order(sequenceIter->second, true));
+                this->currentState.newCustomers.push_back(sequenceIter->second);
             }
             else
             {
                 //若观察到顾客退单或催单，则直接对原有顾客信息进行更新
-                this->customers[sequenceIter->second->id]->priority = sequenceIter->second->priority;
+                for (auto notSrvCstm = this->currentState.notServicedCustomer.begin(); notSrvCstm != this->currentState.notServicedCustomer.end();)
+                {
+                    if (notSrvCstm->second.second->customer->id == sequenceIter->second->id)
+                    {
+                        notSrvCstm->second.second->customer->priority = sequenceIter->second->priority;
+                        if (sequenceIter->second->priority == 0)
+                        {
+                            this->currentState.notServicedCustomer.erase(notSrvCstm++);
+                        }
+                        else
+                        {
+                            ++notSrvCstm;
+                        }
+                    }
+                    else
+                    {
+                        ++notSrvCstm;
+                    }
+                }
                 delete sequenceIter->second;
             }
         }
         this->sequenceData.erase(sequenceIter++);
     }
-    //删除已取消的订单
-    /*if (!this->currentState.notServicedCustomer.empty())
-    {
-        for (auto iter = this->currentState.notServicedCustomer.begin(); iter != this->currentState.notServicedCustomer.end(); ++iter)
-        {
-            if ((*iter)->isOrigin && (*iter)->customer->priority == 0)
-            {
-                this->currentState.notServicedCustomer.erase(iter);
-                iter = this->currentState.notServicedCustomer.begin();
-            }
-        }
-    }*/
     //更新当前车辆可以合法访问的点
     this->currentState.reachableCustomer.clear();
     if (this->currentState.currentRoute != nullptr)
     {
         for (auto iter = this->currentState.notServicedCustomer.begin(); iter != this->currentState.notServicedCustomer.end(); ++iter)
         {
-            if ((*iter)->isOrigin)
-            {
-                this->currentState.reachableCustomer.push_back(*iter);
-            }
-            else
+            if (iter->second.first == nullptr)
             {
                 PointOrder p = this->currentState.currentRoute->head->next;
                 while (p != this->currentState.currentRoute->tail)
                 {
-                    if (p->customer->id == (*iter)->customer->id)
+                    if (p->customer->id == iter->second.second->customer->id)
                     {
-                        this->currentState.reachableCustomer.push_back(*iter);
+                        this->currentState.reachableCustomer.push_back(iter->second.second);
                         break;
                     }
                     else
@@ -315,14 +561,16 @@ void MDP::observation(double lastDecisionTime)
                     }
                 }
             }
+            else
+            {
+                this->currentState.reachableCustomer.push_back(iter->second.first);
+            }
         }
     }
-
     //update the solution(delete the customers with cancellation)
-    /* 
     for (auto routeIter = this->solution.routes.begin(); routeIter != this->solution.routes.end(); ++routeIter)
     {
-        PointOrder p = routeIter->currentPos->next;
+        PointOrder p = routeIter->currentPos;
         bool cancellation = false;
         while (p != routeIter->tail)
         {
@@ -331,8 +579,15 @@ void MDP::observation(double lastDecisionTime)
             {
                 cancellation = true;
                 PointOrder tempPtr = p->next;
-                routeIter->removeOrder(p);
-                delete p;
+                if (p == routeIter->currentPos)
+                {
+                    p->currentWeight -= p->customer->weight;
+                }
+                else
+                {
+                    routeIter->removeOrder(p);
+                    delete p;
+                }
                 p = tempPtr;
             }
             else
@@ -345,5 +600,5 @@ void MDP::observation(double lastDecisionTime)
             //若有顾客退单导致解的变化，则更新对应路径的信息
             routeIter->routeUpdate();
         }
-    }*/
+    }
 }

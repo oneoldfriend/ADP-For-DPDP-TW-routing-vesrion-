@@ -49,7 +49,7 @@ class ValueFunction
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW*/
 public:
   LookupTable lookupTable;
-  double getValue(State S, Action a);
+  double getValue(State S, Action a, bool approx);
   void updateValue(vector<pair<Aggregation, double> > valueAtThisSimulation, bool startApproximate);
   ValueFunction();
 };

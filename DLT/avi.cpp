@@ -1,5 +1,6 @@
 #include "avi.h"
 #include "generator.h"
+#include "vfa.h"
 #include <random>
 
 void AVI::approximation(ValueFunction *valueFunction)
@@ -17,25 +18,32 @@ void AVI::approximation(ValueFunction *valueFunction)
         }
         //初始化马尔科夫决策过程
         MDP simulation = MDP(true, "");
-        vector<pair<Aggregation, double> > valueAtThisSimulation;
+        vector<pair<Aggregation, double>> valueAtThisSimulation;
         //开始mdp模拟
         while (simulation.currentState.currentRoute != nullptr)
         {
             Action bestAction;
-            double reward = 0.0;
-            simulation.findBestAction(&bestAction, *valueFunction, &reward, true);
-            Aggregation postDecisionState;
-            simulation.currentState.executeAction(bestAction);
-            postDecisionState.aggregate(simulation.currentState, bestAction);
-            simulation.currentState.undoAction(bestAction);
+            double routingReward = 0.0;
+            simulation.findBestAssignmentAction(&bestAction, *valueFunction);
+            simulation.assignmentConfirmed(bestAction);
+            simulation.findBestRoutingAction(&bestAction, *valueFunction, &routingReward, startApproximate);
             //记录这次sample path的信息
-            valueAtThisSimulation.push_back(make_pair(postDecisionState, reward));
+            simulation.executeAction(bestAction);
+            Aggregation postDecisionState;
+            postDecisionState.aggregate(simulation.currentState, bestAction);
+            simulation.undoAction(bestAction);
+            valueAtThisSimulation.push_back(make_pair(postDecisionState, routingReward));
             //状态转移
             simulation.transition(bestAction);
         }
         //对lookup table 进行更新
+        double valueSum = 0.0;
+        for (auto iter = valueAtThisSimulation.begin(); iter != valueAtThisSimulation.end(); ++iter)
+        {
+            valueSum += iter->second;
+        }
         simulation.solution.calcCost();
-        //cout << totalSimulationCount << " " << simulation.solution.cost << " " << simulation.solution.penalty << " " << simulation.solution.waitTime << endl;
+        //cout << totalSimulationCount << " " << simulation.solution.cost << " " << simulation.solution.penalty << " " << simulation.solution.waitTime << " " << simulation.cumOutsourcedCost << " " << simulation.solution.cost + simulation.cumOutsourcedCost << " " << valueSum << endl;
         valueFunction->updateValue(valueAtThisSimulation, startApproximate);
         for (auto iter = simulation.customers.begin(); iter != simulation.customers.end(); ++iter)
         {
