@@ -35,6 +35,14 @@ void Solver::solve()
     vector<double> rejection;
     vector<double> latenessForAll;
     vector<double> latenessForReminder;
+    /*for (int i = 0; i < (int)MAX_WORK_TIME; i++)
+    {
+        for (int j = 0; j < (int)MAX_VEHICLE * MAX_WORK_TIME; j++)
+        {
+            int entryNum = valueFunction.lookupTable.entryIndex[i][j];
+            cout << i << " " << j << " " << entryNum << " " << valueFunction.lookupTable.entryValue[entryNum] << endl;
+        }
+    }*/
     while (instanceNum++ < MAX_TEST_INSTANCE)
     {
         double duration;

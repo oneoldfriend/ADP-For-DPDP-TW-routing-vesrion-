@@ -4,9 +4,8 @@
 LookupTable::LookupTable()
 {
     double initialValue = -MAX_EDGE * double(CUSTOMER_NUMBER);
-    double xTick = double(MAX_WORK_TIME) / double(X_INITIAL_ENTRY_NUM),
-           yTick = double(MAX_VEHICLE * MAX_WORK_TIME) / double(Y_INITIAL_ENTRY_NUM);
-    int entryCount = 0;
+    double xTick = 10.0, yTick = 10.0;
+    int entryCount = 0, xEntryNum = (int)ceil(MAX_WORK_TIME / xTick), yEntryNum = (int)ceil(MAX_VEHICLE * MAX_WORK_TIME / yTick);
 
     for (int i = 0; i < MAX_WORK_TIME; i++)
     {
@@ -18,9 +17,9 @@ LookupTable::LookupTable()
         this->entryIndex.push_back(secondD);
     }
 
-    for (int xCount = 0; xCount < X_INITIAL_ENTRY_NUM; xCount++)
+    for (int xCount = 0; xCount < xEntryNum; xCount++)
     {
-        for (int yCount = 0; yCount < Y_INITIAL_ENTRY_NUM; yCount++)
+        for (int yCount = 0; yCount < yEntryNum; yCount++)
         {
             this->entryValue[entryCount] = initialValue;
             this->entryPosition[entryCount].first = floor(double(xCount) * xTick);
@@ -28,11 +27,13 @@ LookupTable::LookupTable()
             this->entryRange[entryCount].first = xTick;
             this->entryRange[entryCount].second = yTick;
             for (int i = (int)this->entryPosition[entryCount].first;
-                 i < (int)floor(this->entryPosition[entryCount].first + this->entryRange[entryCount].first);
+                 i < (int)floor(this->entryPosition[entryCount].first + this->entryRange[entryCount].first) &&
+                 i < (int)MAX_WORK_TIME;
                  i++)
             {
                 for (int j = (int)this->entryPosition[entryCount].second;
-                     j < (int)floor(this->entryPosition[entryCount].second + this->entryRange[entryCount].second);
+                     j < (int)floor(this->entryPosition[entryCount].second + this->entryRange[entryCount].second) &&
+                     j < (int)MAX_VEHICLE * MAX_WORK_TIME;
                      j++)
                 {
                     this->entryIndex[i][j] = entryCount;
@@ -121,9 +122,9 @@ void Aggregation::aggregate(State S, Action a)
 {
     //对执行动作后的解进行相关的信息提取
     this->currentTime = S.currentTime;
-    for (auto iter = S.pointSolution->routes.begin(); iter != S.pointSolution->routes.begin(); ++iter)
+    for (auto iter = S.pointSolution->routes.begin(); iter != S.pointSolution->routes.end(); ++iter)
     {
-        this->remainTime += MAX_WORK_TIME - iter->tail->arrivalTime;
+        this->remainTime += (double)MAX_WORK_TIME - iter->tail->arrivalTime;
     }
 }
 
@@ -146,7 +147,7 @@ double ValueFunction::getValue(State S, Action a, bool approx)
     }
 }
 
-void ValueFunction::updateValue(vector<pair<Aggregation, double> > valueAtThisSimulation, bool startApproximate)
+void ValueFunction::updateValue(vector<pair<Aggregation, double>> valueAtThisSimulation, bool startApproximate)
 {
     double lastValue = 0;
     double errorThisSimulation = 0.0;
@@ -162,7 +163,7 @@ void ValueFunction::updateValue(vector<pair<Aggregation, double> > valueAtThisSi
         this->lookupTable.entryInfo[entryNum].first++;
         this->lookupTable.entryInfo[entryNum].second.push_back(decisionPoint->second);
         errorThisSimulation += abs(this->lookupTable.entryValue[entryNum] - decisionPoint->second);
-        this->lookupTable.entryValue[entryNum] = (1 - STEP_SIZE) * this->lookupTable.entryValue[entryNum] - STEP_SIZE * (this->lookupTable.entryValue[entryNum] - decisionPoint->second);
+        this->lookupTable.entryValue[entryNum] = (1 - STEP_SIZE) * this->lookupTable.entryValue[entryNum] + STEP_SIZE * decisionPoint->second;
     }
     cout << errorThisSimulation << endl;
     if (DYNAMIC_LOOKUP_TABLE)
