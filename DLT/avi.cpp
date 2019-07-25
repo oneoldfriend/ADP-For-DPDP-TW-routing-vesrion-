@@ -11,8 +11,8 @@ void AVI::approximation(ValueFunction *valueFunction)
     bool startApproximate = false;
     while (totalSimulationCount++ < MAX_SIMULATION)
     {
-		double duration;
-		clock_t start, end;
+        double duration;
+        clock_t start, end;
         start = clock();
         lagApproximateCount++;
         if (lagApproximateCount > LAG_APPROXIMATE)
@@ -27,9 +27,9 @@ void AVI::approximation(ValueFunction *valueFunction)
         {
             Action bestAction;
             double routingReward = 0.0;
-            simulation.findBestAssignmentAction(&bestAction, *valueFunction);
+            simulation.findBestAssignmentAction(&bestAction, valueFunction);
             simulation.assignmentConfirmed(bestAction);
-            simulation.findBestRoutingAction(&bestAction, *valueFunction, &routingReward, startApproximate);
+            simulation.findBestRoutingAction(&bestAction, valueFunction, &routingReward, startApproximate);
             //记录这次sample path的信息
             simulation.executeAction(bestAction);
             Aggregation postDecisionState;
@@ -40,12 +40,6 @@ void AVI::approximation(ValueFunction *valueFunction)
             simulation.transition(bestAction);
         }
         //对lookup table 进行更新
-        double valueSum = 0.0;
-        for (auto iter = valueAtThisSimulation.begin(); iter != valueAtThisSimulation.end(); ++iter)
-        {
-            valueSum += iter->second;
-        }
-        simulation.solution.calcCost();
         //cout << totalSimulationCount << " " << simulation.solution.cost << " " << simulation.solution.penalty << " " << simulation.solution.waitTime << " " << simulation.cumOutsourcedCost << " " << simulation.solution.cost + simulation.cumOutsourcedCost << " " << valueSum << endl;
         valueFunction->updateValue(valueAtThisSimulation, startApproximate);
         for (auto iter = simulation.customers.begin(); iter != simulation.customers.end(); ++iter)
@@ -53,7 +47,7 @@ void AVI::approximation(ValueFunction *valueFunction)
             delete iter->second;
         }
         end = clock();
-		duration = (double)(end - start) / CLOCKS_PER_SEC / 60;
-        cout << "last " << duration << "mins" << endl;
+        duration = (double)(end - start) / CLOCKS_PER_SEC;
+        //cout << "last " << duration << "s  " << valueAtThisSimulation.size() << endl;
     }
 }

@@ -13,9 +13,9 @@ class ValueFunction;
 #define MAX_EDGE 100.0
 #define UNIT_TIME 5.0
 #define SPEED 20
-#define CUSTOMER_NUMBER 30
-#define MAX_VEHICLE 1
-#define MAX_SIMULATION 50000
+#define CUSTOMER_NUMBER 90
+#define MAX_VEHICLE 3
+#define MAX_SIMULATION 500000
 #define MAX_TEST_INSTANCE 10000
 #define LAG_APPROXIMATE 0
 #define ASSIGNMENT 0

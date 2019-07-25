@@ -3,7 +3,7 @@
 
 LookupTable::LookupTable()
 {
-    double initialValue = MAX_EDGE * double(CUSTOMER_NUMBER);
+    double initialValue = -MAX_EDGE * double(CUSTOMER_NUMBER);
     double xTick = double(MAX_WORK_TIME) / double(X_INITIAL_ENTRY_NUM),
            yTick = double(MAX_VEHICLE * MAX_WORK_TIME) / double(Y_INITIAL_ENTRY_NUM);
     int entryCount = 0;
@@ -146,7 +146,7 @@ double ValueFunction::getValue(State S, Action a, bool approx)
     }
 }
 
-void ValueFunction::updateValue(vector<pair<Aggregation, double>> valueAtThisSimulation, bool startApproximate)
+void ValueFunction::updateValue(vector<pair<Aggregation, double> > valueAtThisSimulation, bool startApproximate)
 {
     double lastValue = 0;
     double errorThisSimulation = 0.0;
@@ -162,12 +162,9 @@ void ValueFunction::updateValue(vector<pair<Aggregation, double>> valueAtThisSim
         this->lookupTable.entryInfo[entryNum].first++;
         this->lookupTable.entryInfo[entryNum].second.push_back(decisionPoint->second);
         errorThisSimulation += abs(this->lookupTable.entryValue[entryNum] - decisionPoint->second);
-        if (startApproximate)
-        {
-            this->lookupTable.entryValue[entryNum] = (1 - STEP_SIZE) * this->lookupTable.entryValue[entryNum] - STEP_SIZE * (this->lookupTable.entryValue[entryNum] - decisionPoint->second);
-        }
+        this->lookupTable.entryValue[entryNum] = (1 - STEP_SIZE) * this->lookupTable.entryValue[entryNum] - STEP_SIZE * (this->lookupTable.entryValue[entryNum] - decisionPoint->second);
     }
-    //cout << errorThisSimulation << endl;
+    cout << errorThisSimulation << endl;
     if (DYNAMIC_LOOKUP_TABLE)
     {
         this->lookupTable.partitionUpdate();
