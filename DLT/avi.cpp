@@ -11,6 +11,9 @@ void AVI::approximation(ValueFunction *valueFunction)
     bool startApproximate = false;
     while (totalSimulationCount++ < MAX_SIMULATION)
     {
+		double duration;
+		clock_t start, end;
+        start = clock();
         lagApproximateCount++;
         if (lagApproximateCount > LAG_APPROXIMATE)
         {
@@ -43,11 +46,14 @@ void AVI::approximation(ValueFunction *valueFunction)
             valueSum += iter->second;
         }
         simulation.solution.calcCost();
-        cout << totalSimulationCount << " " << simulation.solution.cost << " " << simulation.solution.penalty << " " << simulation.solution.waitTime << " " << simulation.cumOutsourcedCost << " " << simulation.solution.cost + simulation.cumOutsourcedCost << " " << valueSum << endl;
+        //cout << totalSimulationCount << " " << simulation.solution.cost << " " << simulation.solution.penalty << " " << simulation.solution.waitTime << " " << simulation.cumOutsourcedCost << " " << simulation.solution.cost + simulation.cumOutsourcedCost << " " << valueSum << endl;
         valueFunction->updateValue(valueAtThisSimulation, startApproximate);
         for (auto iter = simulation.customers.begin(); iter != simulation.customers.end(); ++iter)
         {
             delete iter->second;
         }
+        end = clock();
+		duration = (double)(end - start) / CLOCKS_PER_SEC / 60;
+        cout << "last " << duration << "mins" << endl;
     }
 }

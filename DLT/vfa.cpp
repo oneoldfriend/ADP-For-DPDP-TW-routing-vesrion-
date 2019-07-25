@@ -134,9 +134,16 @@ ValueFunction::ValueFunction()
 
 double ValueFunction::getValue(State S, Action a, bool approx)
 {
-    Aggregation postDecisionState;
-    postDecisionState.aggregate(S, a);
-    return this->lookupTable.lookup(postDecisionState);
+    if (MYOPIC)
+    {
+        return 0.0;
+    }
+    else
+    {
+        Aggregation postDecisionState;
+        postDecisionState.aggregate(S, a);
+        return this->lookupTable.lookup(postDecisionState);
+    }
 }
 
 void ValueFunction::updateValue(vector<pair<Aggregation, double>> valueAtThisSimulation, bool startApproximate)
