@@ -6,11 +6,22 @@ LookupTable::LookupTable()
     averageN = 0;
     averageTheta = 0;
     double initialValue = -MAX_EDGE * double(CUSTOMER_NUMBER);
-    double xTick = 5.0, yTick = 5.0;
-    int entryCount = 0,
+    double xTick, yTick;
+    int entryCount = 0, xEntryNum, yEntryNum;
+    if (DYNAMIC_LOOKUP_TABLE)
+    {
+        xEntryNum = 10;
+        yEntryNum = 10;
+        xTick = ceil(MAX_WORK_TIME / xEntryNum);
+        yTick = ceil(MAX_VEHICLE * MAX_WORK_TIME / yEntryNum);
+    }
+    else
+    {
+        xTick = 5.0;
+        yTick = 5.0;
         xEntryNum = (int)ceil(MAX_WORK_TIME / xTick),
         yEntryNum = (int)ceil(MAX_VEHICLE * MAX_WORK_TIME / yTick);
-
+    }
     for (int i = 0; i < MAX_WORK_TIME; i++)
     {
         vector<int> secondD;
@@ -108,11 +119,13 @@ void LookupTable::partition(int entryNum)
         this->entryInfo[newEntryIndex][1] = this->entryInfo[entryNum][1];
         this->entryInfo[newEntryIndex][2] = this->entryInfo[entryNum][2];
         for (int i = (int)this->entryPosition[newEntryIndex].first;
-             i < (int)this->entryPosition[newEntryIndex].first + this->entryRange[newEntryIndex].first;
+             i < (int)this->entryPosition[newEntryIndex].first + this->entryRange[newEntryIndex].first &&
+             i < (int)MAX_WORK_TIME;
              i++)
         {
             for (int j = (int)this->entryPosition[newEntryIndex].second;
-                 j < (int)this->entryPosition[newEntryIndex].second + this->entryRange[newEntryIndex].second;
+                 j < (int)this->entryPosition[newEntryIndex].second + this->entryRange[newEntryIndex].second &&
+                 j < (int)MAX_VEHICLE * MAX_WORK_TIME;
                  j++)
             {
                 this->entryIndex[i][j] = newEntryIndex;
