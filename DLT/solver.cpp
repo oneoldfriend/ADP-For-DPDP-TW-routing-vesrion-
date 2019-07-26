@@ -75,9 +75,9 @@ void Solver::solve()
                 {
                     allLateness += max(0.0, p->arrivalTime - p->customer->endTime);
                 }
-                if (p->customer->priority == 2 && !p->isOrigin)
+                if (p->customer->priority == 0 && p->isOrigin)
                 {
-                    reminderLateness += max(0.0, p->arrivalTime - p->customer->endTime);
+                    reminderLateness += 1;//max(0.0, p->arrivalTime - p->customer->endTime);
                 }
                 p = p->next;
             }

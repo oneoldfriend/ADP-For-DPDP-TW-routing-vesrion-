@@ -8,8 +8,8 @@ LookupTable::LookupTable()
     double initialValue = -MAX_EDGE * double(CUSTOMER_NUMBER);
     double xTick = 5.0, yTick = 5.0;
     int entryCount = 0,
-        xEntryNum = 10, //(int)ceil(MAX_WORK_TIME / xTick),
-        yEntryNum = 10; //(int)ceil(MAX_VEHICLE * MAX_WORK_TIME / yTick);
+        xEntryNum = (int)ceil(MAX_WORK_TIME / xTick),
+        yEntryNum = (int)ceil(MAX_VEHICLE * MAX_WORK_TIME / yTick);
 
     for (int i = 0; i < MAX_WORK_TIME; i++)
     {
@@ -180,7 +180,7 @@ void ValueFunction::updateValue(vector<pair<Aggregation, double>> valueAtThisSim
         errorThisSimulation += abs(this->lookupTable.entryValue[entryNum] - decisionPoint->second);
         this->lookupTable.entryValue[entryNum] = (1.0 - STEP_SIZE) * this->lookupTable.entryValue[entryNum] + STEP_SIZE * decisionPoint->second;
     }
-    //cout << errorThisSimulation << endl;
+    cout << errorThisSimulation / valueAtThisSimulation.size() << endl;
     if (DYNAMIC_LOOKUP_TABLE)
     {
         if (startApproximate)
