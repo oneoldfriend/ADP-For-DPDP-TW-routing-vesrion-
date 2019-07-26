@@ -4,8 +4,10 @@
 LookupTable::LookupTable()
 {
     double initialValue = -MAX_EDGE * double(CUSTOMER_NUMBER);
-    double xTick = 10.0, yTick = 10.0;
-    int entryCount = 0, xEntryNum = (int)ceil(MAX_WORK_TIME / xTick), yEntryNum = (int)ceil(MAX_VEHICLE * MAX_WORK_TIME / yTick);
+    double xTick = 5.0, yTick = 5.0;
+    int entryCount = 0,
+        xEntryNum = 10, //(int)ceil(MAX_WORK_TIME / xTick),
+        yEntryNum = 10; //(int)ceil(MAX_VEHICLE * MAX_WORK_TIME / yTick);
 
     for (int i = 0; i < MAX_WORK_TIME; i++)
     {
@@ -58,7 +60,12 @@ void LookupTable::partitionUpdate()
     for (int entryCount = 0; entryCount < entrySize; entryCount++)
     {
         totalN += this->entryInfo[entryCount].first;
-        entryTheta[entryCount] = Util::standardDeviation(this->entryInfo[entryCount].second);
+        double vectorCopy[this->entryInfo[entryCount].second.size()];
+        for (int i = 0; i < this->entryInfo[entryCount].second.size(); i++)
+        {
+            vectorCopy[i] = this->entryInfo[entryCount].second[i];
+        }
+        entryTheta[entryCount] = Util::standardDeviation(vectorCopy, this->entryInfo[entryCount].second.size());
         totalTheta += entryTheta[entryCount];
     }
     //计算\hat{N}和\hat{theta}
@@ -70,9 +77,9 @@ void LookupTable::partitionUpdate()
         double factor2 = entryTheta[entryCount] / averageTheta;
         if (factor1 * factor2 > PARTITION_THRESHOLD)
         {
-            cout << factor1 << " " << factor2 << " " << PARTITION_THRESHOLD << endl;
+            //cout << factor1 << " " << factor2 << " " << PARTITION_THRESHOLD << endl;
             //若该entry 达到threshold，则对entry 进行再划分
-            cout << "partitioned entry: " << this->entryPosition[entryCount].first << " " << this->entryPosition[entryCount].second << endl;
+            //cout << "partitioned entry: " << this->entryPosition[entryCount].first << " " << this->entryPosition[entryCount].second << endl;
             this->partition(entryCount);
         }
     }

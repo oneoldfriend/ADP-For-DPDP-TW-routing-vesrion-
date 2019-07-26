@@ -45,9 +45,6 @@ void Solver::solve()
     }*/
     while (instanceNum++ < MAX_TEST_INSTANCE)
     {
-        double duration;
-        clock_t start, end;
-        start = clock();
         char dayNum[] = {char(CUSTOMER_NUMBER / 100 + 48), char(CUSTOMER_NUMBER % 100 / 10 + 48), char(CUSTOMER_NUMBER % 10 + 48), '-',
                          char(instanceNum / 1000000 + 48), char(instanceNum % 1000000 / 100000 + 48), char(instanceNum % 100000 / 10000 + 48),
                          char(instanceNum % 10000 / 1000 + 48), char(instanceNum % 1000 / 100 + 48),
@@ -87,9 +84,6 @@ void Solver::solve()
         }
         latenessForReminder.push_back(reminderLateness);
         latenessForAll.push_back(allLateness);
-        end = clock();
-        duration = (double)(end - start) / CLOCKS_PER_SEC;
-        //cout << "last " << duration << "s  " << endl;
         //cout << simulation.solution.cost << " " << simulation.solution.penalty << " " << simulation.solution.waitTime << " " << simulation.cumOutsourcedCost << " " << simulation.solution.cost + simulation.cumOutsourcedCost << endl;
         /*ofstream outFile("solution.txt", ios::out);
         for (auto iter = simulation.solution.routes.begin(); iter != simulation.solution.routes.end(); ++iter)

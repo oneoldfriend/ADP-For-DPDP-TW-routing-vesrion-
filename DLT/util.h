@@ -10,6 +10,6 @@ class Util
 {
   public:
     static void infoCopy(Customer *target, Customer *source);
-    static double standardDeviation(vector<double> sample);
+    static double standardDeviation(double *sample, int size);
     static double calcTravelTime(Position a, Position b);
 };

@@ -11,9 +11,6 @@ void AVI::approximation(ValueFunction *valueFunction)
     bool startApproximate = false;
     while (totalSimulationCount++ < MAX_SIMULATION)
     {
-        double duration;
-        clock_t start, end;
-        start = clock();
         lagApproximateCount++;
         if (lagApproximateCount > LAG_APPROXIMATE)
         {
@@ -46,8 +43,5 @@ void AVI::approximation(ValueFunction *valueFunction)
         {
             delete iter->second;
         }
-        end = clock();
-        duration = (double)(end - start) / CLOCKS_PER_SEC;
-        //cout << "last " << duration << "s  " << valueAtThisSimulation.size() << endl;
     }
 }

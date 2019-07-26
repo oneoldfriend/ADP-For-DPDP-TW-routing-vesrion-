@@ -13,19 +13,19 @@ void Util::infoCopy(Customer *target, Customer *source)
     target->id = source->id;
 }
 
-double Util::standardDeviation(vector<double> sample)
+double Util::standardDeviation(double *sample, int size)
 {
     double sum = 0, mean = 0, variance = 0;
-    for (auto iter = sample.begin(); iter != sample.end(); ++iter)
+    for (int i = 0; i < size; i++)
     {
-        sum += *iter;
+        sum += sample[i];
     }
-    mean = sum / sample.size();
-    for (auto iter = sample.begin(); iter != sample.end(); ++iter)
+    mean = sum / size;
+    for (int i = 0; i < size; i++)
     {
-        variance += pow(*iter - mean, 2);
+        variance += pow(sample[i] - mean, 2);
     }
-    variance = variance / (sample.size() - 1);
+    variance = variance / (size - 1);
     return sqrt(variance);
 }
 

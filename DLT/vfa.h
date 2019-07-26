@@ -6,9 +6,9 @@
 #include <vector>
 #define STEP_SIZE 0.3
 #define PARTITION_THRESHOLD 1.5
-#define DYNAMIC_LOOKUP_TABLE 0
+#define DYNAMIC_LOOKUP_TABLE 1
 #define ATTRIBUTES_NUMBER 4
-#define LAMBDA 1
+#define LAMBDA 0.8
 
 class Aggregation
 {
