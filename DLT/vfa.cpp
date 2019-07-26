@@ -3,6 +3,8 @@
 
 LookupTable::LookupTable()
 {
+    averageN = 0;
+    averageTheta = 0;
     double initialValue = -MAX_EDGE * double(CUSTOMER_NUMBER);
     double xTick = 5.0, yTick = 5.0;
     int entryCount = 0,
@@ -28,6 +30,9 @@ LookupTable::LookupTable()
             this->entryPosition[entryCount].second = floor(double(yCount) * yTick);
             this->entryRange[entryCount].first = xTick;
             this->entryRange[entryCount].second = yTick;
+            this->entryInfo[entryCount][0] = 0.0;
+            this->entryInfo[entryCount][1] = 0.0;
+            this->entryInfo[entryCount][2] = 0.0;
             for (int i = (int)this->entryPosition[entryCount].first;
                  i < (int)floor(this->entryPosition[entryCount].first + this->entryRange[entryCount].first) &&
                  i < (int)MAX_WORK_TIME;
@@ -52,37 +57,32 @@ double LookupTable::lookup(Aggregation postDecisionState)
     return this->entryValue[this->entryIndex[lookX][lookY]];
 }
 
-void LookupTable::partitionUpdate()
+void LookupTable::partitionCheck()
 {
-    map<int, double> entryTheta;
-    int entrySize = this->entryValue.size();
-    double totalN = 0, totalTheta = 0;
+    double entrySize = this->entryValue.size();
+    cout << entrySize << endl;
+    double newAverageN = this->averageN, newAverageTheta = this->averageTheta;
     for (int entryCount = 0; entryCount < entrySize; entryCount++)
     {
-        totalN += this->entryInfo[entryCount].first;
-        double vectorCopy[this->entryInfo[entryCount].second.size()];
-        for (int i = 0; i < this->entryInfo[entryCount].second.size(); i++)
-        {
-            vectorCopy[i] = this->entryInfo[entryCount].second[i];
-        }
-        entryTheta[entryCount] = Util::standardDeviation(vectorCopy, this->entryInfo[entryCount].second.size());
-        totalTheta += entryTheta[entryCount];
-    }
-    //计算\hat{N}和\hat{theta}
-    double averageN = totalN / entrySize, averageTheta = totalTheta / entrySize;
-    for (int entryCount = 0; entryCount < entrySize; entryCount++)
-    {
-        //计算N/\hat{N}和theta/\hat{theta}
-        double factor1 = this->entryInfo[entryCount].first / averageN;
-        double factor2 = entryTheta[entryCount] / averageTheta;
-        if (factor1 * factor2 > PARTITION_THRESHOLD)
+        double factor1 = this->entryInfo[entryCount][0] / this->averageN;
+        double entryTheta = sqrt(this->entryInfo[entryCount][1] / max(this->entryInfo[entryCount][0] - 1.0, 1.0));
+        double factor2 = entryTheta / this->averageTheta;
+        if (factor1 * factor2 > (double)PARTITION_THRESHOLD)
         {
             //cout << factor1 << " " << factor2 << " " << PARTITION_THRESHOLD << endl;
             //若该entry 达到threshold，则对entry 进行再划分
             //cout << "partitioned entry: " << this->entryPosition[entryCount].first << " " << this->entryPosition[entryCount].second << endl;
             this->partition(entryCount);
+            double i = 3.0;
+            while (i-- > 0.0)
+            {
+                newAverageN += (this->entryInfo[entryCount][0] - newAverageN) / (this->entryValue.size() - i);
+                newAverageTheta += (entryTheta - newAverageTheta) / (this->entryValue.size() - i);
+            }
         }
     }
+    this->averageN = newAverageN;
+    this->averageTheta = newAverageTheta;
 }
 
 void LookupTable::partition(int entryNum)
@@ -91,7 +91,8 @@ void LookupTable::partition(int entryNum)
     int newEntryIndex = this->entryValue.size(), entrySize = this->entryValue.size();
     this->entryRange[entryNum].first = this->entryRange[entryNum].first / 2.0;
     this->entryRange[entryNum].second = this->entryRange[entryNum].second / 2.0;
-    this->entryInfo[entryNum].first = this->entryInfo[entryNum].first / 4;
+    this->entryInfo[entryNum][0] = this->entryInfo[entryNum][0] / 4.0;
+    this->entryInfo[entryNum][1] = this->entryInfo[entryNum][1] / 16.0;
     this->entryPosition[newEntryIndex].first = this->entryPosition[entryNum].first;
     this->entryPosition[newEntryIndex].second = floor(this->entryPosition[entryNum].second + this->entryRange[entryNum].second);
     this->entryPosition[newEntryIndex + 1].first = floor(this->entryPosition[entryNum].first + this->entryRange[entryNum].first);
@@ -103,7 +104,9 @@ void LookupTable::partition(int entryNum)
         this->entryValue[newEntryIndex] = this->entryValue[entryNum];
         this->entryRange[newEntryIndex].first = this->entryRange[entryNum].first;
         this->entryRange[newEntryIndex].second = this->entryRange[entryNum].second;
-        this->entryInfo[newEntryIndex].first = this->entryInfo[entryNum].first;
+        this->entryInfo[newEntryIndex][0] = this->entryInfo[entryNum][0];
+        this->entryInfo[newEntryIndex][1] = this->entryInfo[entryNum][1];
+        this->entryInfo[newEntryIndex][2] = this->entryInfo[entryNum][2];
         for (int i = (int)this->entryPosition[newEntryIndex].first;
              i < (int)this->entryPosition[newEntryIndex].first + this->entryRange[newEntryIndex].first;
              i++)
@@ -167,15 +170,23 @@ void ValueFunction::updateValue(vector<pair<Aggregation, double>> valueAtThisSim
     {
         int lookX = (int)floor(decisionPoint->first.currentTime), lookY = (int)floor(decisionPoint->first.remainTime);
         int entryNum = this->lookupTable.entryIndex[lookX][lookY];
-        this->lookupTable.entryInfo[entryNum].first++;
-        this->lookupTable.entryInfo[entryNum].second.push_back(decisionPoint->second);
+        this->lookupTable.averageN -= this->lookupTable.entryInfo[entryNum][0] / this->lookupTable.entryValue.size();
+        this->lookupTable.averageTheta -= sqrt(this->lookupTable.entryInfo[entryNum][1] / max(this->lookupTable.entryInfo[entryNum][0] - 1.0, 1.0)) / this->lookupTable.entryValue.size();
+        this->lookupTable.entryInfo[entryNum][0]++;
+        this->lookupTable.entryInfo[entryNum][1] += (this->lookupTable.entryInfo[entryNum][0] - 1.0) / this->lookupTable.entryInfo[entryNum][0] * pow(decisionPoint->second - this->lookupTable.entryInfo[entryNum][2], 2);
+        this->lookupTable.entryInfo[entryNum][2] += (decisionPoint->second - this->lookupTable.entryInfo[entryNum][2]) / this->lookupTable.entryInfo[entryNum][0];
+        this->lookupTable.averageN += this->lookupTable.entryInfo[entryNum][0] / this->lookupTable.entryValue.size();
+        this->lookupTable.averageTheta += sqrt(this->lookupTable.entryInfo[entryNum][1] / max(this->lookupTable.entryInfo[entryNum][0] - 1.0, 1.0)) / this->lookupTable.entryValue.size();
         errorThisSimulation += abs(this->lookupTable.entryValue[entryNum] - decisionPoint->second);
-        this->lookupTable.entryValue[entryNum] = (1 - STEP_SIZE) * this->lookupTable.entryValue[entryNum] + STEP_SIZE * decisionPoint->second;
+        this->lookupTable.entryValue[entryNum] = (1.0 - STEP_SIZE) * this->lookupTable.entryValue[entryNum] + STEP_SIZE * decisionPoint->second;
     }
-    cout << errorThisSimulation << endl;
+    //cout << errorThisSimulation << endl;
     if (DYNAMIC_LOOKUP_TABLE)
     {
-        this->lookupTable.partitionUpdate();
+        if (startApproximate)
+        {
+            this->lookupTable.partitionCheck();
+        }
     }
 }
 

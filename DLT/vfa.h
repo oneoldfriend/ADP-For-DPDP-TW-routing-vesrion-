@@ -21,13 +21,14 @@ public:
 class LookupTable
 {
 public:
+  double averageN, averageTheta;
   map<int, double> entryValue;
   vector<vector<int> > entryIndex;
   map<int, pair<double, double> > entryPosition;
   map<int, pair<double, double> > entryRange;
-  map<int, pair<int, vector<double> > > entryInfo;
+  map<int, double[3]> entryInfo;
   double lookup(Aggregation postDecisionState);
-  void partitionUpdate();
+  void partitionCheck();
   void partition(int entryNum);
   LookupTable();
 };
