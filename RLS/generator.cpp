@@ -15,7 +15,7 @@ void Generator::instanceGenenrator(bool testInstanceGenerate, list<pair<double, 
     default_random_engine e(rd());
     double shopLocation = 10.0, serviceRange = 5.0;
     uniform_real_distribution<double> ratio(0.0, 1.0);
-    double cancellationRatio = 0.1, hurryRatio = 0.6, timeWindowLength = 60.0, blankLength = 10.0, maxDemand = 5.0;
+    double cancellationRatio = 0.1, hurryRatio = 0.2, timeWindowLength = 60.0, blankLength = 10.0, maxDemand = 5.0;
     double staticCustomer = double(CUSTOMER_NUMBER) * (1 - DEGREE_OF_DYNAMISM);
     int customerCount = 0;
     double staticCustomerCount = 0.0;

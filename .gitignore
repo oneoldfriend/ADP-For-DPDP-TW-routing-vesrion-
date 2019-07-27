@@ -6,7 +6,6 @@ TrainingData.txt
 *.txt
 *.out
 *.csv
-Eigen
 TestData
 mxnet
 lib
