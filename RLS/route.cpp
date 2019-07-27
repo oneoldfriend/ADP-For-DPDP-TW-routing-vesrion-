@@ -208,7 +208,7 @@ double Route::calcCost()
     while (p != this->tail)
     {
         //若当前位置为顾客点，则查看是否迟到并进行相应惩罚
-        if (p->arrivalTime > p->customer->endTime)
+        if (!p->isOrigin && p->arrivalTime > p->customer->endTime)
         {
             penalty += p->customer->priority * PENALTY_FACTOR * (p->arrivalTime - p->customer->endTime);
         }

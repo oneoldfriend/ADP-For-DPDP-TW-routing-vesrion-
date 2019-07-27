@@ -71,7 +71,6 @@ double LookupTable::lookup(Aggregation postDecisionState)
 void LookupTable::partitionCheck()
 {
     double entrySize = this->entryValue.size();
-    cout << entrySize << endl;
     double newAverageN = this->averageN, newAverageTheta = this->averageTheta;
     for (int entryCount = 0; entryCount < entrySize; entryCount++)
     {
