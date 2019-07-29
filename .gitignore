@@ -13,3 +13,4 @@ build
 CMakeFiles
 *.cmake
 bin
+Eigen
