@@ -13,12 +13,13 @@ void Solver::solve()
                          char(instanceNum / 1000000 + 48), char(instanceNum % 1000000 / 100000 + 48), char(instanceNum % 100000 / 10000 + 48),
                          char(instanceNum % 10000 / 1000 + 48), char(instanceNum % 1000 / 100 + 48),
                          char(instanceNum % 100 / 10 + 48), char(instanceNum % 10 + 48), '\0'};
-        string fileName = "/home/linfei/ADP-For-DPDP-TW-routing-vesrion-/DNN/TestData/";
+        string fileName = "/home/linfei/ADP-For-DPDP-TW-routing-vesrion-/QAC/TestData/";
         fileName = fileName + dayNum + ".txt";
         Generator::instanceGenenrator(true, nullptr, fileName);
     }
     return;
     srand(time(NULL));*/
+
     ValueFunction valueFunction;
     //offline approximation
     AVI approximateValueIterate;
@@ -53,16 +54,16 @@ void Solver::solve()
                          char(instanceNum / 1000000 + 48), char(instanceNum % 1000000 / 100000 + 48), char(instanceNum % 100000 / 10000 + 48),
                          char(instanceNum % 10000 / 1000 + 48), char(instanceNum % 1000 / 100 + 48),
                          char(instanceNum % 100 / 10 + 48), char(instanceNum % 10 + 48), '\0'};
-        string fileName = "/home/linfei/ADP-For-DPDP-TW-routing-vesrion-/DNN/TestData/";
+        string fileName = "/home/linfei/ADP-For-DPDP-TW-routing-vesrion-/QAC/TestData/";
         fileName = fileName + dayNum + ".txt";
         MDP simulation = MDP(false, fileName);
         while (simulation.currentState.currentRoute != nullptr)
         {
             Action bestAction;
             double routingReward = 0.0;
-            simulation.findBestAssignmentAction(&bestAction, valueFunction);
+            simulation.findBestAssignmentAction(&bestAction, &valueFunction);
             simulation.assignmentConfirmed(bestAction);
-            simulation.findBestRoutingAction(&bestAction, valueFunction, &routingReward, false);
+            simulation.findBestRoutingAction(&bestAction, &valueFunction, &routingReward, false);
             //状态转移
             simulation.transition(bestAction);
         }

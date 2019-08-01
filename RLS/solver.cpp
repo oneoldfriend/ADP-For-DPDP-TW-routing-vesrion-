@@ -13,7 +13,7 @@ void Solver::solve()
                          char(instanceNum / 1000000 + 48), char(instanceNum % 1000000 / 100000 + 48), char(instanceNum % 100000 / 10000 + 48),
                          char(instanceNum % 10000 / 1000 + 48), char(instanceNum % 1000 / 100 + 48),
                          char(instanceNum % 100 / 10 + 48), char(instanceNum % 10 + 48), '\0'};
-        string fileName = "/home/linfei/ADP-For-DPDP-TW-routing-vesrion-/RLS/TestData/";
+        string fileName = "/home/linfei/ADP-For-DPDP-TW-routing-vesrion-/DNN/TestData/";
         fileName = fileName + dayNum + ".txt";
         Generator::instanceGenenrator(true, nullptr, fileName);
     }
@@ -56,7 +56,7 @@ void Solver::solve()
                          char(instanceNum / 1000000 + 48), char(instanceNum % 1000000 / 100000 + 48), char(instanceNum % 100000 / 10000 + 48),
                          char(instanceNum % 10000 / 1000 + 48), char(instanceNum % 1000 / 100 + 48),
                          char(instanceNum % 100 / 10 + 48), char(instanceNum % 10 + 48), '\0'};
-        string fileName = "/home/linfei/ADP-For-DPDP-TW-routing-vesrion-/RLS/TestData/";
+        string fileName = "/home/linfei/ADP-For-DPDP-TW-routing-vesrion-/DNN/TestData/";
         fileName = fileName + dayNum + ".txt";
         MDP simulation = MDP(false, fileName);
         while (simulation.currentState.currentRoute != nullptr)
