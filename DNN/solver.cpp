@@ -64,9 +64,9 @@ void Solver::solve()
         {
             Action bestAction;
             double routingReward = 0.0;
-            simulation.findBestAssignmentAction(&bestAction, valueFunction);
+            simulation.findBestAssignmentAction(&bestAction, &valueFunction);
             simulation.assignmentConfirmed(bestAction);
-            simulation.findBestRoutingAction(&bestAction, valueFunction, &routingReward, false);
+            simulation.findBestRoutingAction(&bestAction, &valueFunction, &routingReward, false);
             //状态转移
             simulation.transition(bestAction);
         }

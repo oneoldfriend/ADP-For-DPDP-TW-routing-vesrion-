@@ -46,8 +46,8 @@ public:
   map<string, Customer *> customers;
   bool checkAssignmentActionFeasibility(Action a, double *reward);
   bool checkRoutingActionFeasibility(Action a, double *reward);
-  void findBestAssignmentAction(Action *a, ValueFunction valueFunction);
-  void findBestRoutingAction(Action *a, ValueFunction valueFunction, double *reward, bool approx);
+  void findBestAssignmentAction(Action *a, ValueFunction *valueFunction);
+  void findBestRoutingAction(Action *a, ValueFunction *valueFunction, double *reward, bool approx);
   void integerToRoutingAction(int actionNum, State S, Action *a);
   void integerToAssignmentAction(int actionNum, State S, Action *a);
   void transition(Action a);

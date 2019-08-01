@@ -4,7 +4,7 @@ export LD_LIBRARY_PATH=.:/Users/leilinfei/Desktop/ADP-For-DPDP-TW-routing-vesrio
 MY_CFLAGS =  -std=c++11
   
 # The linker options.  
-MY_LIBS   =  ./mxnet/lib/libmxnet.so
+MY_LIBS   =  ./mxnet/lib/libmxnet.so ./mxnet/lib/libmkldnn.so.0 ./mxnet/lib/libmklml_intel.so
   
 # The pre-processor options used by the cpp (man cpp for more).  
 CPPFLAGS  = -Wall  

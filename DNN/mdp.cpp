@@ -170,7 +170,7 @@ void MDP::integerToAssignmentAction(int actionNum, State S, Action *a)
     }
 }
 
-void MDP::findBestAssignmentAction(Action *a, ValueFunction valueFunction)
+void MDP::findBestAssignmentAction(Action *a, ValueFunction *valueFunction)
 {
     int actionNum = 0, maxActionNum = pow(2, this->currentState.newCustomers.size()), bestActionNum = -1;
     double bestActionValue = MAX_COST;
@@ -207,7 +207,7 @@ void MDP::findBestAssignmentAction(Action *a, ValueFunction valueFunction)
     this->integerToAssignmentAction(bestActionNum, this->currentState, a);
 }
 
-void MDP::findBestRoutingAction(Action *a, ValueFunction valueFunction, double *reward, bool approx)
+void MDP::findBestRoutingAction(Action *a, ValueFunction *valueFunction, double *reward, bool approx)
 {
     int actionNum = 0, maxActionNum = this->currentState.reachableCustomer.size(), bestActionNum = -1;
     double bestActionValue = MAX_COST, totalValue = 0.0;
@@ -222,7 +222,7 @@ void MDP::findBestRoutingAction(Action *a, ValueFunction valueFunction, double *
         if (this->checkRoutingActionFeasibility(tempAction, &immediateReward))
         {
             //若动作可行，则进行评估
-            actionValue = immediateReward + valueFunction.getValue(this->currentState, tempAction, approx);
+            actionValue = immediateReward + valueFunction->getValue(this->currentState, tempAction, approx);
             if (actionValue < bestActionValue)
             {
                 //记录更优的动作

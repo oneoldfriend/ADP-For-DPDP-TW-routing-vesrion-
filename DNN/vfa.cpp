@@ -29,14 +29,6 @@ ValueFunction::ValueFunction(const vector<int> &layers)
     NDArray array_x(Shape(1, INPUT_LAYER), ctx_dev, false);
     NDArray array_y(Shape(1), ctx_dev, false);
 
-    mx_float *aptr_x = new mx_float[INPUT_LAYER];
-    mx_float *aptr_y = new mx_float[1];
-
-    array_x.SyncCopyFromCPU(aptr_x, INPUT_LAYER);
-    array_x.WaitToRead();
-    array_y.SyncCopyFromCPU(aptr_y, 1);
-    array_y.WaitToRead();
-
     NDArray array_w_1(Shape(HIDDEN_LAYER, INPUT_LAYER), ctx_dev, false);
     NDArray array_b_1(Shape(HIDDEN_LAYER), ctx_dev, false);
     NDArray array_w_2(Shape(1, HIDDEN_LAYER), ctx_dev, false);
@@ -103,6 +95,7 @@ double ValueFunction::getValue(State S, Action a, bool actor)
     this->exe->arg_arrays[0].WaitToRead();
     this->exe->Forward(false);
     this->exe->outputs[0];
+    delete[] aptr_x;
 }
 
 void ValueFunction::updateNetwork(double valueAtThisSimulation[(int)MAX_WORK_TIME][INPUT_DATA_FIRST_D][INPUT_DATA_SECOND_D], vector<double> rewardPath, bool startApproximate)
@@ -137,5 +130,7 @@ void ValueFunction::updateNetwork(double valueAtThisSimulation[(int)MAX_WORK_TIM
         {
             this->exe->arg_arrays[i] -= this->exe->grad_arrays[i] * STEP_SIZE;
         }
+        delete[] aptr_x;
+        delete[] aptr_y;
     }
 }

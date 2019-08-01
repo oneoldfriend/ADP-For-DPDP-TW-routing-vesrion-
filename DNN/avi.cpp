@@ -27,9 +27,9 @@ void AVI::approximation(ValueFunction *valueFunction)
         {
             Action bestAction;
             double routingReward = 0.0;
-            simulation.findBestAssignmentAction(&bestAction, *valueFunction);
+            simulation.findBestAssignmentAction(&bestAction, valueFunction);
             simulation.assignmentConfirmed(bestAction);
-            simulation.findBestRoutingAction(&bestAction, *valueFunction, &routingReward, startApproximate);
+            simulation.findBestRoutingAction(&bestAction, valueFunction, &routingReward, startApproximate);
             //记录这次sample path的信息
             simulation.executeAction(bestAction);
             simulation.currentState.calcAttribute(bestAction, valueAtThisSimulation[stateCount++]);
