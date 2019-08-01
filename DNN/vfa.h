@@ -7,14 +7,14 @@
 #include "mxnet-cpp/model.h"
 #include "mxnet-cpp/op.h"
 #include <vector>
-#define FIRST_LAYER 512
-#define SECOND_LAYER 10
-#define INPUT_DATA_FIRST_D 100
-#define INPUT_DATA_SECOND_D 1
+#define INPUT_DATA_FIRST_D CUSTOMER_NUMBER * 2
+#define INPUT_DATA_SECOND_D 8
+#define INPUT_LAYER INPUT_DATA_FIRST_D * INPUT_DATA_SECOND_D
+#define HIDDEN_LAYER (int)sqrt(INPUT_LAYER)
 #define PARTITION_THRESHOLD 1.0
 #define LOOKUP_TABLE_INITIAL 10.0
 #define ATTRIBUTES_NUMBER 4
-#define STEP_SIZE 0.2
+#define STEP_SIZE 0.001
 #define LAMBDA 0.8
 
 class State;
