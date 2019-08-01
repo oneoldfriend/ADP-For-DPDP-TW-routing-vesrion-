@@ -15,7 +15,7 @@ void Generator::instanceGenenrator(bool testInstanceGenerate, list<pair<double, 
     default_random_engine e(rd());
     double shopLocation = 10.0, serviceRange = 5.0;
     uniform_real_distribution<double> ratio(0.0, 1.0);
-    double cancellationRatio = 0.1, hurryRatio = 0.8, timeWindowLength = 60.0, blankLength = 10.0, maxDemand = 5.0;
+    double cancellationRatio = 0.1, hurryRatio = 0.4, timeWindowLength = 60.0, blankLength = 10.0, maxDemand = 5.0;
     double staticCustomer = double(CUSTOMER_NUMBER) * (1 - DEGREE_OF_DYNAMISM);
     int customerCount = 0;
     double staticCustomerCount = 0.0;
@@ -36,10 +36,11 @@ void Generator::instanceGenenrator(bool testInstanceGenerate, list<pair<double, 
             break;
         }*/
         Customer *customer = new Customer();
-        uniform_real_distribution<double> ap(0, 1.0);
-        //double appearTime = (MAX_WORK_TIME - timeWindowLength - blankLength) * ap(e);
+        normal_distribution<double> ap(360, 120);
+        double appearTime = max(0.0,min(650.0,ap(e)));//(MAX_WORK_TIME - timeWindowLength - blankLength) * ap(e);
+	//cout << appearTime << endl;
         //double appearTime = apStore[customerCount - 1];
-        double appearTime = ratio(e) * (MAX_WORK_TIME - timeWindowLength - blankLength);
+        //double appearTime = ratio(e) * (MAX_WORK_TIME - timeWindowLength - blankLength);
         if (staticCustomerCount++ < staticCustomer)
         {
             customer->origin.x = 0.0;
