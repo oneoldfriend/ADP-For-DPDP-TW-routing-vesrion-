@@ -81,21 +81,28 @@ ValueFunction::ValueFunction(const vector<int> &layers)
 
 double ValueFunction::getValue(State S, Action a, bool actor)
 {
-    double inputData[INPUT_DATA_FIRST_D][INPUT_DATA_SECOND_D];
-    S.calcAttribute(a, inputData);
-    mx_float *aptr_x = new mx_float[INPUT_LAYER];
-    for (int i = 0; i < INPUT_DATA_FIRST_D; i++)
+    if (MYOPIC)
     {
-        for (int j = 0; j < INPUT_DATA_SECOND_D; j++)
-        {
-            aptr_x[i * INPUT_DATA_SECOND_D + j] = inputData[i][j];
-        }
+        return 0;
     }
-    this->exe->arg_arrays[0].SyncCopyFromCPU(aptr_x, INPUT_LAYER);
-    this->exe->arg_arrays[0].WaitToRead();
-    this->exe->Forward(false);
-    this->exe->outputs[0];
-    delete[] aptr_x;
+    else
+    {
+        double inputData[INPUT_DATA_FIRST_D][INPUT_DATA_SECOND_D];
+        S.calcAttribute(a, inputData);
+        mx_float *aptr_x = new mx_float[INPUT_LAYER];
+        for (int i = 0; i < INPUT_DATA_FIRST_D; i++)
+        {
+            for (int j = 0; j < INPUT_DATA_SECOND_D; j++)
+            {
+                aptr_x[i * INPUT_DATA_SECOND_D + j] = inputData[i][j];
+            }
+        }
+        this->exe->arg_arrays[0].SyncCopyFromCPU(aptr_x, INPUT_LAYER);
+        this->exe->arg_arrays[0].WaitToRead();
+        this->exe->Forward(false);
+        this->exe->outputs[0];
+        delete[] aptr_x;
+    }
 }
 
 void ValueFunction::updateNetwork(double valueAtThisSimulation[(int)MAX_WORK_TIME][INPUT_DATA_FIRST_D][INPUT_DATA_SECOND_D], vector<double> rewardPath, bool startApproximate)

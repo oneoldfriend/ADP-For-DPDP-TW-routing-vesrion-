@@ -19,7 +19,7 @@ class ValueFunction;
 #define LAG_APPROXIMATE 0
 #define ASSIGNMENT 0
 #define IGNORANCE_TOLERANCE 30.0
-#define MYOPIC 0
+#define MYOPIC 1
 
 class AVI
 {
