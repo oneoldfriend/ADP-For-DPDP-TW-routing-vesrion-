@@ -1,8 +1,6 @@
 #pragma once
-#include "avi.h"
+#include "mdp.h"
 #include <random>
-
-using namespace std;
 
 class Generator
 {

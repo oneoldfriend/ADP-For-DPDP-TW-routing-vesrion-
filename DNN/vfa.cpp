@@ -1,4 +1,5 @@
 #include "vfa.h"
+#include "mdp.h"
 #include <iomanip>
 
 ValueFunction::ValueFunction(const vector<int> &layers)
@@ -80,59 +81,29 @@ ValueFunction::ValueFunction(const vector<int> &layers)
     grad_req_type.push_back(kNullOp);
 
     std::vector<NDArray> aux_states;
-    
-    exe = new Executor(this->net, ctx_dev, in_args, arg_grad_store,
-                       grad_req_type, aux_states);
+
+    this->exe = new Executor(this->net, ctx_dev, in_args, arg_grad_store,
+                             grad_req_type, aux_states);
 }
 
 double ValueFunction::getValue(State S, Action a, bool actor)
 {
-    S.calcAttribute(a);
-    if (MYOPIC)
-    {
-        return 0;
-    }
-    else
-    {
-        if (actor)
-        {
-            return this->actorWeights.transpose() * S.attributes;
-        }
-        else
-        {
-            return this->criticWeights.transpose() * S.attributes;
-        }
-    }
+    double inputData[INPUT_DATA_FIRST_D][INPUT_DATA_SECOND_D];
+    S.calcAttribute(a, inputData);
+
+    this->exe->Forward(false);
+    this->exe->outputs[0];
 }
 
-void ValueFunction::updateActor(pair<Eigen::Vector4d, double> infoAtCurrentState, State nextState, Action actionForNextState, Eigen::Vector4d score)
+void ValueFunction::updateNetwork(double valueAtThisSimulation[(int)MAX_WORK_TIME][INPUT_DATA_FIRST_D][INPUT_DATA_SECOND_D], vector<double> rewardPath, bool startApproximate)
 {
-    nextState.executeAction(actionForNextState);
-    nextState.calcAttribute(actionForNextState);
-    double estimateValue = this->criticWeights.transpose() * infoAtCurrentState.first;
-    double bootstrappingValue = infoAtCurrentState.second + LAMBDA * this->criticWeights.transpose() * nextState.attributes;
-    double error = bootstrappingValue - estimateValue;
-    this->actorWeights = this->actorWeights + STEP_SIZE * score * error;
-    double gammaN = 1.0 + infoAtCurrentState.first.transpose() * this->matrixBeta * infoAtCurrentState.first;
-    this->criticWeights = this->criticWeights + 1 / gammaN * this->matrixBeta * infoAtCurrentState.first * error;
-    this->matrixBeta = this->matrixBeta - 1.0 / gammaN * (this->matrixBeta * infoAtCurrentState.first * infoAtCurrentState.first.transpose() * this->matrixBeta);
-    nextState.undoAction(actionForNextState);
-}
+    //input data get
 
-void ValueFunction::updateCritic(vector<pair<Eigen::Vector4d, double>> valueAtThisSimulation, bool startApproximate, vector<Eigen::Vector4d> scoreAtThisSimulation)
-{
-    double lastValue = 0;
-    for (auto iter = valueAtThisSimulation.rbegin(); iter != valueAtThisSimulation.rend(); ++iter)
+    exe->Forward(true);
+    // update the parameters
+    exe->Backward();
+    for (int i = 1; i < 5; ++i)
     {
-        iter->second += lastValue;
-        lastValue = double(LAMBDA) * iter->second;
-    }
-    auto scoreIter = scoreAtThisSimulation.begin();
-    for (auto iter = valueAtThisSimulation.begin(); iter != valueAtThisSimulation.end(); ++iter, ++scoreIter)
-    {
-        double gammaN = 1.0 + iter->first.transpose() * this->matrixBeta * iter->first,
-               error = this->criticWeights.transpose() * iter->first - iter->second;
-        this->criticWeights = this->criticWeights - 1 / gammaN * this->matrixBeta * iter->first * error;
-        this->matrixBeta = this->matrixBeta - 1.0 / gammaN * (this->matrixBeta * iter->first * iter->first.transpose() * this->matrixBeta);
+        this->exe->arg_arrays[i] -= this->exe->grad_arrays[i] * STEP_SIZE;
     }
 }

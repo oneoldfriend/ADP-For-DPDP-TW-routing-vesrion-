@@ -3,7 +3,6 @@
 #include "customer.h"
 #include "route.h"
 #include "util.h"
-#include "Eigen/Dense"
 #include "mxnet-cpp/MxNetCpp.h"
 #include "mxnet-cpp/model.h"
 #include "mxnet-cpp/op.h"
@@ -18,6 +17,8 @@
 #define STEP_SIZE 0.2
 #define LAMBDA 0.8
 
+class State;
+class Action;
 
 using namespace std;
 using namespace mxnet::cpp;
@@ -30,13 +31,7 @@ public:
   vector<Symbol> outputs;
   Symbol net;
   Executor *exe;
-
-  Eigen::Vector4d actorWeights;
-  Eigen::Vector4d criticWeights;
-  Eigen::Matrix4d matrixBeta;
   double getValue(State S, Action a, bool approx);
-  void updateActor(pair<Eigen::Vector4d, double> infoAtCurrentState, State nextState, Action actionForNextState, Eigen::Vector4d score);
-  void updateCritic(vector<pair<Eigen::Vector4d, double> > valueAtThisSimulation, bool startApproximate, vector<Eigen::Vector4d> scoreAtThisSimulation);
+  void updateNetwork(double valueAtThisSimulation[(int)MAX_WORK_TIME][INPUT_DATA_FIRST_D][INPUT_DATA_SECOND_D], vector<double> rewardPath, bool startApproximate);
   ValueFunction(const vector<int> &layers);
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };

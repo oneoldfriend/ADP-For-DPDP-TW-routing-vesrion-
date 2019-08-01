@@ -1,7 +1,6 @@
 #include "mdp.h"
 #include "route.h"
 #include "generator.h"
-#include <math.h>
 
 using namespace std;
 
@@ -22,75 +21,162 @@ State::State()
 {
     this->currentTime = 0;
     this->currentRoute = nullptr;
+    this->attributes = Eigen::VectorXd(ATTRIBUTES_NUMBER);
 }
 
-void State::calcAttribute(Action a)
+void State::calcAttribute(Action a, double matrix[INPUT_DATA_FIRST_D][INPUT_DATA_SECOND_D])
 {
     this->pointSolution->calcInfo();
-    this->attributes[0] = this->currentRoute->currentPos->departureTime;
-    this->attributes[1] = this->notServicedCustomer.size();
+    this->attributes[0] = 100;
+    this->attributes[1] = this->currentRoute->currentPos->departureTime;
+    //this->attributes[1] = this->pointSolution->info[3];
+    this->attributes[2] = this->pointSolution->info[2];
     if (a.positionToVisit != nullptr && a.positionToVisit->isOrigin)
     {
-        this->attributes[1]--;
+        this->attributes[3] = this->notServicedCustomer.size() + 1;
     }
-    this->attributes[2] = this->pointSolution->info[1];
-    this->attributes[3] = this->pointSolution->info[3];
+    else
+    {
+        this->attributes[3] = this->notServicedCustomer.size();
+        if (a.positionToVisit != nullptr)
+        {
+            this->attributes[2] = this->pointSolution->info[2] + 1;
+            //this->attributes[1] = this->pointSolution->info[3] + a.positionToVisit->customer->weight;
+        }
+    }
+    this->attributes[4] = this->pointSolution->info[1];
+    //this->attributes[3] = this->currentRoute->currentPos->currentWeight;
+    /*
+    double originMatrix[CUSTOMER_NUMBER * 2][PCA_INPUT_COL];
+    double routeCount = 1;
+    int rowNumber = 0;
+    for (auto iter = this->pointSolution->routes.begin(); iter != this->pointSolution->routes.end(); ++iter)
+    {
+        PointOrder p = iter->head->next;
+        while (p != iter->tail)
+        {
+            int varCount = 0;
+            originMatrix[rowNumber][varCount++] = p->position.x;
+            originMatrix[rowNumber][varCount++] = p->position.y;
+            originMatrix[rowNumber][varCount++] = p->customer->startTime;
+            originMatrix[rowNumber][varCount++] = p->customer->endTime;
+            if (p->isOrigin)
+            {
+                originMatrix[rowNumber][varCount++] = p->customer->weight;
+            }
+            else
+            {
+                originMatrix[rowNumber][varCount++] = -p->customer->weight;
+            }
+            originMatrix[rowNumber][varCount++] = p->arrivalTime;
+            originMatrix[rowNumber][varCount++] = p->departureTime;
+            originMatrix[rowNumber][varCount++] = p->currentWeight;
+            p = p->next;
+            rowNumber++;
+        }
+    }
+    for (auto iter = this->notServicedCustomer.begin(); iter != this->notServicedCustomer.end(); ++iter)
+    {
+        if ((*iter).second.first != a.positionToVisit)
+        {
+            int varCount = 0;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->origin.x;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->origin.y;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->startTime;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->endTime;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->weight;
+            originMatrix[rowNumber][varCount++] = 0;
+            originMatrix[rowNumber][varCount++] = 0;
+            originMatrix[rowNumber][varCount++] = 0;
+            varCount = 0;
+            rowNumber++;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->position.x;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->position.y;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->startTime;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->endTime;
+            originMatrix[rowNumber][varCount++] = -(*iter).second.second->customer->weight;
+            originMatrix[rowNumber][varCount++] = 0;
+            originMatrix[rowNumber][varCount++] = 0;
+            originMatrix[rowNumber][varCount++] = 0;
+            rowNumber++;
+        }
+    }
+    alglib::real_2d_array pcaInput;
+    pcaInput.setlength(rowNumber, PCA_INPUT_COL);
+    for (int i = 0; i < rowNumber; i++)
+    {
+        for (int j = 0; j < PCA_INPUT_COL; j++)
+        {
+            pcaInput[i][j] = originMatrix[i][j];
+        }
+    }
+    const alglib::real_2d_array pcaInput1 = pcaInput;
+    alglib::ae_int_t infoOutput;
+    alglib::real_1d_array pcaOutput1;
+    alglib::real_2d_array pcaOutput2;
+    alglib::pcabuildbasis(pcaInput1, rowNumber, PCA_INPUT_COL, infoOutput, pcaOutput1, pcaOutput2);
+    for (int i = 0; i < ATTRIBUTES_NUMBER; i++)
+    {
+        //cout << pcaOutput1[i] << " ";
+        this->attributes[i] = pcaOutput1[i];
+    }
+    //cout << endl;*/
 }
 
-void State::executeAction(Action a)
+void MDP::executeAction(Action a)
 {
     if (a.positionToVisit != nullptr)
     {
         if (a.positionToVisit->isOrigin)
         {
-            a.positionToVisit->prior = this->currentRoute->currentPos;
-            a.positionToVisit->next = this->currentRoute->currentPos->next;
-            PointOrder dest = this->notServicedCustomer[a.positionToVisit->customer->id].second;
+            a.positionToVisit->prior = this->currentState.currentRoute->currentPos;
+            a.positionToVisit->next = this->currentState.currentRoute->currentPos->next;
+            PointOrder dest = this->currentState.notServicedCustomer[a.positionToVisit->customer->id].second;
             dest->prior = a.positionToVisit;
             dest->next = a.positionToVisit->next;
-            this->currentRoute->insertOrder(a.positionToVisit);
-            this->currentRoute->insertOrder(dest);
+            this->currentState.currentRoute->insertOrder(a.positionToVisit);
+            this->currentState.currentRoute->insertOrder(dest);
         }
         else
         {
-            this->currentRoute->removeOrder(a.positionToVisit);
-            a.positionToVisit->prior = this->currentRoute->currentPos;
-            a.positionToVisit->next = this->currentRoute->currentPos->next;
-            this->currentRoute->insertOrder(a.positionToVisit);
+            this->currentState.currentRoute->removeOrder(a.positionToVisit);
+            a.positionToVisit->prior = this->currentState.currentRoute->currentPos;
+            a.positionToVisit->next = this->currentState.currentRoute->currentPos->next;
+            this->currentState.currentRoute->insertOrder(a.positionToVisit);
         }
     }
     else
     {
-        this->currentRoute->currentPos->departureTime += UNIT_TIME;
-        this->currentRoute->currentPos->waitTime += UNIT_TIME;
+        this->currentState.currentRoute->currentPos->departureTime += UNIT_TIME;
+        this->currentState.currentRoute->currentPos->waitTime += UNIT_TIME;
     }
-    this->currentRoute->routeUpdate();
+    this->currentState.currentRoute->routeUpdate();
 }
 
-void State::undoAction(Action a)
+void MDP::undoAction(Action a)
 {
     if (a.positionToVisit != nullptr)
     {
         if (a.positionToVisit->isOrigin)
         {
             PointOrder dest = a.positionToVisit->next;
-            this->currentRoute->removeOrder(a.positionToVisit);
-            this->currentRoute->removeOrder(dest);
+            this->currentState.currentRoute->removeOrder(a.positionToVisit);
+            this->currentState.currentRoute->removeOrder(dest);
         }
         else
         {
-            this->currentRoute->removeOrder(a.positionToVisit);
+            this->currentState.currentRoute->removeOrder(a.positionToVisit);
             a.positionToVisit->prior = a.destPosBeforeExecution.first;
             a.positionToVisit->next = a.destPosBeforeExecution.second;
-            this->currentRoute->insertOrder(a.positionToVisit);
+            this->currentState.currentRoute->insertOrder(a.positionToVisit);
         }
     }
     else
     {
-        this->currentRoute->currentPos->departureTime -= UNIT_TIME;
-        this->currentRoute->currentPos->waitTime -= UNIT_TIME;
+        this->currentState.currentRoute->currentPos->departureTime -= UNIT_TIME;
+        this->currentState.currentRoute->currentPos->waitTime -= UNIT_TIME;
     }
-    this->currentRoute->routeUpdate();
+    this->currentState.currentRoute->routeUpdate();
 }
 
 void MDP::integerToRoutingAction(int actionNum, State S, Action *a)
@@ -163,41 +249,49 @@ void MDP::findBestAssignmentAction(Action *a, ValueFunction valueFunction)
     this->integerToAssignmentAction(bestActionNum, this->currentState, a);
 }
 
-void MDP::findBestRoutingAction(Action *a, ValueFunction valueFunction, double *reward, bool approx, Eigen::Vector4d *score)
+void MDP::findBestRoutingAction(Action *a, ValueFunction valueFunction, double *reward, bool approx)
 {
     int actionNum = 0, maxActionNum = this->currentState.reachableCustomer.size(), bestActionNum = -1;
-    map<int, double> actionQValue;
-    map<int, Eigen::Vector4d> actionScoreSample;
-    map<int, double> actionReward;
+    double bestActionValue = MAX_COST, totalValue = 0.0;
+    map<int, double> actionWheel;
     while (actionNum < maxActionNum)
     {
         //检查每个可能动作的可行性并对可行动作进行评估
         Action tempAction;
+        double actionValue = 0;
         this->integerToRoutingAction(actionNum, this->currentState, &tempAction);
         double immediateReward = 0;
         if (this->checkRoutingActionFeasibility(tempAction, &immediateReward))
         {
-            double downStreamValue = valueFunction.getValue(this->currentState, tempAction, true);
-            //cout << downStreamValue << endl;
-            actionQValue[actionNum] = -downStreamValue;
-            actionReward[actionNum] = immediateReward;
-            this->currentState.calcAttribute(tempAction);
-            actionScoreSample[actionNum] = this->currentState.attributes;
+            //若动作可行，则进行评估
+            actionValue = immediateReward + valueFunction.getValue(this->currentState, tempAction, approx);
+            if (actionValue < bestActionValue)
+            {
+                //记录更优的动作
+                *reward = immediateReward;
+                bestActionValue = actionValue;
+                bestActionNum = actionNum;
+            }
+            totalValue += actionValue;
+            actionWheel[actionNum] = actionValue;
         }
         //回撤动作继续下一个评估
-        this->currentState.undoAction(tempAction);
+        this->undoAction(tempAction);
         actionNum++;
     }
-    Eigen::Vector4d scoreExpectation;
-
-    bestActionNum = Util::softmax(actionQValue, &scoreExpectation, actionScoreSample);
-    *score = actionScoreSample[bestActionNum] - scoreExpectation;
-    cout << *score << endl;
-    cout << actionScoreSample[bestActionNum] << endl;
-    cout << scoreExpectation << endl;
-    cout << "***************************" << endl
-         << endl;
-    *reward = actionReward[bestActionNum];
+    if (false)
+    {
+        double prob = rand() / double(RAND_MAX), cumProb = 0.0;
+        for (auto iter = actionWheel.begin(); iter != actionWheel.end(); ++iter)
+        {
+            cumProb += iter->second / totalValue;
+            if (prob <= cumProb)
+            {
+                bestActionNum = iter->first;
+                break;
+            }
+        }
+    }
     this->integerToRoutingAction(bestActionNum, this->currentState, a);
 }
 
@@ -218,7 +312,7 @@ bool MDP::checkAssignmentActionFeasibility(Action a, double *reward)
 bool MDP::checkRoutingActionFeasibility(Action a, double *reward)
 {
     double currentCost = this->currentState.currentRoute->cost;
-    this->currentState.executeAction(a);
+    this->executeAction(a);
     bool feasibility = this->currentState.currentRoute->checkFeasibility();
     double newCost = this->currentState.currentRoute->cost;
     for (auto iter = this->currentState.notServicedCustomer.begin(); iter != this->currentState.notServicedCustomer.end(); ++iter)
@@ -312,9 +406,9 @@ double MDP::reward(State S, Action a)
 {
     //复制当前解并对副本执行动作计算立即反馈
     double currentCost = S.currentRoute->cost;
-    this->currentState.executeAction(a);
+    this->executeAction(a);
     double newCost = S.currentRoute->cost;
-    this->currentState.undoAction(a);
+    this->undoAction(a);
     return newCost - currentCost;
 }
 
@@ -322,7 +416,7 @@ void MDP::transition(Action a)
 {
     //执行动作
     double lastDecisionTime = this->currentState.currentTime;
-    this->currentState.executeAction(a);
+    this->executeAction(a);
     //更新当前状态
     if (a.positionToVisit != nullptr)
     {
@@ -348,7 +442,7 @@ void MDP::transition(Action a)
         if (this->currentState.currentRoute->tail->departureTime + UNIT_TIME > MAX_WORK_TIME)
         {
             //若车辆不能原地等待则直接返回仓库结束配送
-            this->currentState.undoAction(a);
+            this->undoAction(a);
             this->currentState.currentRoute->currentPos = this->currentState.currentRoute->tail;
         }
     }
@@ -420,7 +514,25 @@ void MDP::observation(double lastDecisionTime)
             else
             {
                 //若观察到顾客退单或催单，则直接对原有顾客信息进行更新
-                this->customers[sequenceIter->second->id]->priority = sequenceIter->second->priority;
+                for (auto notSrvCstm = this->currentState.notServicedCustomer.begin(); notSrvCstm != this->currentState.notServicedCustomer.end();)
+                {
+                    if (notSrvCstm->second.second->customer->id == sequenceIter->second->id)
+                    {
+                        notSrvCstm->second.second->customer->priority = sequenceIter->second->priority;
+                        if (sequenceIter->second->priority == 0)
+                        {
+                            this->currentState.notServicedCustomer.erase(notSrvCstm++);
+                        }
+                        else
+                        {
+                            ++notSrvCstm;
+                        }
+                    }
+                    else
+                    {
+                        ++notSrvCstm;
+                    }
+                }
                 delete sequenceIter->second;
             }
         }
@@ -454,13 +566,10 @@ void MDP::observation(double lastDecisionTime)
             }
         }
     }
-}
-
-//update the solution(delete the customers with cancellation)
-/* 
+    //update the solution(delete the customers with cancellation)
     for (auto routeIter = this->solution.routes.begin(); routeIter != this->solution.routes.end(); ++routeIter)
     {
-        PointOrder p = routeIter->currentPos->next;
+        PointOrder p = routeIter->currentPos;
         bool cancellation = false;
         while (p != routeIter->tail)
         {
@@ -469,8 +578,15 @@ void MDP::observation(double lastDecisionTime)
             {
                 cancellation = true;
                 PointOrder tempPtr = p->next;
-                routeIter->removeOrder(p);
-                delete p;
+                if (p == routeIter->currentPos)
+                {
+                    p->currentWeight -= p->customer->weight;
+                }
+                else
+                {
+                    routeIter->removeOrder(p);
+                    delete p;
+                }
                 p = tempPtr;
             }
             else
@@ -483,4 +599,5 @@ void MDP::observation(double lastDecisionTime)
             //若有顾客退单导致解的变化，则更新对应路径的信息
             routeIter->routeUpdate();
         }
-    }*/
+    }
+}

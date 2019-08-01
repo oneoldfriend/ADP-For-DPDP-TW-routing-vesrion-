@@ -1,8 +1,8 @@
 #include "solver.h"
-
-
-using namespace std;
-using namespace mxnet::cpp;
+#include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
+#include <math.h>
 
 int main()
 {

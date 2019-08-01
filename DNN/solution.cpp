@@ -1,5 +1,6 @@
 #include "solution.h"
 #include "avi.h"
+#include "mdp.h"
 #include "vfa.h"
 
 Solution::Solution()
@@ -111,26 +112,23 @@ void Solution::solutionDelete()
 void Solution::calcInfo()
 {
     this->info[0] = MAX_EDGE;
-    int deliveredParcels = 0, availableVehicle = 0;
+    double deliveredWeights = 0, servicedCustomers = 0;
     double availableTime = 0.0;
     for (auto routeIter = this->routes.begin(); routeIter != this->routes.end(); routeIter++)
     {
         availableTime += MAX_WORK_TIME - routeIter->tail->arrivalTime;
-        if (routeIter->currentPos != routeIter->tail)
-        {
-            availableVehicle++;
-        }
         PointOrder p = routeIter->head;
-        while (p != routeIter->currentPos->next)
+        while (p != routeIter->currentPos)
         {
             if (!p->isOrigin)
             {
-                deliveredParcels++;
+		servicedCustomers += 1;
+                deliveredWeights += p->customer->weight;
             }
             p = p->next;
         }
     }
     this->info[1] = availableTime;
-    this->info[2] = deliveredParcels;
-    this->info[3] = availableVehicle;
+    this->info[3] = deliveredWeights;
+    this->info[2] = servicedCustomers;
 }

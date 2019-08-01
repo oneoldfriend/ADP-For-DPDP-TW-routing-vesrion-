@@ -1,5 +1,7 @@
 #include "avi.h"
 #include "generator.h"
+#include "vfa.h"
+#include "mdp.h"
 #include <random>
 
 void AVI::approximation(ValueFunction *valueFunction)
@@ -15,48 +17,36 @@ void AVI::approximation(ValueFunction *valueFunction)
         {
             startApproximate = true;
         }
-        double valueSum = 0.0;
         //初始化马尔科夫决策过程
         MDP simulation = MDP(true, "");
-        vector<pair<Eigen::Vector4d, double> > valueAtThisSimulation;
-        pair<Eigen::Vector4d, double> infoAtCurrentState;
-        Eigen::Vector4d currentScore;
-        Eigen::Vector4d nextScore;
-        vector<Eigen::Vector4d> scoreAtThisSimulation;
-        //单步初始化
-        Action bestAction;
-        double routingReward = 0.0;
-        simulation.findBestAssignmentAction(&bestAction, *valueFunction);
-        simulation.assignmentConfirmed(bestAction);
-        simulation.findBestRoutingAction(&bestAction, *valueFunction, &routingReward, startApproximate, &currentScore);
+        double valueAtThisSimulation[(int)MAX_WORK_TIME][INPUT_DATA_FIRST_D][INPUT_DATA_SECOND_D];
+        vector<double> rewardPath;
+        int stateCount = 0;
         //开始mdp模拟
         while (simulation.currentState.currentRoute != nullptr)
         {
-            valueSum += routingReward;
-            //记录这次sample path的信息
-            simulation.currentState.executeAction(bestAction);
-            simulation.currentState.calcAttribute(bestAction);
-            simulation.currentState.undoAction(bestAction);
-            valueAtThisSimulation.push_back(make_pair(simulation.currentState.attributes, routingReward));
-            scoreAtThisSimulation.push_back(currentScore);
-            infoAtCurrentState = make_pair(simulation.currentState.attributes, routingReward);
-            //状态转移
-            simulation.transition(bestAction);
-            //对下一次状态采样
-            if (simulation.currentState.currentRoute == nullptr)
-            {
-                break;
-            }
-            bestAction = Action();
+            Action bestAction;
+            double routingReward = 0.0;
             simulation.findBestAssignmentAction(&bestAction, *valueFunction);
             simulation.assignmentConfirmed(bestAction);
-            simulation.findBestRoutingAction(&bestAction, *valueFunction, &routingReward, startApproximate, &nextScore);
-            //valueFunction->updateActor(infoAtCurrentState, simulation.currentState, bestAction, currentScore);
-            currentScore = nextScore;
+            simulation.findBestRoutingAction(&bestAction, *valueFunction, &routingReward, startApproximate);
+            //记录这次sample path的信息
+            simulation.executeAction(bestAction);
+            simulation.currentState.calcAttribute(bestAction, valueAtThisSimulation[stateCount++]);
+            simulation.undoAction(bestAction);
+            rewardPath.push_back(routingReward);
+            //状态转移
+            simulation.transition(bestAction);
         }
-        valueFunction->updateCritic(valueAtThisSimulation, startApproximate, scoreAtThisSimulation);
+        //对lookup table 进行更新
+        double valueSum = 0.0;
+        for (auto iter = rewardPath.begin(); iter != rewardPath.end(); ++iter)
+        {
+            valueSum += *iter;
+        }
         simulation.solution.calcCost();
         //cout << totalSimulationCount << " " << simulation.solution.cost << " " << simulation.solution.penalty << " " << simulation.solution.waitTime << " " << simulation.cumOutsourcedCost << " " << simulation.solution.cost + simulation.cumOutsourcedCost << " " << valueSum << endl;
+        valueFunction->updateNetwork(valueAtThisSimulation, rewardPath, startApproximate);
         for (auto iter = simulation.customers.begin(); iter != simulation.customers.end(); ++iter)
         {
             delete iter->second;
