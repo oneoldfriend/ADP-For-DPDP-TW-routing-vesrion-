@@ -1,6 +1,8 @@
 #include "mdp.h"
 #include "route.h"
 #include "generator.h"
+#include "pca/ap.h"
+#include "pca/dataanalysis.h"
 
 using namespace std;
 
@@ -26,6 +28,7 @@ State::State()
 
 void State::calcAttribute(Action a, double matrix[INPUT_DATA_FIRST_D][INPUT_DATA_SECOND_D])
 {
+    double originMatrix[CUSTOMER_NUMBER * 2][INPUT_DATA_SECOND_D];
     double routeCount = 1;
     int rowNumber = 0;
     for (auto iter = this->pointSolution->routes.begin(); iter != this->pointSolution->routes.end(); ++iter)
@@ -34,21 +37,21 @@ void State::calcAttribute(Action a, double matrix[INPUT_DATA_FIRST_D][INPUT_DATA
         while (p != iter->tail)
         {
             int varCount = 0;
-            matrix[rowNumber][varCount++] = p->position.x;
-            matrix[rowNumber][varCount++] = p->position.y;
-            matrix[rowNumber][varCount++] = p->customer->startTime;
-            matrix[rowNumber][varCount++] = p->customer->endTime;
+            originMatrix[rowNumber][varCount++] = p->position.x;
+            originMatrix[rowNumber][varCount++] = p->position.y;
+            originMatrix[rowNumber][varCount++] = p->customer->startTime;
+            originMatrix[rowNumber][varCount++] = p->customer->endTime;
             if (p->isOrigin)
             {
-                matrix[rowNumber][varCount++] = p->customer->weight;
+                originMatrix[rowNumber][varCount++] = p->customer->weight;
             }
             else
             {
-                matrix[rowNumber][varCount++] = -p->customer->weight;
+                originMatrix[rowNumber][varCount++] = -p->customer->weight;
             }
-            matrix[rowNumber][varCount++] = p->arrivalTime;
-            matrix[rowNumber][varCount++] = p->departureTime;
-            matrix[rowNumber][varCount++] = p->currentWeight;
+            originMatrix[rowNumber][varCount++] = p->arrivalTime;
+            originMatrix[rowNumber][varCount++] = p->departureTime;
+            originMatrix[rowNumber][varCount++] = p->currentWeight;
             p = p->next;
             rowNumber++;
         }
@@ -58,26 +61,44 @@ void State::calcAttribute(Action a, double matrix[INPUT_DATA_FIRST_D][INPUT_DATA
         if ((*iter).second.first != a.positionToVisit)
         {
             int varCount = 0;
-            matrix[rowNumber][varCount++] = (*iter).second.second->customer->origin.x;
-            matrix[rowNumber][varCount++] = (*iter).second.second->customer->origin.y;
-            matrix[rowNumber][varCount++] = (*iter).second.second->customer->startTime;
-            matrix[rowNumber][varCount++] = (*iter).second.second->customer->endTime;
-            matrix[rowNumber][varCount++] = (*iter).second.second->customer->weight;
-            matrix[rowNumber][varCount++] = 0;
-            matrix[rowNumber][varCount++] = 0;
-            matrix[rowNumber][varCount++] = 0;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->origin.x;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->origin.y;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->startTime;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->endTime;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->weight;
+            originMatrix[rowNumber][varCount++] = 0;
+            originMatrix[rowNumber][varCount++] = 0;
+            originMatrix[rowNumber][varCount++] = 0;
             varCount = 0;
             rowNumber++;
-            matrix[rowNumber][varCount++] = (*iter).second.second->position.x;
-            matrix[rowNumber][varCount++] = (*iter).second.second->position.y;
-            matrix[rowNumber][varCount++] = (*iter).second.second->customer->startTime;
-            matrix[rowNumber][varCount++] = (*iter).second.second->customer->endTime;
-            matrix[rowNumber][varCount++] = -(*iter).second.second->customer->weight;
-            matrix[rowNumber][varCount++] = 0;
-            matrix[rowNumber][varCount++] = 0;
-            matrix[rowNumber][varCount++] = 0;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->position.x;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->position.y;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->startTime;
+            originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->endTime;
+            originMatrix[rowNumber][varCount++] = -(*iter).second.second->customer->weight;
+            originMatrix[rowNumber][varCount++] = 0;
+            originMatrix[rowNumber][varCount++] = 0;
+            originMatrix[rowNumber][varCount++] = 0;
             rowNumber++;
         }
+    }
+    alglib::real_2d_array pcaInput;
+    pcaInput.setlength(rowNumber, INPUT_DATA_SECOND_D);
+    for (int i = 0; i < rowNumber; i++)
+    {
+        for (int j = 0; j < INPUT_DATA_SECOND_D; j++)
+        {
+            pcaInput[i][j] = originMatrix[i][j];
+        }
+    }
+    const alglib::real_2d_array pcaInput1 = pcaInput;
+    alglib::ae_int_t infoOutput;
+    alglib::real_1d_array pcaOutput1;
+    alglib::real_2d_array pcaOutput2;
+    alglib::pcabuildbasis(pcaInput1, rowNumber, INPUT_DATA_SECOND_D, infoOutput, pcaOutput1, pcaOutput2);
+    for (int i = 0; i < INPUT_DATA_SECOND_D; i++)
+    {
+        matrix[0][i] = pcaOutput1[i];
     }
 }
 
@@ -225,6 +246,7 @@ void MDP::findBestRoutingAction(Action *a, ValueFunction *valueFunction, double 
             actionValue = immediateReward + valueFunction->getValue(this->currentState, tempAction, approx);
             if (actionValue < bestActionValue)
             {
+                //cout << actionValue - immediateReward << endl;
                 //记录更优的动作
                 *reward = immediateReward;
                 bestActionValue = actionValue;

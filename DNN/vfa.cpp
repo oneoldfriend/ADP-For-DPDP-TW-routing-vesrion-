@@ -20,9 +20,9 @@ ValueFunction::ValueFunction(const vector<int> &layers)
         Symbol fc = FullyConnected(std::string("fc") + istr,
                                    i == 0 ? x : outputs[i - 1],
                                    weights[i], biases[i], layers[i]);
-        outputs[i] = LeakyReLU(std::string("act") + istr, fc, null_sym, LeakyReLUActType::kLeaky);
+        outputs[i] = i == layers.size() - 1 ? fc : Activation(fc, ActivationActType::kRelu);
     }
-    this->net = SoftmaxOutput(outputs.back(), label);
+    this->net = outputs.back();
 
     Context ctx_dev(DeviceType::kCPU, 0);
 
@@ -35,9 +35,9 @@ ValueFunction::ValueFunction(const vector<int> &layers)
     NDArray array_b_2(Shape(1), ctx_dev, false);
 
     array_w_1 = 0.5f;
-    array_b_1 = 0.0f;
+    array_b_1 = 1.0f;
     array_w_2 = 0.5f;
-    array_b_2 = 0.0f;
+    array_b_2 = 1.0f;
 
     // the grads
 
@@ -100,8 +100,8 @@ double ValueFunction::getValue(State S, Action a, bool actor)
         this->exe->arg_arrays[0].SyncCopyFromCPU(aptr_x, INPUT_LAYER);
         this->exe->arg_arrays[0].WaitToRead();
         this->exe->Forward(false);
-        this->exe->outputs[0];
         delete[] aptr_x;
+        return this->exe->outputs[0].GetData()[0];
     }
 }
 
@@ -131,12 +131,22 @@ void ValueFunction::updateNetwork(double valueAtThisSimulation[(int)MAX_WORK_TIM
         this->exe->arg_arrays[5].SyncCopyFromCPU(aptr_y, 1);
         this->exe->arg_arrays[5].WaitToRead();
         exe->Forward(true);
+        /*cout << this->exe->arg_arrays[0] << endl;
+        cout << this->exe->arg_arrays[1] << endl;
+        cout << this->exe->arg_arrays[2] << endl;
+        cout << this->exe->arg_arrays[3] << endl;
+        cout << this->exe->arg_arrays[4] << endl;
+        cout << this->exe->arg_arrays[5] << endl;*/
+        double before = exe->outputs[0].GetData()[0];
         // update the parameters
         exe->Backward();
         for (int i = 1; i < 5; ++i)
         {
             this->exe->arg_arrays[i] -= this->exe->grad_arrays[i] * STEP_SIZE;
         }
+        /*exe->Forward(false);
+        double after = exe->outputs[0].GetData()[0];
+        cout << before - after << endl;*/
         delete[] aptr_x;
         delete[] aptr_y;
     }

@@ -37,8 +37,8 @@ void Generator::instanceGenenrator(bool testInstanceGenerate, list<pair<double, 
         }*/
         Customer *customer = new Customer();
         normal_distribution<double> ap(360, 120);
-        double appearTime = max(0.0,min(650.0,ap(e)));//(MAX_WORK_TIME - timeWindowLength - blankLength) * ap(e);
-	//cout << appearTime << endl;
+        double appearTime = (MAX_WORK_TIME - timeWindowLength - blankLength) * ap(e);
+	    //cout << appearTime << endl;
         //double appearTime = apStore[customerCount - 1];
         //double appearTime = ratio(e) * (MAX_WORK_TIME - timeWindowLength - blankLength);
         if (staticCustomerCount++ < staticCustomer)

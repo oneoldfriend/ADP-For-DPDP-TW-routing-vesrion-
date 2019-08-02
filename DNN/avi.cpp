@@ -12,6 +12,8 @@ void AVI::approximation(ValueFunction *valueFunction)
     bool startApproximate = false;
     while (totalSimulationCount++ < MAX_SIMULATION)
     {
+        clock_t start, end;
+        start = clock();
         lagApproximateCount++;
         if (lagApproximateCount > LAG_APPROXIMATE)
         {
@@ -44,6 +46,8 @@ void AVI::approximation(ValueFunction *valueFunction)
         {
             valueSum += *iter;
         }
+        end = clock();
+        //cout << double(end - start) / CLOCKS_PER_SEC << endl;
         simulation.solution.calcCost();
         cout << totalSimulationCount << " " << simulation.solution.cost << " " << simulation.solution.penalty << " " << simulation.solution.waitTime << " " << simulation.cumOutsourcedCost << " " << simulation.solution.cost + simulation.cumOutsourcedCost << " " << valueSum << endl;
         valueFunction->updateNetwork(valueAtThisSimulation, rewardPath, startApproximate);
