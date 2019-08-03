@@ -23,7 +23,7 @@ ValueFunction::ValueFunction(const vector<int> &layers)
     }
     this->net = outputs.back();
 
-    Context ctx_dev(DeviceType::kCPU, 0);
+    Context ctx_dev(DeviceType::kGPU, 0);
 
     NDArray array_x(Shape(1, INPUT_LAYER), ctx_dev, false);
     NDArray array_y(Shape(1), ctx_dev, false);
@@ -106,7 +106,7 @@ double ValueFunction::getValue(State S, Action a, bool actor)
 
 void ValueFunction::updateNetwork(double valueAtThisSimulation[(int)MAX_WORK_TIME][INPUT_DATA_FIRST_D][INPUT_DATA_SECOND_D], vector<double> rewardPath, bool startApproximate)
 {
-    double lastValue = 0.0;
+    double lastValue = 0.0, error = 0.0;
     for (auto iter = rewardPath.rbegin(); iter != rewardPath.rend(); ++iter)
     {
         *iter += lastValue;
@@ -143,10 +143,11 @@ void ValueFunction::updateNetwork(double valueAtThisSimulation[(int)MAX_WORK_TIM
         {
             this->exe->arg_arrays[i] -= this->exe->grad_arrays[i] * STEP_SIZE;
         }
-        /*exe->Forward(false);
+        exe->Forward(false);
         double after = exe->outputs[0].GetData()[0];
-        cout << before - after << endl;*/
+        error += abs(before - after);
         delete[] aptr_x;
         delete[] aptr_y;
     }
+    cout << error << endl;
 }
