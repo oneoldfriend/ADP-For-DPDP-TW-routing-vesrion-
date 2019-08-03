@@ -23,7 +23,7 @@ State::State()
 {
     this->currentTime = 0;
     this->currentRoute = nullptr;
-    this->attributes = Eigen::VectorXd(ATTRIBUTES_NUMBER);
+    this->attributes = Eigen::VectorXd(INPUT_DATA_SECOND_D);
 }
 
 void State::calcAttribute(Action a, double matrix[INPUT_DATA_FIRST_D][INPUT_DATA_SECOND_D])
@@ -37,21 +37,21 @@ void State::calcAttribute(Action a, double matrix[INPUT_DATA_FIRST_D][INPUT_DATA
         while (p != iter->tail)
         {
             int varCount = 0;
-            originMatrix[rowNumber][varCount++] = p->position.x;
-            originMatrix[rowNumber][varCount++] = p->position.y;
-            originMatrix[rowNumber][varCount++] = p->customer->startTime;
-            originMatrix[rowNumber][varCount++] = p->customer->endTime;
+           originMatrix[rowNumber][varCount++] = p->position.x;
+           originMatrix[rowNumber][varCount++] = p->position.y;
+           originMatrix[rowNumber][varCount++] = p->customer->startTime;
+           originMatrix[rowNumber][varCount++] = p->customer->endTime;
             if (p->isOrigin)
             {
-                originMatrix[rowNumber][varCount++] = p->customer->weight;
+               originMatrix[rowNumber][varCount++] = p->customer->weight;
             }
             else
             {
-                originMatrix[rowNumber][varCount++] = -p->customer->weight;
+               originMatrix[rowNumber][varCount++] = -p->customer->weight;
             }
-            originMatrix[rowNumber][varCount++] = p->arrivalTime;
-            originMatrix[rowNumber][varCount++] = p->departureTime;
-            originMatrix[rowNumber][varCount++] = p->currentWeight;
+           originMatrix[rowNumber][varCount++] = p->arrivalTime;
+           originMatrix[rowNumber][varCount++] = p->departureTime;
+           originMatrix[rowNumber][varCount++] = p->currentWeight;
             p = p->next;
             rowNumber++;
         }
@@ -61,24 +61,24 @@ void State::calcAttribute(Action a, double matrix[INPUT_DATA_FIRST_D][INPUT_DATA
         if ((*iter).second.first != a.positionToVisit)
         {
             int varCount = 0;
-            originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->origin.x;
-            originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->origin.y;
-            originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->startTime;
-            originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->endTime;
-            originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->weight;
-            originMatrix[rowNumber][varCount++] = 0;
-            originMatrix[rowNumber][varCount++] = 0;
-            originMatrix[rowNumber][varCount++] = 0;
+           originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->origin.x;
+           originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->origin.y;
+           originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->startTime;
+           originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->endTime;
+           originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->weight;
+           originMatrix[rowNumber][varCount++] = 0;
+           originMatrix[rowNumber][varCount++] = 0;
+           originMatrix[rowNumber][varCount++] = 0;
             varCount = 0;
             rowNumber++;
-            originMatrix[rowNumber][varCount++] = (*iter).second.second->position.x;
-            originMatrix[rowNumber][varCount++] = (*iter).second.second->position.y;
-            originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->startTime;
-            originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->endTime;
-            originMatrix[rowNumber][varCount++] = -(*iter).second.second->customer->weight;
-            originMatrix[rowNumber][varCount++] = 0;
-            originMatrix[rowNumber][varCount++] = 0;
-            originMatrix[rowNumber][varCount++] = 0;
+           originMatrix[rowNumber][varCount++] = (*iter).second.second->position.x;
+           originMatrix[rowNumber][varCount++] = (*iter).second.second->position.y;
+           originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->startTime;
+           originMatrix[rowNumber][varCount++] = (*iter).second.second->customer->endTime;
+           originMatrix[rowNumber][varCount++] = -(*iter).second.second->customer->weight;
+           originMatrix[rowNumber][varCount++] = 0;
+           originMatrix[rowNumber][varCount++] = 0;
+           originMatrix[rowNumber][varCount++] = 0;
             rowNumber++;
         }
     }

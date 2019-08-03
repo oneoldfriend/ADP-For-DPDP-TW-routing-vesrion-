@@ -13,8 +13,7 @@
 #define HIDDEN_LAYER (int)ceil(sqrt(INPUT_LAYER))
 #define PARTITION_THRESHOLD 1.0
 #define LOOKUP_TABLE_INITIAL 10.0
-#define ATTRIBUTES_NUMBER 4
-#define STEP_SIZE 0.0001
+#define STEP_SIZE 0.01
 #define LAMBDA 0.8
 
 class State;

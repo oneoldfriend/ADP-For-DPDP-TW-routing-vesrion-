@@ -10,7 +10,6 @@ ValueFunction::ValueFunction(const vector<int> &layers)
     weights = vector<Symbol>(layers.size());
     biases = vector<Symbol>(layers.size());
     outputs = vector<Symbol>(layers.size());
-
     Symbol null_sym;
     for (int i = 0; i < layers.size(); i++)
     {

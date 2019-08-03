@@ -40,17 +40,17 @@ void AVI::approximation(ValueFunction *valueFunction)
             //状态转移
             simulation.transition(bestAction);
         }
-        //对lookup table 进行更新
+        //对lookup table 进行更新;
         double valueSum = 0.0;
         for (auto iter = rewardPath.begin(); iter != rewardPath.end(); ++iter)
         {
             valueSum += *iter;
         }
-        end = clock();
-        //cout << double(end - start) / CLOCKS_PER_SEC << endl;
         simulation.solution.calcCost();
-        cout << totalSimulationCount << " " << simulation.solution.cost << " " << simulation.solution.penalty << " " << simulation.solution.waitTime << " " << simulation.cumOutsourcedCost << " " << simulation.solution.cost + simulation.cumOutsourcedCost << " " << valueSum << endl;
+        //cout << totalSimulationCount << " " << simulation.solution.cost << " " << simulation.solution.penalty << " " << simulation.solution.waitTime << " " << simulation.cumOutsourcedCost << " " << simulation.solution.cost + simulation.cumOutsourcedCost << " " << valueSum << endl;
         valueFunction->updateNetwork(valueAtThisSimulation, rewardPath, startApproximate);
+        end = clock();
+        cout << double(end - start) / CLOCKS_PER_SEC << endl;
         for (auto iter = simulation.customers.begin(); iter != simulation.customers.end(); ++iter)
         {
             delete iter->second;
