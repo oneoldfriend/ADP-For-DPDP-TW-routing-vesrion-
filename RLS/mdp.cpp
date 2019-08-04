@@ -26,28 +26,41 @@ State::State()
     this->attributes = Eigen::VectorXd(ATTRIBUTES_NUMBER);
 }
 
-void State::calcAttribute(Action a)
+void State::calcAttribute(Action a, bool predecision)
 {
-    this->pointSolution->calcInfo();
-    this->attributes[0] = 100;
-    this->attributes[1] = this->currentRoute->currentPos->departureTime;
-    //this->attributes[1] = this->pointSolution->info[3];
-    this->attributes[2] = this->pointSolution->info[2];
-    if (a.positionToVisit != nullptr && a.positionToVisit->isOrigin)
+    if (predecision)
     {
-        this->attributes[3] = this->notServicedCustomer.size() + 1;
+        this->pointSolution->calcInfo();
+        this->attributes[0] = 100;
+        this->attributes[1] = this->currentRoute->currentPos->departureTime;
+        //this->attributes[1] = this->pointSolution->info[3];
+        this->attributes[2] = this->pointSolution->info[2];
+        this->attributes[3] = this->notServicedCustomer.size();
+        this->attributes[4] = this->pointSolution->info[1];
     }
     else
     {
-        this->attributes[3] = this->notServicedCustomer.size();
-        if (a.positionToVisit != nullptr)
+        this->pointSolution->calcInfo();
+        this->attributes[0] = 100;
+        this->attributes[1] = this->currentRoute->currentPos->departureTime;
+        //this->attributes[1] = this->pointSolution->info[3];
+        this->attributes[2] = this->pointSolution->info[2];
+        if (a.positionToVisit != nullptr && a.positionToVisit->isOrigin)
         {
-            this->attributes[2] = this->pointSolution->info[2] + 1;
-            //this->attributes[1] = this->pointSolution->info[3] + a.positionToVisit->customer->weight;
+            this->attributes[3] = this->notServicedCustomer.size() + 1;
         }
+        else
+        {
+            this->attributes[3] = this->notServicedCustomer.size();
+            if (a.positionToVisit != nullptr)
+            {
+                this->attributes[2] = this->pointSolution->info[2] + 1;
+                //this->attributes[1] = this->pointSolution->info[3] + a.positionToVisit->customer->weight;
+            }
+        }
+        this->attributes[4] = this->pointSolution->info[1];
+        //this->attributes[3] = this->currentRoute->currentPos->currentWeight;
     }
-    this->attributes[4] = this->pointSolution->info[1];
-    //this->attributes[3] = this->currentRoute->currentPos->currentWeight;
     /*
     double originMatrix[CUSTOMER_NUMBER * 2][PCA_INPUT_COL];
     double routeCount = 1;

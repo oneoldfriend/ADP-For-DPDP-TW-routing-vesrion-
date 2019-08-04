@@ -19,6 +19,7 @@
 #define LAG_APPROXIMATE 0
 #define ASSIGNMENT 0
 #define IGNORANCE_TOLERANCE 30.0
+#define GENERATOR 0
 #define MYOPIC 0
 
 class AVI

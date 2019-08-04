@@ -5,11 +5,11 @@
 #include "util.h"
 #include "Eigen/Dense"
 #include <vector>
-#define STEP_SIZE 0.3
 #define PARTITION_THRESHOLD 1.0
 #define LOOKUP_TABLE_INITIAL 10.0
 #define ATTRIBUTES_NUMBER 5
 #define LAMBDA 0.8
+#define ALPHA 1
 
 class Aggregation
 {
@@ -55,13 +55,14 @@ class ValueFunction
 public:
   LookupTable lookupTable;
   double lambda;
-  Eigen::MatrixXd matrixBeta;
-  Eigen::VectorXd updatedAttributesWeight;
-  Eigen::VectorXd initialAttributesWeight;
+  Eigen::MatrixXd postdecisionMatrixBeta;
+  Eigen::MatrixXd predecisionMatrixBeta;
+  Eigen::VectorXd postdecisionAttributesWeight;
+  Eigen::VectorXd predecisionAttributesWeight;
   //double getValue(Aggregation postDecisionState, double reward);
-  double getValue(State S, Action a, bool approx);
+  double getValue(State S, Action a, bool predecision);
   //void updateValue(vector<pair<Aggregation, double>> valueAtThisSimulation, bool startApproximate);
-  void updateValue(vector<pair<Eigen::VectorXd, double> > valueAtThisSimulation, bool startApproximate);
+  void updateValue(vector<pair<Eigen::VectorXd, double> > postdecisionValueAtThisSimulation, vector<pair<Eigen::VectorXd, double> > predecisionValueAtThisSimulation, bool startApproximate);
   ValueFunction();
   //EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };

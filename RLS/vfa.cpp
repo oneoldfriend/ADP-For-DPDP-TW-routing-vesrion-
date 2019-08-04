@@ -149,22 +149,25 @@ ValueFunction::ValueFunction()
 {
     lookupTable = LookupTable();
     lambda = 1;
-    this->updatedAttributesWeight = Eigen::VectorXd(ATTRIBUTES_NUMBER);
-    this->initialAttributesWeight = Eigen::VectorXd(ATTRIBUTES_NUMBER);
-    this->matrixBeta = Eigen::MatrixXd(ATTRIBUTES_NUMBER, ATTRIBUTES_NUMBER);
+    this->postdecisionAttributesWeight = Eigen::VectorXd(ATTRIBUTES_NUMBER);
+    this->predecisionAttributesWeight = Eigen::VectorXd(ATTRIBUTES_NUMBER);
+    this->postdecisionMatrixBeta = Eigen::MatrixXd(ATTRIBUTES_NUMBER, ATTRIBUTES_NUMBER);
+    this->predecisionMatrixBeta = Eigen::MatrixXd(ATTRIBUTES_NUMBER, ATTRIBUTES_NUMBER);
     for (int i = 0; i < ATTRIBUTES_NUMBER; i++)
     {
-        this->updatedAttributesWeight(i) = 1.0;
-        this->initialAttributesWeight(i) = 1.0;
+        this->postdecisionAttributesWeight(i) = 1.0;
+        this->predecisionAttributesWeight(i) = 1.0;
         for (int j = 0; j < ATTRIBUTES_NUMBER; j++)
         {
             if (i == j)
             {
-                this->matrixBeta(i, j) = MAX_EDGE * CUSTOMER_NUMBER / MAX_VEHICLE;
+                this->postdecisionMatrixBeta(i, j) = MAX_EDGE * CUSTOMER_NUMBER / MAX_VEHICLE;
+                this->predecisionMatrixBeta(i, j) = MAX_EDGE * CUSTOMER_NUMBER / MAX_VEHICLE;
             }
             else
             {
-                this->matrixBeta(i, j) = 0;
+                this->postdecisionMatrixBeta(i, j) = 0;
+                this->predecisionMatrixBeta(i, j) = 0;
             }
         }
     }
@@ -175,9 +178,9 @@ ValueFunction::ValueFunction()
     return this->lookupTable.lookup(postDecisionState);
 }*/
 
-double ValueFunction::getValue(State S, Action a, bool approx)
+double ValueFunction::getValue(State S, Action a, bool predecision)
 {
-    S.calcAttribute(a);
+    S.calcAttribute(a, false);
     if (MYOPIC)
     {
         return 0;
@@ -186,11 +189,11 @@ double ValueFunction::getValue(State S, Action a, bool approx)
     {
         if (false)
         {
-            return this->initialAttributesWeight.transpose() * S.attributes;
+            return this->predecisionAttributesWeight.transpose() * S.attributes;
         }
         else
         {
-            return this->updatedAttributesWeight.transpose() * S.attributes;
+            return this->postdecisionAttributesWeight.transpose() * S.attributes;
         }
     }
 }
@@ -228,38 +231,46 @@ double ValueFunction::getValue(State S, Action a, bool approx)
     this->lookupTable.partitionUpdate();
 }*/
 
-void ValueFunction::updateValue(vector<pair<Eigen::VectorXd, double>> valueAtThisSimulation, bool startApproximate)
+void ValueFunction::updateValue(vector<pair<Eigen::VectorXd, double> > postdecisionValueAtThisSimulation, vector<pair<Eigen::VectorXd, double> > predecisionValueAtThisSimulation, bool startApproximate)
 {
     //this->matrixBeta = MAX_EDGE * CUSTOMER_NUMBER / MAX_VEHICLE * Eigen::Matrix4d::Identity();
     //this->matrixBeta = Eigen::Matrix4d::Identity();
     double lastValue = 0;
-    double weightErrorThisSimulation = 0.0, valueErrorThisSimulation = 0.0;
-    for (auto iter = valueAtThisSimulation.rbegin(); iter != valueAtThisSimulation.rend(); ++iter)
+    double predecisionEstimatorErrorThisSimulation = 0.0, postdecisionEstimatorErrorThisSimulation = 0.0;
+    vector<double> rewardStored;
+    for (auto iter = postdecisionValueAtThisSimulation.rbegin(); iter != postdecisionValueAtThisSimulation.rend(); ++iter)
     {
+        //double reward = iter->second;
+        rewardStored.push_back(iter->second);
         iter->second += lastValue;
         lastValue = double(LAMBDA) * iter->second;
     }
-    Eigen::VectorXd oldAttributesWeight = this->updatedAttributesWeight;
-    for (auto iter = valueAtThisSimulation.begin(); iter != valueAtThisSimulation.end(); ++iter)
+    for (int i = 0; i < (int)predecisionValueAtThisSimulation.size(); i++)
     {
-        double gammaN = 1.0 + iter->first.transpose() * this->matrixBeta * iter->first,
-               error = this->updatedAttributesWeight.transpose() * iter->first - iter->second;
-        //cout << this->updatedAttributesWeight.transpose() * iter->first << endl;
-        this->updatedAttributesWeight = this->updatedAttributesWeight - 1 / gammaN * this->matrixBeta * iter->first * error;
-        //cout << 1 / gammaN * this->matrixBeta << endl;
-        this->matrixBeta = this->matrixBeta - 1.0 / gammaN * (this->matrixBeta * iter->first * iter->first.transpose() * this->matrixBeta);
-        if (!startApproximate)
-        {
-            for (int i = 0; i < ATTRIBUTES_NUMBER; i++)
-            {
-                this->initialAttributesWeight[i] = this->updatedAttributesWeight[i];
-            }
-        }
-        valueErrorThisSimulation += abs(error);
+        predecisionValueAtThisSimulation[i].second = postdecisionValueAtThisSimulation[i].second;
     }
-    for (int i = 0; i < ATTRIBUTES_NUMBER; i++)
+
+    //update for pre decision value estimator
+    for (int i = 0; i < (int)predecisionValueAtThisSimulation.size(); i++)
     {
-        weightErrorThisSimulation += abs(this->updatedAttributesWeight[i] - oldAttributesWeight[i]);
+        double gammaN = 1.0 + predecisionValueAtThisSimulation[i].first.transpose() * this->predecisionMatrixBeta * predecisionValueAtThisSimulation[i].first,
+               error = ALPHA * (this->predecisionAttributesWeight.transpose() * predecisionValueAtThisSimulation[i].first - predecisionValueAtThisSimulation[i].second) + (1 - ALPHA) * (this->predecisionAttributesWeight.transpose() * predecisionValueAtThisSimulation[i].first - (this->postdecisionAttributesWeight.transpose() * postdecisionValueAtThisSimulation[i].first + rewardStored[i]));
+        this->predecisionAttributesWeight = this->predecisionAttributesWeight - 1 / gammaN * this->predecisionMatrixBeta * predecisionValueAtThisSimulation[i].first * error;
+        //cout << 1 / gammaN * this->matrixBeta << endl;
+        this->predecisionMatrixBeta = this->predecisionMatrixBeta - 1.0 / gammaN * (this->predecisionMatrixBeta * predecisionValueAtThisSimulation[i].first * predecisionValueAtThisSimulation[i].first.transpose() * this->predecisionMatrixBeta);
+        predecisionEstimatorErrorThisSimulation += abs(error);
+    }
+
+    //update for post decision value estimator
+    for (int i = 0; i < (int)postdecisionValueAtThisSimulation.size(); i++)
+    {
+        double gammaN = 1.0 + postdecisionValueAtThisSimulation[i].first.transpose() * this->postdecisionMatrixBeta * postdecisionValueAtThisSimulation[i].first,
+               error = ALPHA * (this->postdecisionAttributesWeight.transpose() * postdecisionValueAtThisSimulation[i].first - postdecisionValueAtThisSimulation[i].second) + (1 - ALPHA) * (this->postdecisionAttributesWeight.transpose() * postdecisionValueAtThisSimulation[i].first - (this->predecisionAttributesWeight.transpose() * predecisionValueAtThisSimulation[i].first - rewardStored[i]));
+        //cout << this->updatedAttributesWeight.transpose() * iter->first << endl;
+        this->postdecisionAttributesWeight = this->postdecisionAttributesWeight - 1 / gammaN * this->postdecisionMatrixBeta * postdecisionValueAtThisSimulation[i].first * error;
+        //cout << 1 / gammaN * this->matrixBeta << endl;
+        this->postdecisionMatrixBeta = this->postdecisionMatrixBeta - 1.0 / gammaN * (this->postdecisionMatrixBeta * postdecisionValueAtThisSimulation[i].first * postdecisionValueAtThisSimulation[i].first.transpose() * this->postdecisionMatrixBeta);
+        postdecisionEstimatorErrorThisSimulation += abs(error);
     }
     //cout << weightErrorThisSimulation << "," << valueErrorThisSimulation << endl;
 }

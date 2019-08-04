@@ -32,7 +32,7 @@ public:
   vector<Customer*> newCustomers;
   map<string, pair<PointOrder, PointOrder> > notServicedCustomer;
   vector<PointOrder> reachableCustomer;
-  void calcAttribute(Action a);
+  void calcAttribute(Action a, bool predecision);
   State();
 };
 
