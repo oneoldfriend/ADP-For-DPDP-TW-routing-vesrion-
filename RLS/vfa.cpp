@@ -243,7 +243,7 @@ void ValueFunction::updateValue(vector<pair<Eigen::VectorXd, double> > postdecis
         //double reward = iter->second;
         rewardStored.push_back(iter->second);
         iter->second += lastValue;
-        lastValue = double(LAMBDA) * iter->second;
+        lastValue = double(NOISE_DEDUCTION) * iter->second;
     }
     for (int i = 0; i < (int)predecisionValueAtThisSimulation.size(); i++)
     {
@@ -264,13 +264,13 @@ void ValueFunction::updateValue(vector<pair<Eigen::VectorXd, double> > postdecis
     //update for post decision value estimator
     for (int i = 0; i < (int)postdecisionValueAtThisSimulation.size(); i++)
     {
-        double gammaN = 1.0 + postdecisionValueAtThisSimulation[i].first.transpose() * this->postdecisionMatrixBeta * postdecisionValueAtThisSimulation[i].first,
+        double gammaN = LAMBDA + postdecisionValueAtThisSimulation[i].first.transpose() * this->postdecisionMatrixBeta * postdecisionValueAtThisSimulation[i].first,
                error = ALPHA * (this->postdecisionAttributesWeight.transpose() * postdecisionValueAtThisSimulation[i].first - postdecisionValueAtThisSimulation[i].second) + (1 - ALPHA) * (this->postdecisionAttributesWeight.transpose() * postdecisionValueAtThisSimulation[i].first - (this->predecisionAttributesWeight.transpose() * predecisionValueAtThisSimulation[i].first - rewardStored[i]));
         //cout << this->updatedAttributesWeight.transpose() * iter->first << endl;
-        this->postdecisionAttributesWeight = this->postdecisionAttributesWeight - 1 / gammaN * this->postdecisionMatrixBeta * postdecisionValueAtThisSimulation[i].first * error;
+        this->postdecisionAttributesWeight = this->postdecisionAttributesWeight - 1.0 / gammaN * this->postdecisionMatrixBeta * postdecisionValueAtThisSimulation[i].first * error;
         //cout << 1 / gammaN * this->matrixBeta << endl;
-        this->postdecisionMatrixBeta = this->postdecisionMatrixBeta - 1.0 / gammaN * (this->postdecisionMatrixBeta * postdecisionValueAtThisSimulation[i].first * postdecisionValueAtThisSimulation[i].first.transpose() * this->postdecisionMatrixBeta);
+        this->postdecisionMatrixBeta = LAMBDA * (this->postdecisionMatrixBeta - 1.0 / gammaN * (this->postdecisionMatrixBeta * postdecisionValueAtThisSimulation[i].first * postdecisionValueAtThisSimulation[i].first.transpose() * this->postdecisionMatrixBeta));
         postdecisionEstimatorErrorThisSimulation += abs(error);
     }
-    //cout << weightErrorThisSimulation << "," << valueErrorThisSimulation << endl;
+    cout <<  postdecisionEstimatorErrorThisSimulation << endl;
 }
