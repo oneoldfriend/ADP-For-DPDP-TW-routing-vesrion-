@@ -264,6 +264,7 @@ void ValueFunction::updateValue(vector<pair<Eigen::VectorXd, double> > postdecis
     //update for post decision value estimator
     for (int i = 0; i < (int)postdecisionValueAtThisSimulation.size(); i++)
     {
+	//postdecisionValueAtThisSimulation[i].second -= rewardStored[i];
         double gammaN = LAMBDA + postdecisionValueAtThisSimulation[i].first.transpose() * this->postdecisionMatrixBeta * postdecisionValueAtThisSimulation[i].first,
                error = ALPHA * (this->postdecisionAttributesWeight.transpose() * postdecisionValueAtThisSimulation[i].first - postdecisionValueAtThisSimulation[i].second) + (1 - ALPHA) * (this->postdecisionAttributesWeight.transpose() * postdecisionValueAtThisSimulation[i].first - (this->predecisionAttributesWeight.transpose() * predecisionValueAtThisSimulation[i].first - rewardStored[i]));
         //cout << this->updatedAttributesWeight.transpose() * iter->first << endl;
