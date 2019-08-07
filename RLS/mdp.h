@@ -18,6 +18,7 @@ class Action
 public:
   PointOrder positionToVisit;
   pair<PointOrder, PointOrder> destPosBeforeExecution;
+  pair<PointOrder, PointOrder> originPosBeforeExecution;
   map<Customer *, bool> customerConfirmation;
   double rejectionReward();
 };

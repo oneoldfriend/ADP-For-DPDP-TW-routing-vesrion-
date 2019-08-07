@@ -56,6 +56,6 @@ void AVI::approximation(ValueFunction *valueFunction)
             delete iter->second;
         }
         end = clock();
-        //cout << double(end - start) / CLOCKS_PER_SEC << endl;
+        cout << double(end - start) / CLOCKS_PER_SEC << endl;
     }
 }

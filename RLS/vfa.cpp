@@ -116,25 +116,12 @@ Aggregation::Aggregation()
 
 void Aggregation::aggregate(State S, Action a)
 {
-    Solution tempSolution = Solution();
-    tempSolution.solutionCopy(S.pointSolution);
-    tempSolution.greedyInsertion(a);
     //对执行动作后的解进行相关的信息提取
     this->currentTime = S.currentTime;
-    this->remainTime = 0;
-    //计算每条路径的剩余可规划时间
-    for (auto iter = tempSolution.routes.begin(); iter != tempSolution.routes.end(); ++iter)
+    for (auto iter = S.pointSolution->routes.begin(); iter != S.pointSolution->routes.end(); ++iter)
     {
-        if (iter->head->next == iter->tail)
-        {
-            this->remainTime += MAX_WORK_TIME - iter->head->departureTime;
-        }
-        else
-        {
-            this->remainTime += MAX_WORK_TIME - iter->tail->departureTime;
-        }
+        this->remainTime += (double)MAX_WORK_TIME - iter->tail->arrivalTime;
     }
-    tempSolution.solutionDelete();
 }
 
 Entry::Entry()

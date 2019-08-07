@@ -15,23 +15,14 @@ Solution::Solution()
     this->penalty = 0;
 }
 
-bool Solution::greedyInsertion(Action a)
+bool Solution::greedyInsertion(vector<pair<Order *, Order *> > orderWaitToBeInserted)
 {
-    vector<Customer *> customerToBeInserted;
-    //获得需要插入的顾客信息
-    for (auto iter = a.customerConfirmation.begin(); iter != a.customerConfirmation.end(); ++iter)
-    {
-        if (iter->second)
-        {
-            customerToBeInserted.push_back(iter->first);
-        }
-    }
-    for (auto customerIter = customerToBeInserted.begin(); customerIter != customerToBeInserted.end(); ++customerIter)
+    for (auto customerIter = orderWaitToBeInserted.begin(); customerIter != orderWaitToBeInserted.end(); ++customerIter)
     {
         //找到每个顾客在解中的最优位置进行插入
         bool feasibility = false;
-        PointOrder origin = new Order(*customerIter, true);
-        PointOrder dest = new Order(*customerIter, false);
+        PointOrder origin = customerIter->first;
+        PointOrder dest = customerIter->second;
         pair<PointOrder, PointOrder> bestOriginPos, bestDestPos;
         PointRoute bestRoute = nullptr;
         double bestCost = MAX_COST;
@@ -121,7 +112,7 @@ void Solution::calcInfo()
         {
             if (!p->isOrigin)
             {
-		servicedCustomers += 1;
+                servicedCustomers += 1;
                 deliveredWeights += p->customer->weight;
             }
             p = p->next;
@@ -130,4 +121,12 @@ void Solution::calcInfo()
     this->info[1] = availableTime;
     this->info[3] = deliveredWeights;
     this->info[2] = servicedCustomers;
+}
+
+void Solution::solutionUpdate()
+{
+    for (auto iter = this->routes.begin(); iter != this->routes.end(); ++iter)
+    {
+        iter->routeUpdate();
+    }
 }

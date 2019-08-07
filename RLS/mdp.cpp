@@ -144,9 +144,11 @@ void MDP::executeAction(Action a)
     {
         if (a.positionToVisit->isOrigin)
         {
+            PointOrder dest = this->currentState.notServicedCustomer[a.positionToVisit->customer->id].second;
+            this->currentState.currentRoute->removeOrder(a.positionToVisit);
+            this->currentState.currentRoute->removeOrder(dest);
             a.positionToVisit->prior = this->currentState.currentRoute->currentPos;
             a.positionToVisit->next = this->currentState.currentRoute->currentPos->next;
-            PointOrder dest = this->currentState.notServicedCustomer[a.positionToVisit->customer->id].second;
             dest->prior = a.positionToVisit;
             dest->next = a.positionToVisit->next;
             this->currentState.currentRoute->insertOrder(a.positionToVisit);
@@ -165,7 +167,7 @@ void MDP::executeAction(Action a)
         this->currentState.currentRoute->currentPos->departureTime += UNIT_TIME;
         this->currentState.currentRoute->currentPos->waitTime += UNIT_TIME;
     }
-    this->currentState.currentRoute->routeUpdate();
+    this->currentState.pointSolution->solutionUpdate();
 }
 
 void MDP::undoAction(Action a)
@@ -177,6 +179,12 @@ void MDP::undoAction(Action a)
             PointOrder dest = a.positionToVisit->next;
             this->currentState.currentRoute->removeOrder(a.positionToVisit);
             this->currentState.currentRoute->removeOrder(dest);
+            a.positionToVisit->next->prior = a.destPosBeforeExecution.first;
+            a.positionToVisit->next->next = a.destPosBeforeExecution.second;
+            a.positionToVisit->prior = a.originPosBeforeExecution.first;
+            a.positionToVisit->next = a.originPosBeforeExecution.second;
+            this->currentState.currentRoute->insertOrder(a.positionToVisit->next);
+            this->currentState.currentRoute->insertOrder(a.positionToVisit);
         }
         else
         {
@@ -191,7 +199,7 @@ void MDP::undoAction(Action a)
         this->currentState.currentRoute->currentPos->departureTime -= UNIT_TIME;
         this->currentState.currentRoute->currentPos->waitTime -= UNIT_TIME;
     }
-    this->currentState.currentRoute->routeUpdate();
+    this->currentState.pointSolution->solutionUpdate();
 }
 
 void MDP::integerToRoutingAction(int actionNum, State S, Action *a)
@@ -200,8 +208,18 @@ void MDP::integerToRoutingAction(int actionNum, State S, Action *a)
     if (actionNum >= 0)
     {
         a->positionToVisit = S.reachableCustomer[actionNum];
-        a->destPosBeforeExecution.first = S.reachableCustomer[actionNum]->prior;
-        a->destPosBeforeExecution.second = S.reachableCustomer[actionNum]->next;
+        if (!a->positionToVisit->isOrigin)
+        {
+            a->destPosBeforeExecution.first = S.reachableCustomer[actionNum]->prior;
+            a->destPosBeforeExecution.second = S.reachableCustomer[actionNum]->next;
+        }
+        else
+        {
+            a->originPosBeforeExecution.first = a->positionToVisit->prior;
+            a->originPosBeforeExecution.second = a->positionToVisit->next;
+            a->destPosBeforeExecution.first = S.notServicedCustomer[a->positionToVisit->customer->id].second->prior;
+            a->destPosBeforeExecution.second = S.notServicedCustomer[a->positionToVisit->customer->id].second->next;
+        }
     }
     else
     {
@@ -312,13 +330,24 @@ void MDP::findBestRoutingAction(Action *a, ValueFunction valueFunction, double *
 
 bool MDP::checkAssignmentActionFeasibility(Action a, double *reward)
 {
-    Solution tempSolution = Solution();
-    //生成当前解的副本并对副本执行动作进行检查计算
-    tempSolution.solutionCopy(&this->solution);
-    double currentCost = tempSolution.cost;
-    bool feasibility = tempSolution.greedyInsertion(a);
-    double newCost = tempSolution.cost;
-    tempSolution.solutionDelete();
+    double currentCost = this->currentState.pointSolution->cost;
+    vector<pair<PointOrder, PointOrder> > orderWaitToBeInserted;
+    for (auto iter = a.customerConfirmation.begin(); iter != a.customerConfirmation.end(); ++iter)
+    {
+        if (iter->second)
+        {
+            orderWaitToBeInserted.push_back(make_pair(new Order(iter->first, true), new Order(iter->first, false)));
+        }
+    }
+    bool feasibility = this->currentState.pointSolution->greedyInsertion(orderWaitToBeInserted);
+    for(int i = 0; i < (int)orderWaitToBeInserted.size(); i++){
+        this->currentState.pointSolution->routes[0].removeOrder(orderWaitToBeInserted[i].first);
+        this->currentState.pointSolution->routes[0].removeOrder(orderWaitToBeInserted[i].second);
+        delete orderWaitToBeInserted[i].first;
+        delete orderWaitToBeInserted[i].second;
+    }
+    double newCost = this->currentState.pointSolution->cost;
+    this->currentState.pointSolution->solutionUpdate();
     newCost += a.rejectionReward();
     *reward = newCost - currentCost;
     return feasibility;
@@ -344,6 +373,7 @@ bool MDP::checkRoutingActionFeasibility(Action a, double *reward)
 
 void MDP::assignmentConfirmed(Action a)
 {
+    vector<pair<PointOrder, PointOrder> > orderWaitToBeInserted;
     for (auto iter = a.customerConfirmation.begin(); iter != a.customerConfirmation.end(); ++iter)
     {
         if (iter->second)
@@ -351,8 +381,10 @@ void MDP::assignmentConfirmed(Action a)
             PointOrder origin = new Order(iter->first, true);
             this->currentState.reachableCustomer.push_back(origin);
             this->currentState.notServicedCustomer[iter->first->id] = make_pair(origin, new Order(iter->first, false));
+            orderWaitToBeInserted.push_back(this->currentState.notServicedCustomer[iter->first->id]);
         }
     }
+    this->currentState.pointSolution->greedyInsertion(orderWaitToBeInserted);
 }
 
 MDP::MDP(bool approx, string fileName)
