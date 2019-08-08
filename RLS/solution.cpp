@@ -47,8 +47,6 @@ bool Solution::greedyInsertion(vector<pair<Order *, Order *> > orderWaitToBeInse
         if (feasibility == false)
         {
             //若有一个顾客无法在当前解中找到合法位置，则该动作非法，并返回合法性
-            delete origin;
-            delete dest;
             return feasibility;
         }
         else
@@ -69,15 +67,18 @@ bool Solution::greedyInsertion(vector<pair<Order *, Order *> > orderWaitToBeInse
 
 double Solution::calcCost()
 {
-    double cost = 0;
+    this->cost = 0.0;
+    this->penalty = 0.0;
+    this->travelTime = 0.0;
+    this->waitTime = 0.0;
     for (auto iter = this->routes.begin(); iter != this->routes.end(); ++iter)
     {
         this->cost += iter->cost;
         this->penalty += iter->penalty;
-        this->travelTime = iter->travelTime;
-        this->waitTime = iter->waitTime;
+        this->travelTime += iter->travelTime;
+        this->waitTime += iter->waitTime;
     }
-    return cost;
+    return this->cost;
 }
 
 void Solution::solutionCopy(Solution *source)

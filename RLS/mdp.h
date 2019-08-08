@@ -52,7 +52,7 @@ public:
   void integerToRoutingAction(int actionNum, State S, Action *a);
   void integerToAssignmentAction(int actionNum, State S, Action *a);
   void transition(Action a);
-  void checkIgnorance(Action a);
+  //void checkIgnorance(Action a);
   void assignmentConfirmed(Action a);
   double reward(State S, Action a);
   void observation(double lastDecisionTime);

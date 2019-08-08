@@ -183,7 +183,7 @@ void MDP::undoAction(Action a)
             a.positionToVisit->next->next = a.destPosBeforeExecution.second;
             a.positionToVisit->prior = a.originPosBeforeExecution.first;
             a.positionToVisit->next = a.originPosBeforeExecution.second;
-            this->currentState.currentRoute->insertOrder(a.positionToVisit->next);
+            this->currentState.currentRoute->insertOrder(dest);
             this->currentState.currentRoute->insertOrder(a.positionToVisit);
         }
         else
@@ -331,7 +331,7 @@ void MDP::findBestRoutingAction(Action *a, ValueFunction valueFunction, double *
 bool MDP::checkAssignmentActionFeasibility(Action a, double *reward)
 {
     double currentCost = this->currentState.pointSolution->cost;
-    vector<pair<PointOrder, PointOrder> > orderWaitToBeInserted;
+    vector<pair<PointOrder, PointOrder>> orderWaitToBeInserted;
     for (auto iter = a.customerConfirmation.begin(); iter != a.customerConfirmation.end(); ++iter)
     {
         if (iter->second)
@@ -340,7 +340,8 @@ bool MDP::checkAssignmentActionFeasibility(Action a, double *reward)
         }
     }
     bool feasibility = this->currentState.pointSolution->greedyInsertion(orderWaitToBeInserted);
-    for(int i = 0; i < (int)orderWaitToBeInserted.size(); i++){
+    for (int i = 0; i < (int)orderWaitToBeInserted.size(); i++)
+    {
         this->currentState.pointSolution->routes[0].removeOrder(orderWaitToBeInserted[i].first);
         this->currentState.pointSolution->routes[0].removeOrder(orderWaitToBeInserted[i].second);
         delete orderWaitToBeInserted[i].first;
@@ -373,7 +374,7 @@ bool MDP::checkRoutingActionFeasibility(Action a, double *reward)
 
 void MDP::assignmentConfirmed(Action a)
 {
-    vector<pair<PointOrder, PointOrder> > orderWaitToBeInserted;
+    vector<pair<PointOrder, PointOrder>> orderWaitToBeInserted;
     for (auto iter = a.customerConfirmation.begin(); iter != a.customerConfirmation.end(); ++iter)
     {
         if (iter->second)
@@ -382,6 +383,10 @@ void MDP::assignmentConfirmed(Action a)
             this->currentState.reachableCustomer.push_back(origin);
             this->currentState.notServicedCustomer[iter->first->id] = make_pair(origin, new Order(iter->first, false));
             orderWaitToBeInserted.push_back(this->currentState.notServicedCustomer[iter->first->id]);
+        }
+        else
+        {
+            this->cumOutsourcedCost += MAX_WORK_TIME;
         }
     }
     this->currentState.pointSolution->greedyInsertion(orderWaitToBeInserted);
@@ -493,7 +498,7 @@ void MDP::transition(Action a)
             this->currentState.currentRoute->currentPos = this->currentState.currentRoute->tail;
         }
     }
-    this->checkIgnorance(a);
+    //this->checkIgnorance(a);
     this->currentState.currentTime = MAX_WORK_TIME;
     this->currentState.currentRoute = nullptr;
     //找到下一辆空闲车辆,更新状态相关信息
@@ -514,7 +519,7 @@ void MDP::transition(Action a)
     this->observation(lastDecisionTime);
 }
 
-void MDP::checkIgnorance(Action a)
+/*void MDP::checkIgnorance(Action a)
 {
     for (auto iter = this->currentState.notServicedCustomer.begin(); iter != this->currentState.notServicedCustomer.end();)
     {
@@ -538,7 +543,7 @@ void MDP::checkIgnorance(Action a)
             ++iter;
         }
     }
-}
+}*/
 
 void MDP::observation(double lastDecisionTime)
 {
