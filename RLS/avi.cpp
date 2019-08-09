@@ -19,38 +19,35 @@ void AVI::approximation(ValueFunction *valueFunction)
         }
         //初始化马尔科夫决策过程
         MDP simulation = MDP(true, "");
-        vector<pair<Eigen::VectorXd, double>> postdecisionValueAtThisSimulation;
-        vector<pair<Eigen::VectorXd, double>> predecisionValueAtThisSimulation;
+        vector<pair<Eigen::VectorXd, double>> routingValueAtThisSimulation;
+        vector<pair<Eigen::VectorXd, double>> assignmentValueAtThisSimulation;
         //开始mdp模拟
         while (simulation.currentState.currentRoute != nullptr)
         {
-            Eigen::VectorXd predecisionStateAttributes(ATTRIBUTES_NUMBER);
             Action bestAction;
-            double routingReward = 0.0;
+            double routingReward = 0.0, assignmentReward = 0.0;
+            simulation.findBestAssignmentAction(&bestAction, *valueFunction, &assignmentReward);
             simulation.currentState.calcAttribute(bestAction, true);
-            predecisionStateAttributes = simulation.currentState.attributes;
-            simulation.findBestAssignmentAction(&bestAction, *valueFunction);
+            assignmentValueAtThisSimulation.push_back(make_pair(simulation.currentState.attributes, assignmentReward));
             simulation.assignmentConfirmed(bestAction);
-            simulation.findBestRoutingAction(&bestAction, *valueFunction, &routingReward, startApproximate);
+            simulation.findBestRoutingAction(&bestAction, *valueFunction, &routingReward);
             //记录这次sample path的信息
             simulation.executeAction(bestAction);
             simulation.currentState.calcAttribute(bestAction, false);
             simulation.undoAction(bestAction);
-            postdecisionValueAtThisSimulation.push_back(make_pair(simulation.currentState.attributes, routingReward));
-            predecisionValueAtThisSimulation.push_back(make_pair(predecisionStateAttributes, routingReward));
-            //cout << predecisionStateAttributes << endl << simulation.currentState.attributes << endl;
+            routingValueAtThisSimulation.push_back(make_pair(simulation.currentState.attributes, routingReward));
             //状态转移
             simulation.transition(bestAction);
         }
         //对lookup table 进行更新
         double valueSum = 0.0;
-        for (auto iter = postdecisionValueAtThisSimulation.begin(); iter != postdecisionValueAtThisSimulation.end(); ++iter)
+        for (auto iter = routingValueAtThisSimulation.begin(); iter != routingValueAtThisSimulation.end(); ++iter)
         {
             valueSum += iter->second;
         }
         simulation.solution.calcCost();
         //cout << totalSimulationCount << " " << simulation.solution.cost << " " << simulation.solution.penalty << " " << simulation.solution.waitTime << " " << simulation.cumOutsourcedCost << " " << simulation.solution.cost + simulation.cumOutsourcedCost << " " << valueSum << endl;
-        valueFunction->updateValue(postdecisionValueAtThisSimulation, predecisionValueAtThisSimulation, startApproximate);
+        valueFunction->updateValue(routingValueAtThisSimulation, assignmentValueAtThisSimulation, startApproximate);
         for (auto iter = simulation.customers.begin(); iter != simulation.customers.end(); ++iter)
         {
             delete iter->second;

@@ -20,7 +20,8 @@
 #define ASSIGNMENT 1
 #define IGNORANCE_TOLERANCE 30.0
 #define GENERATOR 0
-#define MYOPIC 1
+#define ASSIGNMENT_MYOPIC 0
+#define ROUTING_MYOPIC 0
 
 class AVI
 {

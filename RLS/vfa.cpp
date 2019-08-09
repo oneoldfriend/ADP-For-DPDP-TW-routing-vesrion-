@@ -136,25 +136,25 @@ ValueFunction::ValueFunction()
 {
     lookupTable = LookupTable();
     lambda = 1;
-    this->postdecisionAttributesWeight = Eigen::VectorXd(ATTRIBUTES_NUMBER);
-    this->predecisionAttributesWeight = Eigen::VectorXd(ATTRIBUTES_NUMBER);
-    this->postdecisionMatrixBeta = Eigen::MatrixXd(ATTRIBUTES_NUMBER, ATTRIBUTES_NUMBER);
-    this->predecisionMatrixBeta = Eigen::MatrixXd(ATTRIBUTES_NUMBER, ATTRIBUTES_NUMBER);
+    this->routingAttributesWeight = Eigen::VectorXd(ATTRIBUTES_NUMBER);
+    this->assignmentAttributesWeight = Eigen::VectorXd(ATTRIBUTES_NUMBER);
+    this->routingMatrixBeta = Eigen::MatrixXd(ATTRIBUTES_NUMBER, ATTRIBUTES_NUMBER);
+    this->assignmentMatrixBeta = Eigen::MatrixXd(ATTRIBUTES_NUMBER, ATTRIBUTES_NUMBER);
     for (int i = 0; i < ATTRIBUTES_NUMBER; i++)
     {
-        this->postdecisionAttributesWeight(i) = 1.0;
-        this->predecisionAttributesWeight(i) = 1.0;
+        this->routingAttributesWeight(i) = 1.0;
+        this->assignmentAttributesWeight(i) = 1.0;
         for (int j = 0; j < ATTRIBUTES_NUMBER; j++)
         {
             if (i == j)
             {
-                this->postdecisionMatrixBeta(i, j) = MAX_EDGE * CUSTOMER_NUMBER / MAX_VEHICLE;
-                this->predecisionMatrixBeta(i, j) = MAX_EDGE * CUSTOMER_NUMBER / MAX_VEHICLE;
+                this->routingMatrixBeta(i, j) = MAX_EDGE * CUSTOMER_NUMBER / MAX_VEHICLE;
+                this->assignmentMatrixBeta(i, j) = MAX_EDGE * CUSTOMER_NUMBER / MAX_VEHICLE;
             }
             else
             {
-                this->postdecisionMatrixBeta(i, j) = 0;
-                this->predecisionMatrixBeta(i, j) = 0;
+                this->routingMatrixBeta(i, j) = 0;
+                this->assignmentMatrixBeta(i, j) = 0;
             }
         }
     }
@@ -165,22 +165,29 @@ ValueFunction::ValueFunction()
     return this->lookupTable.lookup(postDecisionState);
 }*/
 
-double ValueFunction::getValue(State S, Action a, bool predecision)
+double ValueFunction::getValue(State S, Action a, bool assignment)
 {
-    S.calcAttribute(a, false);
-    if (MYOPIC)
+    S.calcAttribute(a, assignment);
+    if (assignment)
     {
-        return 0;
-    }
-    else
-    {
-        if (false)
+        if (ASSIGNMENT_MYOPIC)
         {
-            return this->predecisionAttributesWeight.transpose() * S.attributes;
+            return 0;
         }
         else
         {
-            return this->postdecisionAttributesWeight.transpose() * S.attributes;
+            return this->assignmentAttributesWeight.transpose() * S.attributes;
+        }
+    }
+    else
+    {
+        if (ROUTING_MYOPIC)
+        {
+            return 0;
+        }
+        else
+        {
+            return this->routingAttributesWeight.transpose() * S.attributes;
         }
     }
 }
@@ -218,46 +225,46 @@ double ValueFunction::getValue(State S, Action a, bool predecision)
     this->lookupTable.partitionUpdate();
 }*/
 
-void ValueFunction::updateValue(vector<pair<Eigen::VectorXd, double> > postdecisionValueAtThisSimulation, vector<pair<Eigen::VectorXd, double> > predecisionValueAtThisSimulation, bool startApproximate)
+void ValueFunction::updateValue(vector<pair<Eigen::VectorXd, double>> routingValueAtThisSimulation, vector<pair<Eigen::VectorXd, double>> assignmentValueAtThisSimulation, bool startApproximate)
 {
     //this->matrixBeta = MAX_EDGE * CUSTOMER_NUMBER / MAX_VEHICLE * Eigen::Matrix4d::Identity();
     //this->matrixBeta = Eigen::Matrix4d::Identity();
     double lastValue = 0;
     double predecisionEstimatorErrorThisSimulation = 0.0, postdecisionEstimatorErrorThisSimulation = 0.0;
     vector<double> rewardStored;
-    for (auto iter = postdecisionValueAtThisSimulation.rbegin(); iter != postdecisionValueAtThisSimulation.rend(); ++iter)
+    for (auto iter = routingValueAtThisSimulation.rbegin(); iter != routingValueAtThisSimulation.rend(); ++iter)
     {
         //double reward = iter->second;
         rewardStored.push_back(iter->second);
         iter->second += lastValue;
         lastValue = double(NOISE_DEDUCTION) * iter->second;
     }
-    for (int i = 0; i < (int)predecisionValueAtThisSimulation.size(); i++)
+    for (int i = 0; i < (int)assignmentValueAtThisSimulation.size(); i++)
     {
-        predecisionValueAtThisSimulation[i].second = postdecisionValueAtThisSimulation[i].second;
+        assignmentValueAtThisSimulation[i].second = routingValueAtThisSimulation[i].second;
     }
 
     //update for pre decision value estimator
-    for (int i = 0; i < (int)predecisionValueAtThisSimulation.size(); i++)
+    for (int i = 0; i < (int)assignmentValueAtThisSimulation.size(); i++)
     {
-        double gammaN = 1.0 + predecisionValueAtThisSimulation[i].first.transpose() * this->predecisionMatrixBeta * predecisionValueAtThisSimulation[i].first,
-               error = ALPHA * (this->predecisionAttributesWeight.transpose() * predecisionValueAtThisSimulation[i].first - predecisionValueAtThisSimulation[i].second) + (1 - ALPHA) * (this->predecisionAttributesWeight.transpose() * predecisionValueAtThisSimulation[i].first - (this->postdecisionAttributesWeight.transpose() * postdecisionValueAtThisSimulation[i].first + rewardStored[i]));
-        this->predecisionAttributesWeight = this->predecisionAttributesWeight - 1 / gammaN * this->predecisionMatrixBeta * predecisionValueAtThisSimulation[i].first * error;
+        double gammaN = 1.0 + assignmentValueAtThisSimulation[i].first.transpose() * this->assignmentMatrixBeta * assignmentValueAtThisSimulation[i].first,
+               error = this->assignmentAttributesWeight.transpose() * assignmentValueAtThisSimulation[i].first - assignmentValueAtThisSimulation[i].second;
+        this->assignmentAttributesWeight = this->assignmentAttributesWeight - 1 / gammaN * this->assignmentMatrixBeta * assignmentValueAtThisSimulation[i].first * error;
         //cout << 1 / gammaN * this->matrixBeta << endl;
-        this->predecisionMatrixBeta = this->predecisionMatrixBeta - 1.0 / gammaN * (this->predecisionMatrixBeta * predecisionValueAtThisSimulation[i].first * predecisionValueAtThisSimulation[i].first.transpose() * this->predecisionMatrixBeta);
+        this->assignmentMatrixBeta = this->assignmentMatrixBeta - 1.0 / gammaN * (this->assignmentMatrixBeta * assignmentValueAtThisSimulation[i].first * assignmentValueAtThisSimulation[i].first.transpose() * this->assignmentMatrixBeta);
         predecisionEstimatorErrorThisSimulation += abs(error);
     }
 
     //update for post decision value estimator
-    for (int i = 0; i < (int)postdecisionValueAtThisSimulation.size(); i++)
+    for (int i = 0; i < (int)routingValueAtThisSimulation.size(); i++)
     {
-	//postdecisionValueAtThisSimulation[i].second -= rewardStored[i];
-        double gammaN = LAMBDA + postdecisionValueAtThisSimulation[i].first.transpose() * this->postdecisionMatrixBeta * postdecisionValueAtThisSimulation[i].first,
-               error = ALPHA * (this->postdecisionAttributesWeight.transpose() * postdecisionValueAtThisSimulation[i].first - postdecisionValueAtThisSimulation[i].second) + (1 - ALPHA) * (this->postdecisionAttributesWeight.transpose() * postdecisionValueAtThisSimulation[i].first - (this->predecisionAttributesWeight.transpose() * predecisionValueAtThisSimulation[i].first - rewardStored[i]));
+        //routingValueAtThisSimulation[i].second -= rewardStored[i];
+        double gammaN = LAMBDA + routingValueAtThisSimulation[i].first.transpose() * this->routingMatrixBeta * routingValueAtThisSimulation[i].first,
+               error = this->routingAttributesWeight.transpose() * routingValueAtThisSimulation[i].first - routingValueAtThisSimulation[i].second;
         //cout << this->updatedAttributesWeight.transpose() * iter->first << endl;
-        this->postdecisionAttributesWeight = this->postdecisionAttributesWeight - 1.0 / gammaN * this->postdecisionMatrixBeta * postdecisionValueAtThisSimulation[i].first * error;
+        this->routingAttributesWeight = this->routingAttributesWeight - 1.0 / gammaN * this->routingMatrixBeta * routingValueAtThisSimulation[i].first * error;
         //cout << 1 / gammaN * this->matrixBeta << endl;
-        this->postdecisionMatrixBeta = LAMBDA * (this->postdecisionMatrixBeta - 1.0 / gammaN * (this->postdecisionMatrixBeta * postdecisionValueAtThisSimulation[i].first * postdecisionValueAtThisSimulation[i].first.transpose() * this->postdecisionMatrixBeta));
+        this->routingMatrixBeta = LAMBDA * (this->routingMatrixBeta - 1.0 / gammaN * (this->routingMatrixBeta * routingValueAtThisSimulation[i].first * routingValueAtThisSimulation[i].first.transpose() * this->routingMatrixBeta));
         postdecisionEstimatorErrorThisSimulation += abs(error);
     }
     //cout <<  postdecisionEstimatorErrorThisSimulation << endl;

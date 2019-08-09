@@ -16,7 +16,7 @@ void Solver::solve()
                              char(instanceNum % 10000 / 1000 + 48), char(instanceNum % 1000 / 100 + 48),
                              char(instanceNum % 100 / 10 + 48), char(instanceNum % 10 + 48), '\0'};
             string fileName = "/Users/leilinfei/Desktop/ADP-For-DPDP-TW-routing-vesrion-/RLS/TestData/";
-	        //string fileName = "/home/linfei/ADP-For-DPDP-TW-routing-vesrion-/RLS/TestData/";
+            //string fileName = "/home/linfei/ADP-For-DPDP-TW-routing-vesrion-/RLS/TestData/";
             fileName = fileName + dayNum + ".txt";
             Generator::instanceGenenrator(true, nullptr, fileName);
         }
@@ -28,7 +28,7 @@ void Solver::solve()
     ValueFunction valueFunction;
     //offline approximation
     AVI approximateValueIterate;
-    if (!MYOPIC)
+    if (!ASSIGNMENT_MYOPIC && !ROUTING_MYOPIC)
     {
         //cout << "starting approximation!\n"
         //     << endl;
@@ -62,22 +62,22 @@ void Solver::solve()
                          char(instanceNum % 10000 / 1000 + 48), char(instanceNum % 1000 / 100 + 48),
                          char(instanceNum % 100 / 10 + 48), char(instanceNum % 10 + 48), '\0'};
         string fileName = "/Users/leilinfei/Desktop/ADP-For-DPDP-TW-routing-vesrion-/RLS/TestData/";
-	    //string fileName = "/home/linfei/ADP-For-DPDP-TW-routing-vesrion-/RLS/TestData/";
+        //string fileName = "/home/linfei/ADP-For-DPDP-TW-routing-vesrion-/RLS/TestData/";
         fileName = fileName + dayNum + ".txt";
         MDP simulation = MDP(false, fileName);
         while (simulation.currentState.currentRoute != nullptr)
         {
             Action bestAction;
-            double routingReward = 0.0;
-            simulation.findBestAssignmentAction(&bestAction, valueFunction);
+            double routingReward = 0.0, assignmentReward = 0.0;
+            simulation.findBestAssignmentAction(&bestAction, valueFunction, &assignmentReward);
             simulation.assignmentConfirmed(bestAction);
-            simulation.findBestRoutingAction(&bestAction, valueFunction, &routingReward, false);
+            simulation.findBestRoutingAction(&bestAction, valueFunction, &routingReward);
             //状态转移
             simulation.transition(bestAction);
         }
         simulation.solution.calcCost();
         testResult.push_back(simulation.solution.cost);
-        rejection.push_back(simulation.cumOutsourcedCost);
+        rejection.push_back(simulation.currentState.cumOutsourcedCost);
         double consolidationCount = 0.0, visitForNothingCount = 0.0, latenessCount = 0.0;
         for (auto iter = simulation.solution.routes.begin(); iter != simulation.solution.routes.end(); ++iter)
         {
@@ -131,6 +131,6 @@ void Solver::solve()
         penaltyCostSum += penaltyCost[index];
         latenessSum += lateness[index];
     }
-    cout << "Test Average Cost: " << resultSum / double(MAX_TEST_INSTANCE) << " " << travelCostSum / double(MAX_TEST_INSTANCE) << " " << waitCostSum / double(MAX_TEST_INSTANCE) << " " << penaltyCostSum / double(MAX_TEST_INSTANCE) << " " << resultSum / double(MAX_TEST_INSTANCE) + rejectionSum / double(MAX_TEST_INSTANCE) << " " << consolidationSum / (double)MAX_TEST_INSTANCE << " " << visitForNothingSum / (double)MAX_TEST_INSTANCE << " " << latenessSum / (double)MAX_TEST_INSTANCE << endl;
+    cout << "Test Average Cost: " << resultSum / double(MAX_TEST_INSTANCE) + rejectionSum / double(MAX_TEST_INSTANCE) << " " << rejectionSum / double(MAX_TEST_INSTANCE) / (double)MAX_WORK_TIME << " " << resultSum / double(MAX_TEST_INSTANCE) << " " << travelCostSum / double(MAX_TEST_INSTANCE) << " " << waitCostSum / double(MAX_TEST_INSTANCE) << " " << penaltyCostSum / double(MAX_TEST_INSTANCE) << " " << consolidationSum / (double)MAX_TEST_INSTANCE << " " << visitForNothingSum / (double)MAX_TEST_INSTANCE << " " << latenessSum / (double)MAX_TEST_INSTANCE << endl;
     return;
 }

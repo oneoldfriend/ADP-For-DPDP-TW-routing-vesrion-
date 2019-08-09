@@ -56,14 +56,14 @@ class ValueFunction
 public:
   LookupTable lookupTable;
   double lambda;
-  Eigen::MatrixXd postdecisionMatrixBeta;
-  Eigen::MatrixXd predecisionMatrixBeta;
-  Eigen::VectorXd postdecisionAttributesWeight;
-  Eigen::VectorXd predecisionAttributesWeight;
+  Eigen::MatrixXd routingMatrixBeta;
+  Eigen::MatrixXd assignmentMatrixBeta;
+  Eigen::VectorXd routingAttributesWeight;
+  Eigen::VectorXd assignmentAttributesWeight;
   //double getValue(Aggregation postDecisionState, double reward);
-  double getValue(State S, Action a, bool predecision);
+  double getValue(State S, Action a, bool assignment);
   //void updateValue(vector<pair<Aggregation, double>> valueAtThisSimulation, bool startApproximate);
-  void updateValue(vector<pair<Eigen::VectorXd, double> > postdecisionValueAtThisSimulation, vector<pair<Eigen::VectorXd, double> > predecisionValueAtThisSimulation, bool startApproximate);
+  void updateValue(vector<pair<Eigen::VectorXd, double> > routingValueAtThisSimulation, vector<pair<Eigen::VectorXd, double> > assignmentValueAtThisSimulation, bool startApproximate);
   ValueFunction();
   //EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
