@@ -260,5 +260,5 @@ void ValueFunction::updateValue(vector<pair<Eigen::VectorXd, double> > postdecis
         this->postdecisionMatrixBeta = LAMBDA * (this->postdecisionMatrixBeta - 1.0 / gammaN * (this->postdecisionMatrixBeta * postdecisionValueAtThisSimulation[i].first * postdecisionValueAtThisSimulation[i].first.transpose() * this->postdecisionMatrixBeta));
         postdecisionEstimatorErrorThisSimulation += abs(error);
     }
-    cout <<  postdecisionEstimatorErrorThisSimulation << endl;
+    //cout <<  postdecisionEstimatorErrorThisSimulation << endl;
 }
