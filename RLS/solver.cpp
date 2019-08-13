@@ -28,7 +28,7 @@ void Solver::solve()
     ValueFunction valueFunction;
     //offline approximation
     AVI approximateValueIterate;
-    if (!ASSIGNMENT_MYOPIC && !ROUTING_MYOPIC)
+    if (!ASSIGNMENT_MYOPIC || !ROUTING_MYOPIC)
     {
         //cout << "starting approximation!\n"
         //     << endl;
