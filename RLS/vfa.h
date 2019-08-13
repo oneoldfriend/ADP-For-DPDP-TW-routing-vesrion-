@@ -61,7 +61,7 @@ public:
   Eigen::VectorXd routingAttributesWeight;
   Eigen::VectorXd assignmentAttributesWeight;
   //double getValue(Aggregation postDecisionState, double reward);
-  double getValue(State S, Action a, bool assignment);
+  double getValue(State S, Action a, bool assignment, bool myopic);
   //void updateValue(vector<pair<Aggregation, double>> valueAtThisSimulation, bool startApproximate);
   void updateValue(vector<pair<Eigen::VectorXd, double> > routingValueAtThisSimulation, vector<pair<Eigen::VectorXd, double> > assignmentValueAtThisSimulation, bool startApproximate);
   ValueFunction();

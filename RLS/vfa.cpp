@@ -165,12 +165,12 @@ ValueFunction::ValueFunction()
     return this->lookupTable.lookup(postDecisionState);
 }*/
 
-double ValueFunction::getValue(State S, Action a, bool assignment)
+double ValueFunction::getValue(State S, Action a, bool assignment, bool myopic)
 {
     S.calcAttribute(a, assignment);
     if (assignment)
     {
-        if (ASSIGNMENT_MYOPIC)
+        if (ASSIGNMENT_MYOPIC || myopic)
         {
             return 0;
         }
@@ -181,7 +181,7 @@ double ValueFunction::getValue(State S, Action a, bool assignment)
     }
     else
     {
-        if (ROUTING_MYOPIC)
+        if (ROUTING_MYOPIC || myopic)
         {
             return 0;
         }

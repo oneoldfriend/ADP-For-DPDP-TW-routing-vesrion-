@@ -10,6 +10,7 @@ bool Generator::sortAscend(const pair<double, Customer *> a, const pair<double, 
 
 void Generator::instanceGenenrator(bool testInstanceGenerate, list<pair<double, Customer *>> *sequenceData, string fileName)
 {
+    sequenceData->clear();
     list<pair<double, Customer *>> generatedCustomers;
     random_device rd;
     default_random_engine e(rd());

@@ -175,7 +175,7 @@ void MDP::integerToAssignmentAction(int actionNum, State S, Action *a)
     }
 }
 
-void MDP::findBestAssignmentAction(Action *a, ValueFunction valueFunction, double *reward)
+void MDP::findBestAssignmentAction(Action *a, ValueFunction valueFunction, double *reward, bool myopic)
 {
     int actionNum = 0, maxActionNum = pow(2, this->currentState.newCustomers.size()), bestActionNum = -1;
     double bestActionValue = MAX_COST;
@@ -193,7 +193,7 @@ void MDP::findBestAssignmentAction(Action *a, ValueFunction valueFunction, doubl
                 double immediateReward = 0;
                 if (this->checkAssignmentActionFeasibility(tempAction, &immediateReward))
                 {
-                    actionValue = immediateReward + valueFunction.getValue(this->currentState, tempAction, true);
+                    actionValue = immediateReward + valueFunction.getValue(this->currentState, tempAction, true, myopic);
                     if (actionValue < bestActionValue)
                     {
                         //记录更优的动作
@@ -213,7 +213,7 @@ void MDP::findBestAssignmentAction(Action *a, ValueFunction valueFunction, doubl
     this->integerToAssignmentAction(bestActionNum, this->currentState, a);
 }
 
-void MDP::findBestRoutingAction(Action *a, ValueFunction valueFunction, double *reward)
+void MDP::findBestRoutingAction(Action *a, ValueFunction valueFunction, double *reward, bool myopic)
 {
     int actionNum = 0, maxActionNum = this->currentState.reachableCustomer.size(), bestActionNum = -1;
     double bestActionValue = MAX_COST, totalValue = 0.0;
@@ -228,7 +228,7 @@ void MDP::findBestRoutingAction(Action *a, ValueFunction valueFunction, double *
         if (this->checkRoutingActionFeasibility(tempAction, &immediateReward))
         {
             //若动作可行，则进行评估
-            actionValue = immediateReward + valueFunction.getValue(this->currentState, tempAction, false);
+            actionValue = immediateReward + valueFunction.getValue(this->currentState, tempAction, false, myopic);
             if (actionValue < bestActionValue)
             {
                 //记录更优的动作
@@ -323,11 +323,11 @@ void MDP::assignmentConfirmed(Action a)
     this->currentState.pointSolution->greedyInsertion(orderWaitToBeInserted);
 }
 
-MDP::MDP(bool approx, string fileName)
+MDP::MDP(bool approx, string fileName, list<pair<double, Customer *> > *data)
 {
     if (approx)
     {
-        Generator::instanceGenenrator(false, &this->sequenceData, "");
+        this->sequenceData = *data;
     }
     else
     {
@@ -515,7 +515,6 @@ void MDP::observation(double lastDecisionTime)
                         ++notSrvCstm;
                     }
                 }
-                delete sequenceIter->second;
             }
         }
         this->sequenceData.erase(sequenceIter++);

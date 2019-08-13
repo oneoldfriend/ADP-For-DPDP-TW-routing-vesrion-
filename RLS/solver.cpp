@@ -64,14 +64,14 @@ void Solver::solve()
         //string fileName = "/Users/leilinfei/Desktop/ADP-For-DPDP-TW-routing-vesrion-/RLS/TestData/";
         string fileName = "/home/linfei/ADP-For-DPDP-TW-routing-vesrion-/RLS/TestData/";
         fileName = fileName + dayNum + ".txt";
-        MDP simulation = MDP(false, fileName);
+        MDP simulation = MDP(false, fileName, nullptr);
         while (simulation.currentState.currentRoute != nullptr)
         {
             Action bestAction;
             double routingReward = 0.0, assignmentReward = 0.0;
-            simulation.findBestAssignmentAction(&bestAction, valueFunction, &assignmentReward);
+            simulation.findBestAssignmentAction(&bestAction, valueFunction, &assignmentReward, false);
             simulation.assignmentConfirmed(bestAction);
-            simulation.findBestRoutingAction(&bestAction, valueFunction, &routingReward);
+            simulation.findBestRoutingAction(&bestAction, valueFunction, &routingReward, false);
             //状态转移
             simulation.transition(bestAction);
         }
