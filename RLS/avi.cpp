@@ -21,7 +21,7 @@ void AVI::approximation(ValueFunction *valueFunction)
         }
         else
         {
-            myopicFirst = true;
+            myopicFirst = false;
         }
         //初始化马尔科夫决策过程
         MDP simulation = MDP(true, "", &data);
@@ -68,7 +68,7 @@ void AVI::approximation(ValueFunction *valueFunction)
         //cout << totalSimulationCount << " " << simulation.solution.cost << " " << simulation.solution.penalty << " " << simulation.solution.waitTime << " " << simulation.cumOutsourcedCost << " " << simulation.solution.cost + simulation.cumOutsourcedCost << " " << valueSum << endl;
         if (!myopicFirst)
         {
-            if (adpCostForThisInstance < myopicCostForThisInstance)
+            /*if (adpCostForThisInstance != myopicCostForThisInstance)
             {
                 valueFunction->updateValue(routingValueAtThisSimulation, assignmentValueAtThisSimulation, true);
                 totalSimulationCount++;
@@ -77,16 +77,18 @@ void AVI::approximation(ValueFunction *valueFunction)
             {
                 valueFunction->updateValue(routingValueAtThisSimulation, assignmentValueAtThisSimulation, true);
                 totalSimulationCount++;
-            }
+            }*/
             T = T * 0.99;
+            valueFunction->updateValue(routingValueAtThisSimulation, assignmentValueAtThisSimulation, true);
+            totalSimulationCount++;
             for (auto iter = simulation.customers.begin(); iter != simulation.customers.end(); ++iter)
             {
                 delete iter->second;
             }
             Generator::instanceGenenrator(false, &data, "");
-            cout << totalSimulationCount << endl;
+            //cout << totalSimulationCount << endl;
         }
         end = clock();
-        //cout << double(end - start) / CLOCKS_PER_SEC << endl;
+        cout << double(end - start) / CLOCKS_PER_SEC << endl;
     }
 }

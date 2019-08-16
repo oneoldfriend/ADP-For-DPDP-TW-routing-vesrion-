@@ -33,3 +33,30 @@ double Util::calcTravelTime(Position a, Position b)
 {
     return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2)) / SPEED * 60.0;
 }
+
+double Util::minTravelTimeCalc(list<pair<double, Customer *> > data)
+{
+    double minTravelTime = MAX_WORK_TIME;
+    Position depot;
+    depot.x = 0.0;
+    depot.y = 0.0;
+    vector<Position> positions;
+    positions.push_back(depot);
+    for (auto iter1 = data.begin(); iter1 != data.end(); ++iter1)
+    {
+        positions.push_back(iter1->second->origin);
+        positions.push_back(iter1->second->dest);
+    }
+    for (auto iter1 = positions.begin(); iter1 != positions.end(); ++iter1)
+    {
+        for (auto iter2 = positions.begin(); iter2 != positions.end(); ++iter2)
+        {
+            double tempTime = Util::calcTravelTime(*iter1, *iter2);
+            if (tempTime != 0.0 && tempTime < minTravelTime)
+            {
+                minTravelTime = tempTime;
+            }
+        }
+    }
+    return minTravelTime;
+}

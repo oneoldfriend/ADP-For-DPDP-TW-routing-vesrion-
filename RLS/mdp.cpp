@@ -261,12 +261,13 @@ void MDP::findBestRoutingAction(Action *a, ValueFunction valueFunction, double *
 
 bool MDP::checkAssignmentActionFeasibility(Action a, double *reward)
 {
-    double currentCost = this->currentState.pointSolution->cost;
+    double currentCost = this->currentState.pointSolution->cost, acceptNum = 0.0;
     vector<pair<PointOrder, PointOrder>> orderWaitToBeInserted;
     for (auto iter = a.customerConfirmation.begin(); iter != a.customerConfirmation.end(); ++iter)
     {
         if (iter->second)
         {
+            acceptNum++;
             orderWaitToBeInserted.push_back(make_pair(new Order(iter->first, true), new Order(iter->first, false)));
         }
     }
@@ -323,7 +324,7 @@ void MDP::assignmentConfirmed(Action a)
     this->currentState.pointSolution->greedyInsertion(orderWaitToBeInserted);
 }
 
-MDP::MDP(bool approx, string fileName, list<pair<double, Customer *> > *data)
+MDP::MDP(bool approx, string fileName, list<pair<double, Customer *>> *data)
 {
     if (approx)
     {
@@ -368,6 +369,8 @@ MDP::MDP(bool approx, string fileName, list<pair<double, Customer *> > *data)
     //状态当前车辆初始化为第一辆车
     this->currentState.currentRoute = &this->solution.routes[0];
     this->currentState.pointSolution = &this->solution;
+    //this->minTravelTime = Util::minTravelTimeCalc(this->sequenceData);
+    //cout << this->minTravelTime << endl;
 }
 
 MDP::~MDP()

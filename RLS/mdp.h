@@ -41,6 +41,7 @@ public:
 class MDP
 {
 public:
+  double minTravelTime;
   Solution solution;
   State currentState;
   list<pair<double, Customer *> > sequenceData;
