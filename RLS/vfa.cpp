@@ -247,11 +247,11 @@ void ValueFunction::updateValue(vector<pair<Eigen::VectorXd, double>> routingVal
     //update for pre decision value estimator
     for (int i = 0; i < (int)assignmentValueAtThisSimulation.size(); i++)
     {
-        double gammaN = 1.0 + assignmentValueAtThisSimulation[i].first.transpose() * this->assignmentMatrixBeta * assignmentValueAtThisSimulation[i].first,
+        double gammaN = LAMBDA + assignmentValueAtThisSimulation[i].first.transpose() * this->assignmentMatrixBeta * assignmentValueAtThisSimulation[i].first,
                error = this->assignmentAttributesWeight.transpose() * assignmentValueAtThisSimulation[i].first - assignmentValueAtThisSimulation[i].second;
         this->assignmentAttributesWeight = this->assignmentAttributesWeight - 1 / gammaN * this->assignmentMatrixBeta * assignmentValueAtThisSimulation[i].first * error;
         //cout << 1 / gammaN * this->matrixBeta << endl;
-        this->assignmentMatrixBeta = this->assignmentMatrixBeta - 1.0 / gammaN * (this->assignmentMatrixBeta * assignmentValueAtThisSimulation[i].first * assignmentValueAtThisSimulation[i].first.transpose() * this->assignmentMatrixBeta);
+        this->assignmentMatrixBeta = LAMBDA * (this->assignmentMatrixBeta - 1.0 / gammaN * (this->assignmentMatrixBeta * assignmentValueAtThisSimulation[i].first * assignmentValueAtThisSimulation[i].first.transpose() * this->assignmentMatrixBeta));
         predecisionEstimatorErrorThisSimulation += abs(error);
     }
 
