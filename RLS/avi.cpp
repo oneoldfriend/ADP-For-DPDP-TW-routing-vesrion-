@@ -21,7 +21,7 @@ void AVI::approximation(ValueFunction *valueFunction)
         }
         else
         {
-            myopicFirst = true;
+            myopicFirst = false;
         }
         //初始化马尔科夫决策过程
         MDP simulation = MDP(true, "", &data);
@@ -68,7 +68,7 @@ void AVI::approximation(ValueFunction *valueFunction)
         //cout << totalSimulationCount << " " << simulation.solution.cost << " " << simulation.solution.penalty << " " << simulation.solution.waitTime << " " << simulation.cumOutsourcedCost << " " << simulation.solution.cost + simulation.cumOutsourcedCost << " " << valueSum << endl;
         if (!myopicFirst)
         {
-            if (adpCostForThisInstance > myopicCostForThisInstance)
+            if (true)//(adpCostForThisInstance > myopicCostForThisInstance)
             {
                 valueFunction->updateValue(routingValueAtThisSimulation, assignmentValueAtThisSimulation, true);
                 totalSimulationCount++;

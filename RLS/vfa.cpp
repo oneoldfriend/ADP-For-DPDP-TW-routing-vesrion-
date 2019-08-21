@@ -260,8 +260,16 @@ void ValueFunction::updateValue(vector<pair<Eigen::VectorXd, double>> routingVal
         //routingValueAtThisSimulation[i].second -= rewardStored[i];
         double gammaNForRouting = LAMBDA + routingValueAtThisSimulation[i].first.transpose() * this->routingMatrixBeta * routingValueAtThisSimulation[i].first,
                gammaNForAssignment = LAMBDA + assignmentValueAtThisSimulation[i].first.transpose() * this->assignmentMatrixBeta * assignmentValueAtThisSimulation[i].first,
-               error = this->routingAttributesWeight.transpose() * routingValueAtThisSimulation[i].first - routingValueAtThisSimulation[i].second + this->assignmentAttributesWeight.transpose() * assignmentValueAtThisSimulation[i].first - assignmentValueAtThisSimulation[i].second;
-               
+               error = 0.0;
+        if (!ROUTING_MYOPIC)
+        {
+            error += this->routingAttributesWeight.transpose() * routingValueAtThisSimulation[i].first - routingValueAtThisSimulation[i].second;
+        }
+        if (!ASSIGNMENT_MYOPIC)
+        {
+            error += this->assignmentAttributesWeight.transpose() * assignmentValueAtThisSimulation[i].first - assignmentValueAtThisSimulation[i].second;
+        }
+
         this->routingAttributesWeight = this->routingAttributesWeight - 1.0 / gammaNForRouting * this->routingMatrixBeta * routingValueAtThisSimulation[i].first * error;
         this->routingMatrixBeta = LAMBDA * (this->routingMatrixBeta - 1.0 / gammaNForRouting * (this->routingMatrixBeta * routingValueAtThisSimulation[i].first * routingValueAtThisSimulation[i].first.transpose() * this->routingMatrixBeta));
 
