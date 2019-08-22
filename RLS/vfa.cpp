@@ -259,7 +259,8 @@ void ValueFunction::updateValue(vector<pair<Eigen::VectorXd, double>> routingVal
         //routingValueAtThisSimulation[i].second -= rewardStored[i];
         double gammaNForRouting = LAMBDA + routingValueAtThisSimulation[i].first.transpose() * this->routingMatrixBeta * routingValueAtThisSimulation[i].first,
                gammaNForAssignment = LAMBDA + assignmentValueAtThisSimulation[i].first.transpose() * this->assignmentMatrixBeta * assignmentValueAtThisSimulation[i].first,
-               errorForRouting = 0.0, errorForAssignment = 0.0;
+               errorForRouting = 0.0, errorForAssignment = 0.0,
+               estimationErrorForBoth = abs(this->routingAttributesWeight.transpose() * routingValueAtThisSimulation[i].first - 0.0 - this->assignmentAttributesWeight.transpose() * assignmentValueAtThisSimulation[i].first);
         if (!ROUTING_MYOPIC)
         {
             errorForRouting += this->routingAttributesWeight.transpose() * routingValueAtThisSimulation[i].first - routingValueAtThisSimulation[i].second;
@@ -270,17 +271,21 @@ void ValueFunction::updateValue(vector<pair<Eigen::VectorXd, double>> routingVal
             errorForAssignment += this->assignmentAttributesWeight.transpose() * assignmentValueAtThisSimulation[i].first - assignmentValueAtThisSimulation[i].second;
             //errorForRouting += this->assignmentAttributesWeight.transpose() * assignmentValueAtThisSimulation[i].first - assignmentValueAtThisSimulation[i].second;
         }
+        double prob = estimationErrorForBoth / (abs(errorForRouting) + abs(errorForAssignment)), isAccept = rand() / double(RAND_MAX);
         if (startApproximate)
         {
             errorForRouting += errorForAssignment;
             errorForAssignment = errorForRouting;
         }
 
-        this->routingAttributesWeight = this->routingAttributesWeight - 1.0 / gammaNForRouting * this->routingMatrixBeta * routingValueAtThisSimulation[i].first * errorForRouting;
-        this->routingMatrixBeta = LAMBDA * (this->routingMatrixBeta - 1.0 / gammaNForRouting * (this->routingMatrixBeta * routingValueAtThisSimulation[i].first * routingValueAtThisSimulation[i].first.transpose() * this->routingMatrixBeta));
+        if (isAccept > prob)
+        {
+            this->routingAttributesWeight = this->routingAttributesWeight - 1.0 / gammaNForRouting * this->routingMatrixBeta * routingValueAtThisSimulation[i].first * errorForRouting;
+            this->routingMatrixBeta = LAMBDA * (this->routingMatrixBeta - 1.0 / gammaNForRouting * (this->routingMatrixBeta * routingValueAtThisSimulation[i].first * routingValueAtThisSimulation[i].first.transpose() * this->routingMatrixBeta));
 
-        this->assignmentAttributesWeight = this->assignmentAttributesWeight - 1.0 / gammaNForAssignment * this->assignmentMatrixBeta * assignmentValueAtThisSimulation[i].first * errorForAssignment;
-        this->assignmentMatrixBeta = LAMBDA * (this->assignmentMatrixBeta - 1.0 / gammaNForAssignment * (this->assignmentMatrixBeta * assignmentValueAtThisSimulation[i].first * assignmentValueAtThisSimulation[i].first.transpose() * this->assignmentMatrixBeta));
+            this->assignmentAttributesWeight = this->assignmentAttributesWeight - 1.0 / gammaNForAssignment * this->assignmentMatrixBeta * assignmentValueAtThisSimulation[i].first * errorForAssignment;
+            this->assignmentMatrixBeta = LAMBDA * (this->assignmentMatrixBeta - 1.0 / gammaNForAssignment * (this->assignmentMatrixBeta * assignmentValueAtThisSimulation[i].first * assignmentValueAtThisSimulation[i].first.transpose() * this->assignmentMatrixBeta));
+        }
     }
     //cout <<  postdecisionEstimatorErrorThisSimulation << endl;
 }
