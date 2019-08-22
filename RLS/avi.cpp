@@ -11,6 +11,8 @@ void AVI::approximation(ValueFunction *valueFunction)
     double T = 0.0;
     Generator::instanceGenenrator(false, &data, "");
     double myopicCostForThisInstance = 0.0, adpCostForThisInstance = 0.0;
+    vector<pair<Eigen::VectorXd, double>> routingValueAtThisSimulation;
+    vector<pair<Eigen::VectorXd, double>> assignmentValueAtThisSimulation;
     while (totalSimulationCount < MAX_SIMULATION)
     {
         clock_t start, end;
@@ -25,8 +27,6 @@ void AVI::approximation(ValueFunction *valueFunction)
         }
         //初始化马尔科夫决策过程
         MDP simulation = MDP(true, "", &data);
-        vector<pair<Eigen::VectorXd, double>> routingValueAtThisSimulation;
-        vector<pair<Eigen::VectorXd, double>> assignmentValueAtThisSimulation;
         //开始mdp模拟
         while (simulation.currentState.currentRoute != nullptr)
         {
@@ -68,9 +68,14 @@ void AVI::approximation(ValueFunction *valueFunction)
         //cout << totalSimulationCount << " " << simulation.solution.cost << " " << simulation.solution.penalty << " " << simulation.solution.waitTime << " " << simulation.cumOutsourcedCost << " " << simulation.solution.cost + simulation.cumOutsourcedCost << " " << valueSum << endl;
         if (!myopicFirst)
         {
-            if (true)//(adpCostForThisInstance > myopicCostForThisInstance)
+            if (true) //(adpCostForThisInstance > myopicCostForThisInstance)
             {
-                valueFunction->updateValue(routingValueAtThisSimulation, assignmentValueAtThisSimulation, true);
+                if (totalSimulationCount > LAG_APPROXIMATE)
+                {
+                    valueFunction->updateValue(routingValueAtThisSimulation, assignmentValueAtThisSimulation, true);
+                    routingValueAtThisSimulation.clear();
+                    assignmentValueAtThisSimulation.clear();
+                }
                 totalSimulationCount++;
                 cout << totalSimulationCount << endl;
             }
