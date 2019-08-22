@@ -270,6 +270,11 @@ void ValueFunction::updateValue(vector<pair<Eigen::VectorXd, double>> routingVal
             errorForAssignment += this->assignmentAttributesWeight.transpose() * assignmentValueAtThisSimulation[i].first - assignmentValueAtThisSimulation[i].second;
             //errorForRouting += this->assignmentAttributesWeight.transpose() * assignmentValueAtThisSimulation[i].first - assignmentValueAtThisSimulation[i].second;
         }
+        if (!ASSIGNMENT_MYOPIC && !ROUTING_MYOPIC)
+        {
+            errorForRouting += this->routingAttributesWeight.transpose() * routingValueAtThisSimulation[i].first - 0.0 - this->assignmentAttributesWeight.transpose() * assignmentValueAtThisSimulation[i].first;
+            errorForAssignment += this->assignmentAttributesWeight.transpose() * assignmentValueAtThisSimulation[i].first - 0.0 - this->routingAttributesWeight.transpose() * routingValueAtThisSimulation[i].first;
+        }
 
         this->routingAttributesWeight = this->routingAttributesWeight - 1.0 / gammaNForRouting * this->routingMatrixBeta * routingValueAtThisSimulation[i].first * errorForRouting;
         this->routingMatrixBeta = LAMBDA * (this->routingMatrixBeta - 1.0 / gammaNForRouting * (this->routingMatrixBeta * routingValueAtThisSimulation[i].first * routingValueAtThisSimulation[i].first.transpose() * this->routingMatrixBeta));
