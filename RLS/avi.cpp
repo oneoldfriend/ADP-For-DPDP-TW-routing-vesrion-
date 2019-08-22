@@ -77,7 +77,7 @@ void AVI::approximation(ValueFunction *valueFunction)
                     assignmentValueAtThisSimulation.clear();
                 }
                 totalSimulationCount++;
-                cout << totalSimulationCount << endl;
+                //cout << totalSimulationCount << endl;
             }
             /*else if (exp(-(adpCostForThisInstance - myopicCostForThisInstance) / T) > rand() / double(RAND_MAX))
             {
