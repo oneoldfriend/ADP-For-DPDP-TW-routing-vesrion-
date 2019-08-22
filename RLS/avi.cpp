@@ -76,6 +76,12 @@ void AVI::approximation(ValueFunction *valueFunction)
                     routingValueAtThisSimulation.clear();
                     assignmentValueAtThisSimulation.clear();
                 }
+                else
+                {
+                    valueFunction->updateValue(routingValueAtThisSimulation, assignmentValueAtThisSimulation, false);
+                    routingValueAtThisSimulation.clear();
+                    assignmentValueAtThisSimulation.clear();
+                }
                 totalSimulationCount++;
                 //cout << totalSimulationCount << endl;
             }
