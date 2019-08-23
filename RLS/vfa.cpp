@@ -275,10 +275,11 @@ void ValueFunction::updateValue(vector<pair<Eigen::VectorXd, double>> routingVal
         if (startApproximate)
         {
             errorForRouting += errorForAssignment;
+	    //errorForRouting = (1.0 - prob) * errorForRouting;
             errorForAssignment = errorForRouting;
         }
 
-        if (isAccept > prob)
+        if (true)
         {
             this->routingAttributesWeight = this->routingAttributesWeight - 1.0 / gammaNForRouting * this->routingMatrixBeta * routingValueAtThisSimulation[i].first * errorForRouting;
             this->routingMatrixBeta = LAMBDA * (this->routingMatrixBeta - 1.0 / gammaNForRouting * (this->routingMatrixBeta * routingValueAtThisSimulation[i].first * routingValueAtThisSimulation[i].first.transpose() * this->routingMatrixBeta));
