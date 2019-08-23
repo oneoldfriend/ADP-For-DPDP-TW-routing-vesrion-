@@ -131,10 +131,6 @@ void Solver::solve()
         penaltyCostSum += penaltyCost[index];
         latenessSum += lateness[index];
     }
-    cout << valueFunction.assignmentAttributesWeight << endl
-         << endl
-         << valueFunction.routingAttributesWeight << endl
-         << endl;
     cout << "Test Average Cost: " << resultSum / double(MAX_TEST_INSTANCE) + rejectionSum / double(MAX_TEST_INSTANCE) << " " << rejectionSum / double(MAX_TEST_INSTANCE) / (double)MAX_WORK_TIME << " " << resultSum / double(MAX_TEST_INSTANCE) << " " << travelCostSum / double(MAX_TEST_INSTANCE) << " " << waitCostSum / double(MAX_TEST_INSTANCE) << " " << penaltyCostSum / double(MAX_TEST_INSTANCE) << " " << consolidationSum / (double)MAX_TEST_INSTANCE << " " << visitForNothingSum / (double)MAX_TEST_INSTANCE << " " << latenessSum / (double)MAX_TEST_INSTANCE << endl;
     return;
 }

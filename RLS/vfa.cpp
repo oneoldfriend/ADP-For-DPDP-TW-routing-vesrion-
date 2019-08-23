@@ -272,19 +272,10 @@ void ValueFunction::updateValue(vector<pair<Eigen::VectorXd, double>> routingVal
             //errorForRouting += this->assignmentAttributesWeight.transpose() * assignmentValueAtThisSimulation[i].first - assignmentValueAtThisSimulation[i].second;
         }
         double prob = estimationErrorForBoth / (abs(errorForRouting) + abs(errorForAssignment)), isAccept = rand() / double(RAND_MAX);
-        double enhancement;
-        if (errorForRouting * errorForAssignment >= 0.0)
-        {
-            enhancement = 5.0;
-        }
-        else
-        {
-            enhancement = 0.5;
-        }
         if (startApproximate)
         {
             errorForRouting += errorForAssignment;
-            //errorForRouting = (1.0 - prob) * errorForRouting;
+            //errorForRouting = enhancement * errorForRouting;
             errorForAssignment = errorForRouting;
         }
 
