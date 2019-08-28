@@ -227,8 +227,6 @@ double ValueFunction::getValue(State S, Action a, bool assignment, bool myopic)
 
 void ValueFunction::updateValue(vector<pair<Eigen::VectorXd, double>> routingValueAtThisSimulation, vector<pair<Eigen::VectorXd, double>> assignmentValueAtThisSimulation, bool startApproximate)
 {
-    //this->matrixBeta = MAX_EDGE * CUSTOMER_NUMBER / MAX_VEHICLE * Eigen::Matrix4d::Identity();
-    //this->matrixBeta = Eigen::Matrix4d::Identity();
     double lastValue = 0.0;
     for (int i = 0; i < (int)assignmentValueAtThisSimulation.size(); i++)
     {
@@ -244,20 +242,8 @@ void ValueFunction::updateValue(vector<pair<Eigen::VectorXd, double>> routingVal
         assignmentValueAtThisSimulation[i].second = routingValueAtThisSimulation[i].second;
     }
 
-    //update for assignment decision value estimator
-    /*for (int i = 0; i < (int)assignmentValueAtThisSimulation.size(); i++)
-    {
-        double gammaN = LAMBDA + assignmentValueAtThisSimulation[i].first.transpose() * this->assignmentMatrixBeta * assignmentValueAtThisSimulation[i].first,
-               error = this->assignmentAttributesWeight.transpose() * assignmentValueAtThisSimulation[i].first - assignmentValueAtThisSimulation[i].second;
-        this->assignmentAttributesWeight = this->assignmentAttributesWeight - 1 / gammaN * this->assignmentMatrixBeta * assignmentValueAtThisSimulation[i].first * error;
-        //cout << 1 / gammaN * this->matrixBeta << endl;
-        this->assignmentMatrixBeta = LAMBDA * (this->assignmentMatrixBeta - 1.0 / gammaN * (this->assignmentMatrixBeta * assignmentValueAtThisSimulation[i].first * assignmentValueAtThisSimulation[i].first.transpose() * this->assignmentMatrixBeta));
-    }*/
-
-    //update for routing decision value estimator
     for (int i = 0; i < (int)routingValueAtThisSimulation.size(); i++)
     {
-        //routingValueAtThisSimulation[i].second -= rewardStored[i];
         double gammaNForRouting = LAMBDA + routingValueAtThisSimulation[i].first.transpose() * this->routingMatrixBeta * routingValueAtThisSimulation[i].first,
                gammaNForAssignment = LAMBDA + assignmentValueAtThisSimulation[i].first.transpose() * this->assignmentMatrixBeta * assignmentValueAtThisSimulation[i].first,
                errorForRouting = 0.0, errorForAssignment = 0.0,
@@ -275,7 +261,7 @@ void ValueFunction::updateValue(vector<pair<Eigen::VectorXd, double>> routingVal
         }
         //cout << routingEstimationErrorWithAssignment << " " << errorForRouting << " " << assignmentEstimationErrorWithRouting << " " << errorForAssignment << endl;
         //cout << routingEstimationErrorWithAssignment / errorForRouting << " " << assignmentEstimationErrorWithRouting / errorForAssignment << endl;
-        if (startApproximate)
+        if (startApproximate && !ASSIGNMENT_MYOPIC && !ROUTING_MYOPIC)
         {
             errorForRouting += errorForAssignment;
             //errorForRouting = enhancement * errorForRouting;
@@ -285,11 +271,10 @@ void ValueFunction::updateValue(vector<pair<Eigen::VectorXd, double>> routingVal
         if (true)
         {
             this->routingAttributesWeight = this->routingAttributesWeight - 1.0 / gammaNForRouting * this->routingMatrixBeta * routingValueAtThisSimulation[i].first * errorForRouting;
-            this->routingMatrixBeta = LAMBDA * (this->routingMatrixBeta - 1.0 / gammaNForRouting * (this->routingMatrixBeta * routingValueAtThisSimulation[i].first * routingValueAtThisSimulation[i].first.transpose() * this->routingMatrixBeta));
+            this->routingMatrixBeta = (1.0 / LAMBDA) * (this->routingMatrixBeta - 1.0 / gammaNForRouting * (this->routingMatrixBeta * routingValueAtThisSimulation[i].first * routingValueAtThisSimulation[i].first.transpose() * this->routingMatrixBeta));
 
             this->assignmentAttributesWeight = this->assignmentAttributesWeight - 1.0 / gammaNForAssignment * this->assignmentMatrixBeta * assignmentValueAtThisSimulation[i].first * errorForAssignment;
-            this->assignmentMatrixBeta = LAMBDA * (this->assignmentMatrixBeta - 1.0 / gammaNForAssignment * (this->assignmentMatrixBeta * assignmentValueAtThisSimulation[i].first * assignmentValueAtThisSimulation[i].first.transpose() * this->assignmentMatrixBeta));
+            this->assignmentMatrixBeta = (1.0 / LAMBDA) * (this->assignmentMatrixBeta - 1.0 / gammaNForAssignment * (this->assignmentMatrixBeta * assignmentValueAtThisSimulation[i].first * assignmentValueAtThisSimulation[i].first.transpose() * this->assignmentMatrixBeta));
         }
     }
-    //cout <<  postdecisionEstimatorErrorThisSimulation << endl;
 }
