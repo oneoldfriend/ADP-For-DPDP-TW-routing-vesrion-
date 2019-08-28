@@ -230,11 +230,12 @@ void ValueFunction::updateValue(vector<pair<Eigen::VectorXd, double>> routingVal
     //this->matrixBeta = MAX_EDGE * CUSTOMER_NUMBER / MAX_VEHICLE * Eigen::Matrix4d::Identity();
     //this->matrixBeta = Eigen::Matrix4d::Identity();
     double lastValue = 0.0;
-    vector<double> rewardStored;
+    for (int i = 0; i < (int)assignmentValueAtThisSimulation.size(); i++)
+    {
+        routingValueAtThisSimulation[i].second += assignmentValueAtThisSimulation[i].second;
+    }
     for (auto iter = routingValueAtThisSimulation.rbegin(); iter != routingValueAtThisSimulation.rend(); ++iter)
     {
-        //double reward = iter->second;
-        rewardStored.push_back(iter->second);
         iter->second += lastValue;
         lastValue = double(NOISE_DEDUCTION) * iter->second;
     }
