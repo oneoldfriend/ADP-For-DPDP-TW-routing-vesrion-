@@ -261,11 +261,13 @@ void ValueFunction::updateValue(vector<pair<Eigen::VectorXd, double>> routingVal
         }
         //cout << routingEstimationErrorWithAssignment << " " << errorForRouting << " " << assignmentEstimationErrorWithRouting << " " << errorForAssignment << endl;
         //cout << routingEstimationErrorWithAssignment / errorForRouting << " " << assignmentEstimationErrorWithRouting / errorForAssignment << endl;
+        double routingErrorRatio = routingEstimationErrorWithAssignment / errorForRouting, assignmentErrorRatio = assignmentEstimationErrorWithRouting / errorForAssignment;
         if (startApproximate && !ASSIGNMENT_MYOPIC && !ROUTING_MYOPIC)
         {
             errorForRouting += errorForAssignment;
-            //errorForRouting = enhancement * errorForRouting;
             errorForAssignment = errorForRouting;
+            errorForRouting = routingErrorRatio * errorForRouting;
+            errorForAssignment = assignmentErrorRatio * errorForAssignment;
         }
 
         if (true)
