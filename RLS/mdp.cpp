@@ -292,14 +292,6 @@ bool MDP::checkRoutingActionFeasibility(Action a, double *reward)
     this->executeAction(a);
     bool feasibility = this->currentState.currentRoute->checkFeasibility();
     double newCost = this->currentState.currentRoute->cost;
-    for (auto iter = this->currentState.notServicedCustomer.begin(); iter != this->currentState.notServicedCustomer.end(); ++iter)
-    {
-        if (iter->second.first != nullptr && a.positionToVisit != iter->second.first &&
-            this->currentState.currentTime - iter->second.first->customer->startTime > IGNORANCE_TOLERANCE)
-        {
-            newCost += MAX_WORK_TIME;
-        }
-    }
     *reward = newCost - currentCost;
     return feasibility;
 }

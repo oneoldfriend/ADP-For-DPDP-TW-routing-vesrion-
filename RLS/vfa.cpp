@@ -260,7 +260,8 @@ void ValueFunction::updateValue(vector<pair<Eigen::VectorXd, double>> routingVal
         double gammaNForRouting = LAMBDA + routingValueAtThisSimulation[i].first.transpose() * this->routingMatrixBeta * routingValueAtThisSimulation[i].first,
                gammaNForAssignment = LAMBDA + assignmentValueAtThisSimulation[i].first.transpose() * this->assignmentMatrixBeta * assignmentValueAtThisSimulation[i].first,
                errorForRouting = 0.0, errorForAssignment = 0.0,
-               estimationErrorForBoth = abs(this->routingAttributesWeight.transpose() * routingValueAtThisSimulation[i].first - 0.0 - this->assignmentAttributesWeight.transpose() * assignmentValueAtThisSimulation[i].first);
+               routingEstimationErrorWithAssignment = this->routingAttributesWeight.transpose() * routingValueAtThisSimulation[i].first - 0.0 - this->assignmentAttributesWeight.transpose() * assignmentValueAtThisSimulation[i].first,
+               assignmentEstimationErrorWithRouting = this->assignmentAttributesWeight.transpose() * assignmentValueAtThisSimulation[i].first - 0.0 - this->routingAttributesWeight.transpose() * routingValueAtThisSimulation[i].first;
         if (!ROUTING_MYOPIC)
         {
             errorForRouting += this->routingAttributesWeight.transpose() * routingValueAtThisSimulation[i].first - routingValueAtThisSimulation[i].second;
@@ -271,7 +272,8 @@ void ValueFunction::updateValue(vector<pair<Eigen::VectorXd, double>> routingVal
             errorForAssignment += this->assignmentAttributesWeight.transpose() * assignmentValueAtThisSimulation[i].first - assignmentValueAtThisSimulation[i].second;
             //errorForRouting += this->assignmentAttributesWeight.transpose() * assignmentValueAtThisSimulation[i].first - assignmentValueAtThisSimulation[i].second;
         }
-        double prob = estimationErrorForBoth / (abs(errorForRouting) + abs(errorForAssignment)), isAccept = rand() / double(RAND_MAX);
+        //cout << routingEstimationErrorWithAssignment << " " << errorForRouting << " " << assignmentEstimationErrorWithRouting << " " << errorForAssignment << endl;
+        //cout << routingEstimationErrorWithAssignment / errorForRouting << " " << assignmentEstimationErrorWithRouting / errorForAssignment << endl;
         if (startApproximate)
         {
             errorForRouting += errorForAssignment;

@@ -47,11 +47,13 @@ void AVI::approximation(ValueFunction *valueFunction)
         }
         //对lookup table 进行更新
         double valueSum = 0.0;
-        for (auto iter = routingValueAtThisSimulation.begin(); iter != routingValueAtThisSimulation.end(); ++iter)
+        for (int i = 0; i < (int)routingValueAtThisSimulation.size(); i++)
         {
-            valueSum += iter->second;
+            valueSum += routingValueAtThisSimulation[i].second;
+            valueSum += assignmentValueAtThisSimulation[i].second;
         }
         simulation.solution.calcCost();
+        //cout<<simulation.solution.cost << " " << valueSum << endl;
         if (myopicFirst)
         {
             myopicCostForThisInstance = simulation.solution.cost;
