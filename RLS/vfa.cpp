@@ -266,8 +266,8 @@ void ValueFunction::updateValue(vector<pair<Eigen::VectorXd, double>> routingVal
         {
             errorForRouting += errorForAssignment;
             errorForAssignment = errorForRouting;
-            errorForRouting = routingErrorRatio * errorForRouting;
-            errorForAssignment = assignmentErrorRatio * errorForAssignment;
+            //errorForRouting = abs(routingErrorRatio) * errorForRouting;
+            //errorForAssignment = abs(assignmentErrorRatio) * errorForAssignment;
         }
 
         if (true)
