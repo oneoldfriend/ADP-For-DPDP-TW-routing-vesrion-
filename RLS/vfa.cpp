@@ -225,53 +225,101 @@ double ValueFunction::getValue(State S, Action a, bool assignment, bool myopic)
     this->lookupTable.partitionUpdate();
 }*/
 
-void ValueFunction::updateValue(vector<pair<Eigen::VectorXd, double>> routingValueAtThisSimulation, vector<pair<Eigen::VectorXd, double>> assignmentValueAtThisSimulation, bool startApproximate)
+void ValueFunction::updateValue(vector<pair<Eigen::VectorXd, double>> routingValueAtThisSimulation, vector<pair<Eigen::VectorXd, double>> assignmentValueAtThisSimulation, vector<pair<Eigen::VectorXd, double>> *routingValueFromLastSwitch, vector<pair<Eigen::VectorXd, double>> *assignmentValueFromLastSwitch, bool isSwitch)
 {
-    double lastValue = 0.0;
-    for (int i = 0; i < (int)assignmentValueAtThisSimulation.size(); i++)
+    if (isSwitch)
     {
-        routingValueAtThisSimulation[i].second += assignmentValueAtThisSimulation[i].second;
-    }
-    for (auto iter = routingValueAtThisSimulation.rbegin(); iter != routingValueAtThisSimulation.rend(); ++iter)
-    {
-        iter->second += lastValue;
-        lastValue = double(NOISE_DEDUCTION) * iter->second;
-    }
-    for (int i = 0; i < (int)assignmentValueAtThisSimulation.size(); i++)
-    {
-        assignmentValueAtThisSimulation[i].second = routingValueAtThisSimulation[i].second;
-    }
-
-    for (int i = 0; i < (int)routingValueAtThisSimulation.size(); i++)
-    {
-        double gammaNForRouting = LAMBDA + routingValueAtThisSimulation[i].first.transpose() * this->routingMatrixBeta * routingValueAtThisSimulation[i].first,
-               gammaNForAssignment = LAMBDA + assignmentValueAtThisSimulation[i].first.transpose() * this->assignmentMatrixBeta * assignmentValueAtThisSimulation[i].first,
-               errorForRouting = 0.0, errorForAssignment = 0.0,
-               routingEstimationErrorWithAssignment = this->routingAttributesWeight.transpose() * routingValueAtThisSimulation[i].first - 0.0 - this->assignmentAttributesWeight.transpose() * assignmentValueAtThisSimulation[i].first,
-               assignmentEstimationErrorWithRouting = this->assignmentAttributesWeight.transpose() * assignmentValueAtThisSimulation[i].first - 0.0 - this->routingAttributesWeight.transpose() * routingValueAtThisSimulation[i].first;
-        if (!ROUTING_MYOPIC)
+        this->routingAttributesWeight = Eigen::VectorXd(ATTRIBUTES_NUMBER);
+        this->assignmentAttributesWeight = Eigen::VectorXd(ATTRIBUTES_NUMBER);
+        this->routingMatrixBeta = Eigen::MatrixXd(ATTRIBUTES_NUMBER, ATTRIBUTES_NUMBER);
+        this->assignmentMatrixBeta = Eigen::MatrixXd(ATTRIBUTES_NUMBER, ATTRIBUTES_NUMBER);
+        for (int i = 0; i < ATTRIBUTES_NUMBER; i++)
         {
-            errorForRouting += this->routingAttributesWeight.transpose() * routingValueAtThisSimulation[i].first - routingValueAtThisSimulation[i].second;
-            //errorForAssignment += this->routingAttributesWeight.transpose() * routingValueAtThisSimulation[i].first - routingValueAtThisSimulation[i].second;
-        }
-        if (!ASSIGNMENT_MYOPIC)
-        {
-            errorForAssignment += this->assignmentAttributesWeight.transpose() * assignmentValueAtThisSimulation[i].first - assignmentValueAtThisSimulation[i].second;
-            //errorForRouting += this->assignmentAttributesWeight.transpose() * assignmentValueAtThisSimulation[i].first - assignmentValueAtThisSimulation[i].second;
-        }
-        //cout << routingEstimationErrorWithAssignment << " " << errorForRouting << " " << assignmentEstimationErrorWithRouting << " " << errorForAssignment << endl;
-        //cout << routingEstimationErrorWithAssignment / errorForRouting << " " << assignmentEstimationErrorWithRouting / errorForAssignment << endl;
-        double routingErrorRatio = routingEstimationErrorWithAssignment / errorForRouting, assignmentErrorRatio = assignmentEstimationErrorWithRouting / errorForAssignment;
-        if (startApproximate && !ASSIGNMENT_MYOPIC && !ROUTING_MYOPIC)
-        {
-            errorForRouting += errorForAssignment;
-            errorForAssignment = errorForRouting;
-            //errorForRouting = abs(routingErrorRatio) * errorForRouting;
-            //errorForAssignment = abs(assignmentErrorRatio) * errorForAssignment;
+            this->routingAttributesWeight(i) = 1.0;
+            this->assignmentAttributesWeight(i) = 1.0;
+            for (int j = 0; j < ATTRIBUTES_NUMBER; j++)
+            {
+                if (i == j)
+                {
+                    this->routingMatrixBeta(i, j) = MAX_EDGE * CUSTOMER_NUMBER / MAX_VEHICLE;
+                    this->assignmentMatrixBeta(i, j) = MAX_EDGE * CUSTOMER_NUMBER / MAX_VEHICLE;
+                }
+                else
+                {
+                    this->routingMatrixBeta(i, j) = 0;
+                    this->assignmentMatrixBeta(i, j) = 0;
+                }
+            }
         }
 
-        if (true)
+        for (int i = 0; i < (int)routingValueAtThisSimulation.size(); i++)
         {
+            double gammaNForRouting = LAMBDA + routingValueAtThisSimulation[i].first.transpose() * this->routingMatrixBeta * routingValueAtThisSimulation[i].first,
+                   gammaNForAssignment = LAMBDA + assignmentValueAtThisSimulation[i].first.transpose() * this->assignmentMatrixBeta * assignmentValueAtThisSimulation[i].first,
+                   errorForRouting = 0.0, errorForAssignment = 0.0;
+            if (!ROUTING_MYOPIC)
+            {
+                errorForRouting += this->routingAttributesWeight.transpose() * routingValueAtThisSimulation[i].first - routingValueAtThisSimulation[i].second;
+            }
+            if (!ASSIGNMENT_MYOPIC)
+            {
+                errorForAssignment += this->assignmentAttributesWeight.transpose() * assignmentValueAtThisSimulation[i].first - assignmentValueAtThisSimulation[i].second;
+            }
+
+            //error iteraction
+            if (INTERACTION && !ASSIGNMENT_MYOPIC && !ROUTING_MYOPIC)
+            {
+                errorForRouting += errorForAssignment;
+                errorForAssignment = errorForRouting;
+            }
+
+            this->routingAttributesWeight = this->routingAttributesWeight - 1.0 / gammaNForRouting * this->routingMatrixBeta * routingValueAtThisSimulation[i].first * errorForRouting;
+            this->routingMatrixBeta = LAMBDA * (this->routingMatrixBeta - 1.0 / gammaNForRouting * (this->routingMatrixBeta * routingValueAtThisSimulation[i].first * routingValueAtThisSimulation[i].first.transpose() * this->routingMatrixBeta));
+
+            this->assignmentAttributesWeight = this->assignmentAttributesWeight - 1.0 / gammaNForAssignment * this->assignmentMatrixBeta * assignmentValueAtThisSimulation[i].first * errorForAssignment;
+            this->assignmentMatrixBeta = LAMBDA * (this->assignmentMatrixBeta - 1.0 / gammaNForAssignment * (this->assignmentMatrixBeta * assignmentValueAtThisSimulation[i].first * assignmentValueAtThisSimulation[i].first.transpose() * this->assignmentMatrixBeta));
+        }
+    }
+    else
+    {
+        double lastValue = 0.0;
+        for (int i = 0; i < (int)assignmentValueAtThisSimulation.size(); i++)
+        {
+            routingValueAtThisSimulation[i].second += assignmentValueAtThisSimulation[i].second;
+        }
+        for (auto iter = routingValueAtThisSimulation.rbegin(); iter != routingValueAtThisSimulation.rend(); ++iter)
+        {
+            iter->second += lastValue;
+            lastValue = double(NOISE_DEDUCTION) * iter->second;
+        }
+        for (int i = 0; i < (int)assignmentValueAtThisSimulation.size(); i++)
+        {
+            assignmentValueAtThisSimulation[i].second = routingValueAtThisSimulation[i].second;
+        }
+
+        for (int i = 0; i < (int)routingValueAtThisSimulation.size(); i++)
+        {
+            routingValueFromLastSwitch->push_back(routingValueAtThisSimulation[i]);
+            assignmentValueFromLastSwitch->push_back(assignmentValueAtThisSimulation[i]);
+            double gammaNForRouting = LAMBDA + routingValueAtThisSimulation[i].first.transpose() * this->routingMatrixBeta * routingValueAtThisSimulation[i].first,
+                   gammaNForAssignment = LAMBDA + assignmentValueAtThisSimulation[i].first.transpose() * this->assignmentMatrixBeta * assignmentValueAtThisSimulation[i].first,
+                   errorForRouting = 0.0, errorForAssignment = 0.0;
+            if (!ROUTING_MYOPIC)
+            {
+                errorForRouting += this->routingAttributesWeight.transpose() * routingValueAtThisSimulation[i].first - routingValueAtThisSimulation[i].second;
+            }
+            if (!ASSIGNMENT_MYOPIC)
+            {
+                errorForAssignment += this->assignmentAttributesWeight.transpose() * assignmentValueAtThisSimulation[i].first - assignmentValueAtThisSimulation[i].second;
+            }
+
+            //error iteraction
+            if (INTERACTION && !ASSIGNMENT_MYOPIC && !ROUTING_MYOPIC)
+            {
+                errorForRouting += errorForAssignment;
+                errorForAssignment = errorForRouting;
+            }
+
             this->routingAttributesWeight = this->routingAttributesWeight - 1.0 / gammaNForRouting * this->routingMatrixBeta * routingValueAtThisSimulation[i].first * errorForRouting;
             this->routingMatrixBeta = LAMBDA * (this->routingMatrixBeta - 1.0 / gammaNForRouting * (this->routingMatrixBeta * routingValueAtThisSimulation[i].first * routingValueAtThisSimulation[i].first.transpose() * this->routingMatrixBeta));
 

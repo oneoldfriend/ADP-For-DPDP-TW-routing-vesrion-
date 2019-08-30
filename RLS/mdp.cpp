@@ -179,36 +179,29 @@ void MDP::findBestAssignmentAction(Action *a, ValueFunction valueFunction, doubl
 {
     int actionNum = 0, maxActionNum = pow(2, this->currentState.newCustomers.size()), bestActionNum = -1;
     double bestActionValue = MAX_COST;
-    if (ASSIGNMENT)
+    if (this->currentState.newCustomers.size() != 0)
     {
-        if (this->currentState.newCustomers.size() != 0)
+        //若有新顾客被观察到
+        while (actionNum < maxActionNum)
         {
-            //若有新顾客被观察到
-            while (actionNum < maxActionNum)
+            //检查每个可能动作的可行性并对可行动作进行评估
+            Action tempAction;
+            double actionValue = 0;
+            this->integerToAssignmentAction(actionNum, this->currentState, &tempAction);
+            double immediateReward = 0;
+            if (this->checkAssignmentActionFeasibility(tempAction, &immediateReward))
             {
-                //检查每个可能动作的可行性并对可行动作进行评估
-                Action tempAction;
-                double actionValue = 0;
-                this->integerToAssignmentAction(actionNum, this->currentState, &tempAction);
-                double immediateReward = 0;
-                if (this->checkAssignmentActionFeasibility(tempAction, &immediateReward))
+                actionValue = immediateReward + valueFunction.getValue(this->currentState, tempAction, true, myopic);
+                if (actionValue < bestActionValue)
                 {
-                    actionValue = immediateReward + valueFunction.getValue(this->currentState, tempAction, true, myopic);
-                    if (actionValue < bestActionValue)
-                    {
-                        //记录更优的动作
-                        *reward = immediateReward;
-                        bestActionValue = actionValue;
-                        bestActionNum = actionNum;
-                    }
+                    //记录更优的动作
+                    *reward = immediateReward;
+                    bestActionValue = actionValue;
+                    bestActionNum = actionNum;
                 }
-                actionNum++;
             }
+            actionNum++;
         }
-    }
-    else
-    {
-        bestActionNum = maxActionNum - 1;
     }
     this->integerToAssignmentAction(bestActionNum, this->currentState, a);
 }

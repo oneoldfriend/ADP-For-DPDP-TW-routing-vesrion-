@@ -5,26 +5,19 @@
 void AVI::approximation(ValueFunction *valueFunction)
 {
     //定义计数器，包括总模拟次数和每个instance的模拟次数
-    int totalSimulationCount = 0;
-    bool myopicFirst = false;
+    bool initialization = true;
+    int totalSimulationCount = 0, isSwitch = 0, switchCount = 0;
     list<pair<double, Customer *>> data;
-    double T = 0.0;
     Generator::instanceGenenrator(false, &data, "");
-    double myopicCostForThisInstance = 0.0, adpCostForThisInstance = 0.0;
     vector<pair<Eigen::VectorXd, double>> routingValueAtThisSimulation;
     vector<pair<Eigen::VectorXd, double>> assignmentValueAtThisSimulation;
+    vector<pair<Eigen::VectorXd, double>> routingValueFromLastSwitch;
+    vector<pair<Eigen::VectorXd, double>> assignmentValueFromLastSwitch;
     while (totalSimulationCount < MAX_SIMULATION)
     {
         clock_t start, end;
         start = clock();
-        if (myopicFirst)
-        {
-            myopicFirst = false;
-        }
-        else
-        {
-            myopicFirst = false;
-        }
+
         //初始化马尔科夫决策过程
         MDP simulation = MDP(true, "", &data);
         //开始mdp模拟
@@ -32,76 +25,55 @@ void AVI::approximation(ValueFunction *valueFunction)
         {
             Action bestAction;
             double routingReward = 0.0, assignmentReward = 0.0;
-            simulation.findBestAssignmentAction(&bestAction, *valueFunction, &assignmentReward, myopicFirst);
+            simulation.findBestAssignmentAction(&bestAction, *valueFunction, &assignmentReward, initialization);
             simulation.currentState.calcAttribute(bestAction, true);
             assignmentValueAtThisSimulation.push_back(make_pair(simulation.currentState.attributes, assignmentReward));
+            assignmentValueFromLastSwitch.push_back(make_pair(simulation.currentState.attributes, assignmentReward));
             simulation.assignmentConfirmed(bestAction);
-            simulation.findBestRoutingAction(&bestAction, *valueFunction, &routingReward, myopicFirst);
+            simulation.findBestRoutingAction(&bestAction, *valueFunction, &routingReward, initialization);
             //记录这次sample path的信息
             simulation.executeAction(bestAction);
             simulation.currentState.calcAttribute(bestAction, false);
             simulation.undoAction(bestAction);
             routingValueAtThisSimulation.push_back(make_pair(simulation.currentState.attributes, routingReward));
+            routingValueFromLastSwitch.push_back(make_pair(simulation.currentState.attributes, routingReward));
             //状态转移
             simulation.transition(bestAction);
         }
-        //对lookup table 进行更新
-        double valueSum = 0.0;
-        for (int i = 0; i < (int)routingValueAtThisSimulation.size(); i++)
-        {
-            valueSum += routingValueAtThisSimulation[i].second;
-            valueSum += assignmentValueAtThisSimulation[i].second;
-        }
+
         simulation.solution.calcCost();
-        //cout<<simulation.solution.cost << " " << valueSum << endl;
-        if (myopicFirst)
+
+        if (isSwitch >= APPROXIMATION_SWITCH && switchCount < SWITCH_TIMES)
         {
-            myopicCostForThisInstance = simulation.solution.cost;
-            if (T == 0.0)
+            valueFunction->updateValue(routingValueAtThisSimulation, assignmentValueAtThisSimulation, &routingValueFromLastSwitch, &assignmentValueFromLastSwitch, false);
+            valueFunction->updateValue(routingValueFromLastSwitch, assignmentValueFromLastSwitch, nullptr, nullptr, true);
+            routingValueFromLastSwitch.clear();
+            assignmentValueFromLastSwitch.clear();
+            isSwitch = 0;
+            switchCount++;
+            if (initialization)
             {
-                T = 0.005 * myopicCostForThisInstance / (double)log(2.0);
+                initialization = false;
             }
         }
         else
         {
-            adpCostForThisInstance = simulation.solution.cost;
+            valueFunction->updateValue(routingValueAtThisSimulation, assignmentValueAtThisSimulation, &routingValueFromLastSwitch, &assignmentValueFromLastSwitch, false);
+            isSwitch++;
         }
-        //cout << myopicCostForThisInstance << " " << adpCostForThisInstance << endl;
-        //cout << totalSimulationCount << " " << simulation.solution.cost << " " << simulation.solution.penalty << " " << simulation.solution.waitTime << " " << simulation.cumOutsourcedCost << " " << simulation.solution.cost + simulation.cumOutsourcedCost << " " << valueSum << endl;
-        if (!myopicFirst)
+        totalSimulationCount++;
+        routingValueAtThisSimulation.clear();
+        assignmentValueAtThisSimulation.clear();
+        if (SWITCH_TIMES == 0 && routingValueAtThisSimulation.size() != 0 && assignmentValueAtThisSimulation.size() != 0)
         {
-            if (true) //(adpCostForThisInstance > myopicCostForThisInstance)
-            {
-                if (totalSimulationCount > LAG_APPROXIMATE)
-                {
-                    valueFunction->updateValue(routingValueAtThisSimulation, assignmentValueAtThisSimulation, true);
-                    routingValueAtThisSimulation.clear();
-                    assignmentValueAtThisSimulation.clear();
-                }
-                else
-                {
-                    valueFunction->updateValue(routingValueAtThisSimulation, assignmentValueAtThisSimulation, false);
-                    routingValueAtThisSimulation.clear();
-                    assignmentValueAtThisSimulation.clear();
-                }
-                totalSimulationCount++;
-                //cout << totalSimulationCount << endl;
-            }
-            /*else if (exp(-(adpCostForThisInstance - myopicCostForThisInstance) / T) > rand() / double(RAND_MAX))
-            {
-                valueFunction->updateValue(routingValueAtThisSimulation, assignmentValueAtThisSimulation, true);
-                totalSimulationCount++;
-            }*/
-            T = T * 0.99;
-            //valueFunction->updateValue(routingValueAtThisSimulation, assignmentValueAtThisSimulation, true);
-            //totalSimulationCount++;
-            for (auto iter = simulation.customers.begin(); iter != simulation.customers.end(); ++iter)
-            {
-                delete iter->second;
-            }
-            Generator::instanceGenenrator(false, &data, "");
-            //cout << totalSimulationCount << endl;
+            routingValueFromLastSwitch.clear();
+            assignmentValueFromLastSwitch.clear();
         }
+        for (auto iter = simulation.customers.begin(); iter != simulation.customers.end(); ++iter)
+        {
+            delete iter->second;
+        }
+        Generator::instanceGenenrator(false, &data, "");
         end = clock();
         cout << double(end - start) / CLOCKS_PER_SEC << endl;
     }
