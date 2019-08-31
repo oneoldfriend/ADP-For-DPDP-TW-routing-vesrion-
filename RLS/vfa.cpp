@@ -246,7 +246,10 @@ void ValueFunction::updateValue(vector<pair<Eigen::VectorXd, double>> routingVal
     {
         double gammaNForRouting = LAMBDA + routingValueAtThisSimulation[i].first.transpose() * this->routingMatrixBeta * routingValueAtThisSimulation[i].first,
                gammaNForAssignment = LAMBDA + assignmentValueAtThisSimulation[i].first.transpose() * this->assignmentMatrixBeta * assignmentValueAtThisSimulation[i].first,
-               errorForRouting = 0.0, errorForAssignment = 0.0;
+               errorForRouting = 0.0, errorForAssignment = 0.0,
+               estimationErrorForRouting = this->routingAttributesWeight.transpose() * routingValueAtThisSimulation[i].first - 0.0 - this->assignmentAttributesWeight.transpose() * assignmentValueAtThisSimulation[i].first,
+               estimationErrorForAssignment = this->assignmentAttributesWeight.transpose() * assignmentValueAtThisSimulation[i].first - 0.0 - this->routingAttributesWeight.transpose() * routingValueAtThisSimulation[i].first;
+
         if (!ROUTING_MYOPIC)
         {
             errorForRouting += this->routingAttributesWeight.transpose() * routingValueAtThisSimulation[i].first - routingValueAtThisSimulation[i].second;
@@ -256,11 +259,15 @@ void ValueFunction::updateValue(vector<pair<Eigen::VectorXd, double>> routingVal
             errorForAssignment += this->assignmentAttributesWeight.transpose() * assignmentValueAtThisSimulation[i].first - assignmentValueAtThisSimulation[i].second;
         }
 
+        double ratioForRouting = estimationErrorForRouting / errorForRouting, ratioForAssignment = estimationErrorForAssignment / errorForAssignment;
+
         //error iteraction
         if (startInteraction && !ASSIGNMENT_MYOPIC && !ROUTING_MYOPIC)
         {
             errorForRouting += errorForAssignment;
             errorForAssignment = errorForRouting;
+            errorForRouting += estimationErrorForRouting;//ratioForRouting * estimationErrorForRouting;
+            errorForAssignment += estimationErrorForAssignment;//ratioForAssignment * estimationErrorForAssignment;
         }
 
         this->routingAttributesWeight = this->routingAttributesWeight - 1.0 / gammaNForRouting * this->routingMatrixBeta * routingValueAtThisSimulation[i].first * errorForRouting;
