@@ -266,8 +266,8 @@ void ValueFunction::updateValue(vector<pair<Eigen::VectorXd, double>> routingVal
         {
             errorForRouting += errorForAssignment;
             errorForAssignment = errorForRouting;
-            errorForRouting += estimationErrorForRouting;//ratioForRouting * estimationErrorForRouting;
-            errorForAssignment += estimationErrorForAssignment;//ratioForAssignment * estimationErrorForAssignment;
+            //errorForRouting += abs(ratioForRouting) * errorForRouting;
+            //errorForAssignment += abs(ratioForAssignment) * errorForAssignment;
         }
 
         this->routingAttributesWeight = this->routingAttributesWeight - 1.0 / gammaNForRouting * this->routingMatrixBeta * routingValueAtThisSimulation[i].first * errorForRouting;
