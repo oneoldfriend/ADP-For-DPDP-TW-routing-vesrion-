@@ -5,7 +5,7 @@
 void AVI::approximation(ValueFunction *valueFunction)
 {
     //定义计数器，包括总模拟次数和每个instance的模拟次数
-    int totalSimulationCount = 0, isSwitch = 0, switchCount = 0;
+    int totalSimulationCount = 0;
     list<pair<double, Customer *>> data;
     Generator::instanceGenenrator(false, &data, "");
     vector<pair<Eigen::VectorXd, double>> routingValueAtThisSimulation;
