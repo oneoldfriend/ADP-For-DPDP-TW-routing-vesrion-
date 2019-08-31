@@ -64,7 +64,7 @@ void AVI::approximation(ValueFunction *valueFunction)
         totalSimulationCount++;
         routingValueAtThisSimulation.clear();
         assignmentValueAtThisSimulation.clear();
-        if (SWITCH_TIMES == 0 && routingValueAtThisSimulation.size() != 0 && assignmentValueAtThisSimulation.size() != 0)
+        if (SWITCH_TIMES == 0)
         {
             routingValueFromLastSwitch.clear();
             assignmentValueFromLastSwitch.clear();
