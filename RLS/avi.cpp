@@ -5,14 +5,11 @@
 void AVI::approximation(ValueFunction *valueFunction)
 {
     //定义计数器，包括总模拟次数和每个instance的模拟次数
-    bool initialization = true;
     int totalSimulationCount = 0, isSwitch = 0, switchCount = 0;
     list<pair<double, Customer *>> data;
     Generator::instanceGenenrator(false, &data, "");
     vector<pair<Eigen::VectorXd, double>> routingValueAtThisSimulation;
     vector<pair<Eigen::VectorXd, double>> assignmentValueAtThisSimulation;
-    vector<pair<Eigen::VectorXd, double>> routingValueFromLastSwitch;
-    vector<pair<Eigen::VectorXd, double>> assignmentValueFromLastSwitch;
     while (totalSimulationCount < MAX_SIMULATION)
     {
         clock_t start, end;
@@ -25,50 +22,31 @@ void AVI::approximation(ValueFunction *valueFunction)
         {
             Action bestAction;
             double routingReward = 0.0, assignmentReward = 0.0;
-            simulation.findBestAssignmentAction(&bestAction, *valueFunction, &assignmentReward, initialization);
+            simulation.findBestAssignmentAction(&bestAction, *valueFunction, &assignmentReward, false);
             simulation.currentState.calcAttribute(bestAction, true);
             assignmentValueAtThisSimulation.push_back(make_pair(simulation.currentState.attributes, assignmentReward));
-            assignmentValueFromLastSwitch.push_back(make_pair(simulation.currentState.attributes, assignmentReward));
             simulation.assignmentConfirmed(bestAction);
-            simulation.findBestRoutingAction(&bestAction, *valueFunction, &routingReward, initialization);
+            simulation.findBestRoutingAction(&bestAction, *valueFunction, &routingReward, false);
             //记录这次sample path的信息
             simulation.executeAction(bestAction);
             simulation.currentState.calcAttribute(bestAction, false);
             simulation.undoAction(bestAction);
             routingValueAtThisSimulation.push_back(make_pair(simulation.currentState.attributes, routingReward));
-            routingValueFromLastSwitch.push_back(make_pair(simulation.currentState.attributes, routingReward));
             //状态转移
             simulation.transition(bestAction);
         }
 
-        simulation.solution.calcCost();
-
-        if (isSwitch >= APPROXIMATION_SWITCH && switchCount < SWITCH_TIMES)
+        if (totalSimulationCount > LAG_APPROXIMATE)
         {
-            valueFunction->updateValue(routingValueAtThisSimulation, assignmentValueAtThisSimulation, &routingValueFromLastSwitch, &assignmentValueFromLastSwitch, false);
-            valueFunction->updateValue(routingValueFromLastSwitch, assignmentValueFromLastSwitch, nullptr, nullptr, true);
-            routingValueFromLastSwitch.clear();
-            assignmentValueFromLastSwitch.clear();
-            isSwitch = 0;
-            switchCount++;
-            if (initialization)
-            {
-                initialization = false;
-            }
+            valueFunction->updateValue(routingValueAtThisSimulation, assignmentValueAtThisSimulation, true);
         }
         else
         {
-            valueFunction->updateValue(routingValueAtThisSimulation, assignmentValueAtThisSimulation, &routingValueFromLastSwitch, &assignmentValueFromLastSwitch, false);
-            isSwitch++;
+            valueFunction->updateValue(routingValueAtThisSimulation, assignmentValueAtThisSimulation, false);
         }
         totalSimulationCount++;
         routingValueAtThisSimulation.clear();
         assignmentValueAtThisSimulation.clear();
-        if (SWITCH_TIMES == 0)
-        {
-            routingValueFromLastSwitch.clear();
-            assignmentValueFromLastSwitch.clear();
-        }
         for (auto iter = simulation.customers.begin(); iter != simulation.customers.end(); ++iter)
         {
             delete iter->second;

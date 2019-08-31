@@ -62,7 +62,7 @@ public:
   //double getValue(Aggregation postDecisionState, double reward);
   double getValue(State S, Action a, bool assignment, bool myopic);
   //void updateValue(vector<pair<Aggregation, double>> valueAtThisSimulation, bool startApproximate);
-  void updateValue(vector<pair<Eigen::VectorXd, double> > routingValueAtThisSimulation, vector<pair<Eigen::VectorXd, double> > assignmentValueAtThisSimulation, vector<pair<Eigen::VectorXd, double> > *routingValueFromLastSwitch, vector<pair<Eigen::VectorXd, double> > *assignmentValueFromLastSwitch, bool isSwitch);
+  void updateValue(vector<pair<Eigen::VectorXd, double> > routingValueAtThisSimulation, vector<pair<Eigen::VectorXd, double> > assignmentValueAtThisSimulation, bool startInteraction);
   ValueFunction();
   //EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
