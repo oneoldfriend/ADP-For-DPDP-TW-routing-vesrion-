@@ -266,8 +266,6 @@ void ValueFunction::updateValue(vector<pair<Eigen::VectorXd, double>> routingVal
         {
             errorForRouting += errorForAssignment;
             errorForAssignment = errorForRouting;
-            //errorForRouting += abs(ratioForRouting) * errorForRouting;
-            //errorForAssignment += abs(ratioForAssignment) * errorForAssignment;
         }
 
         this->routingAttributesWeight = this->routingAttributesWeight - 1.0 / gammaNForRouting * this->routingMatrixBeta * routingValueAtThisSimulation[i].first * errorForRouting;
@@ -276,4 +274,24 @@ void ValueFunction::updateValue(vector<pair<Eigen::VectorXd, double>> routingVal
         this->assignmentAttributesWeight = this->assignmentAttributesWeight - 1.0 / gammaNForAssignment * this->assignmentMatrixBeta * assignmentValueAtThisSimulation[i].first * errorForAssignment;
         this->assignmentMatrixBeta = LAMBDA * (this->assignmentMatrixBeta - 1.0 / gammaNForAssignment * (this->assignmentMatrixBeta * assignmentValueAtThisSimulation[i].first * assignmentValueAtThisSimulation[i].first.transpose() * this->assignmentMatrixBeta));
     }
+}
+
+void ValueFunction::reObservationUpdate(vector<pair<Eigen::VectorXd, pair<Eigen::VectorXd, double>>> routingReplayBuffer, vector<pair<Eigen::VectorXd, pair<Eigen::VectorXd, double>>> assignmentReplayBuffer)
+{
+    cout << this->routingAttributesWeight << endl;
+    for (int i = 0; i < (int)routingReplayBuffer.size(); i++)
+    {
+        double routingTDError = routingReplayBuffer[i].second.second + NOISE_DEDUCTION * this->routingAttributesWeight.transpose() * routingReplayBuffer[i].second.first - this->routingAttributesWeight.transpose() * routingReplayBuffer[i].first;
+        double assignmentTDError = assignmentReplayBuffer[i].second.second + NOISE_DEDUCTION * this->assignmentAttributesWeight.transpose() * assignmentReplayBuffer[i].second.first - this->assignmentAttributesWeight.transpose() * assignmentReplayBuffer[i].first;
+
+        if (!ROUTING_MYOPIC)
+        {
+            this->routingAttributesWeight = this->routingAttributesWeight + ALPHA * routingTDError * routingReplayBuffer[i].first;
+        }
+        if (!ASSIGNMENT_MYOPIC)
+        {
+            this->assignmentAttributesWeight = this->assignmentAttributesWeight + ALPHA * assignmentTDError * assignmentReplayBuffer[i].first;
+        }
+    }
+    cout << this->routingAttributesWeight << endl;
 }

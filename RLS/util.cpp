@@ -34,7 +34,7 @@ double Util::calcTravelTime(Position a, Position b)
     return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2)) / SPEED * 60.0;
 }
 
-double Util::minTravelTimeCalc(list<pair<double, Customer *> > data)
+double Util::minTravelTimeCalc(list<pair<double, Customer *>> data)
 {
     double minTravelTime = MAX_WORK_TIME;
     Position depot;

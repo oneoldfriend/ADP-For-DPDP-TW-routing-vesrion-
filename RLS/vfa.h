@@ -10,6 +10,7 @@
 #define ATTRIBUTES_NUMBER 5
 #define LAMBDA 1.0
 #define NOISE_DEDUCTION 0.8
+#define ALPHA 1e-6
 
 class Aggregation
 {
@@ -63,6 +64,7 @@ public:
   double getValue(State S, Action a, bool assignment, bool myopic);
   //void updateValue(vector<pair<Aggregation, double>> valueAtThisSimulation, bool startApproximate);
   void updateValue(vector<pair<Eigen::VectorXd, double> > routingValueAtThisSimulation, vector<pair<Eigen::VectorXd, double> > assignmentValueAtThisSimulation, bool startInteraction);
+  void reObservationUpdate(vector<pair<Eigen::VectorXd, pair<Eigen::VectorXd, double>>> routingReplayBuffer, vector<pair<Eigen::VectorXd, pair<Eigen::VectorXd, double>>> assignmentReplayBuffer);
   ValueFunction();
   //EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
