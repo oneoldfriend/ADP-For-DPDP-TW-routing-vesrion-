@@ -278,7 +278,6 @@ void ValueFunction::updateValue(vector<pair<Eigen::VectorXd, double>> routingVal
 
 void ValueFunction::reObservationUpdate(vector<pair<Eigen::VectorXd, pair<Eigen::VectorXd, double>>> routingReplayBuffer, vector<pair<Eigen::VectorXd, pair<Eigen::VectorXd, double>>> assignmentReplayBuffer)
 {
-    cout << this->routingAttributesWeight << endl;
     for (int i = 0; i < (int)routingReplayBuffer.size(); i++)
     {
         double routingTDError = routingReplayBuffer[i].second.second + NOISE_DEDUCTION * this->routingAttributesWeight.transpose() * routingReplayBuffer[i].second.first - this->routingAttributesWeight.transpose() * routingReplayBuffer[i].first;
@@ -293,5 +292,4 @@ void ValueFunction::reObservationUpdate(vector<pair<Eigen::VectorXd, pair<Eigen:
             this->assignmentAttributesWeight = this->assignmentAttributesWeight + ALPHA * assignmentTDError * assignmentReplayBuffer[i].first;
         }
     }
-    cout << this->routingAttributesWeight << endl;
 }
