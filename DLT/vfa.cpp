@@ -134,6 +134,20 @@ void LookupTable::partition(int entryNum)
     }
 }
 
+void LookupTable::updateTable(Aggregation postDecisionState, double value)
+{
+    int lookX = (int)floor(postDecisionState.currentTime), lookY = (int)floor(postDecisionState.remainTime);
+    int entryNum = this->entryIndex[lookX][lookY];
+    this->averageN -= this->entryInfo[entryNum][0] / this->entryValue.size();
+    this->averageTheta -= sqrt(this->entryInfo[entryNum][1] / max(this->entryInfo[entryNum][0] - 1.0, 1.0)) / this->entryValue.size();
+    this->entryInfo[entryNum][0]++;
+    this->entryInfo[entryNum][1] += (this->entryInfo[entryNum][0] - 1.0) / this->entryInfo[entryNum][0] * pow(value - this->entryInfo[entryNum][2], 2);
+    this->entryInfo[entryNum][2] += (value - this->entryInfo[entryNum][2]) / this->entryInfo[entryNum][0];
+    this->averageN += this->entryInfo[entryNum][0] / this->entryValue.size();
+    this->averageTheta += sqrt(this->entryInfo[entryNum][1] / max(this->entryInfo[entryNum][0] - 1.0, 1.0)) / this->entryValue.size();
+    this->entryValue[entryNum] = (1.0 - STEP_SIZE) * this->entryValue[entryNum] + STEP_SIZE * value;
+}
+
 Aggregation::Aggregation()
 {
     currentTime = 0;
@@ -152,96 +166,66 @@ void Aggregation::aggregate(State S, Action a)
 
 ValueFunction::ValueFunction()
 {
-    lookupTable = LookupTable();
+    assignmentLookupTable = LookupTable();
+    routingLookupTable = LookupTable();
 }
 
-double ValueFunction::getValue(State S, Action a, bool approx)
+double ValueFunction::getValue(State S, Action a, bool assignment, bool myopic)
 {
-    if (MYOPIC)
+    Aggregation postDecisionState;
+    postDecisionState.aggregate(S, a);
+    if (assignment)
     {
-        return 0.0;
+        if (ASSIGNMENT_MYOPIC || myopic)
+        {
+            return 0;
+        }
+        else
+        {
+            return this->assignmentLookupTable.lookup(postDecisionState);
+        }
     }
     else
     {
-        Aggregation postDecisionState;
-        postDecisionState.aggregate(S, a);
-        return this->lookupTable.lookup(postDecisionState);
-    }
-}
-
-void ValueFunction::updateValue(vector<pair<Aggregation, double>> valueAtThisSimulation, bool startApproximate)
-{
-    double lastValue = 0;
-    double errorThisSimulation = 0.0;
-    for (auto iter = valueAtThisSimulation.rbegin(); iter != valueAtThisSimulation.rend(); ++iter)
-    {
-        iter->second += lastValue;
-        lastValue = double(LAMBDA) * iter->second;
-    }
-    for (auto decisionPoint = valueAtThisSimulation.begin(); decisionPoint != valueAtThisSimulation.end(); ++decisionPoint)
-    {
-        int lookX = (int)floor(decisionPoint->first.currentTime), lookY = (int)floor(decisionPoint->first.remainTime);
-        int entryNum = this->lookupTable.entryIndex[lookX][lookY];
-        this->lookupTable.averageN -= this->lookupTable.entryInfo[entryNum][0] / this->lookupTable.entryValue.size();
-        this->lookupTable.averageTheta -= sqrt(this->lookupTable.entryInfo[entryNum][1] / max(this->lookupTable.entryInfo[entryNum][0] - 1.0, 1.0)) / this->lookupTable.entryValue.size();
-        this->lookupTable.entryInfo[entryNum][0]++;
-        this->lookupTable.entryInfo[entryNum][1] += (this->lookupTable.entryInfo[entryNum][0] - 1.0) / this->lookupTable.entryInfo[entryNum][0] * pow(decisionPoint->second - this->lookupTable.entryInfo[entryNum][2], 2);
-        this->lookupTable.entryInfo[entryNum][2] += (decisionPoint->second - this->lookupTable.entryInfo[entryNum][2]) / this->lookupTable.entryInfo[entryNum][0];
-        this->lookupTable.averageN += this->lookupTable.entryInfo[entryNum][0] / this->lookupTable.entryValue.size();
-        this->lookupTable.averageTheta += sqrt(this->lookupTable.entryInfo[entryNum][1] / max(this->lookupTable.entryInfo[entryNum][0] - 1.0, 1.0)) / this->lookupTable.entryValue.size();
-        errorThisSimulation += abs(this->lookupTable.entryValue[entryNum] - decisionPoint->second);
-        this->lookupTable.entryValue[entryNum] = (1.0 - STEP_SIZE) * this->lookupTable.entryValue[entryNum] + STEP_SIZE * decisionPoint->second;
-    }
-    cout << errorThisSimulation / valueAtThisSimulation.size() << endl;
-    if (DYNAMIC_LOOKUP_TABLE)
-    {
-        if (startApproximate)
+        if (ROUTING_MYOPIC || myopic)
         {
-            this->lookupTable.partitionCheck();
+            return 0;
+        }
+        else
+        {
+            return this->routingLookupTable.lookup(postDecisionState);
         }
     }
 }
 
-/*ValueFunction::ValueFunction()
+void ValueFunction::updateValue(vector<pair<Aggregation, double>> assignmentValueAtThisSimulation, vector<pair<Aggregation, double>> routingValueAtThisSimulation, bool startApproximate)
 {
-    lookupTable = LookupTable();
-    lambda = 1;
-    for (int i = 0; i < ATTRIBUTES_NUMBER; i++)
+    double lastValue = 0.0;
+    for (int i = 0; i < (int)assignmentValueAtThisSimulation.size(); i++)
     {
-        attributesWeight[i] = 1.0;
+        routingValueAtThisSimulation[i].second += assignmentValueAtThisSimulation[i].second;
     }
-    this->matrixBeta = Eigen::Matrix4d::Identity();
-}
+    for (auto iter = routingValueAtThisSimulation.rbegin(); iter != routingValueAtThisSimulation.rend(); ++iter)
+    {
+        iter->second += lastValue;
+        lastValue = double(LAMBDA) * iter->second;
+    }
+    for (int i = 0; i < (int)assignmentValueAtThisSimulation.size(); i++)
+    {
+        assignmentValueAtThisSimulation[i].second = routingValueAtThisSimulation[i].second;
+    }
 
-double ValueFunction::getValue(State S, Action a)
-{
-    Solution tempSolution = Solution();
-    tempSolution.solutionCopy(S.pointSolution);
-    tempSolution.calcAttribute();
-    double value = this->attributesWeight.transpose() * tempSolution.attribute;
-    tempSolution.solutionDelete();
-    if (MYOPIC)
+    for (int i = 0; i < (int)routingValueAtThisSimulation.size(); i++)
     {
-        return 0;
+        this->assignmentLookupTable.updateTable(assignmentValueAtThisSimulation[i].first, assignmentValueAtThisSimulation[i].second);
+        this->routingLookupTable.updateTable(routingValueAtThisSimulation[i].first, routingValueAtThisSimulation[i].second);
     }
-    return value;
+    if (DYNAMIC_LOOKUP_TABLE)
+    {
+        if (startApproximate)
+        {
+            this->assignmentLookupTable.partitionCheck();
+            this->routingLookupTable.partitionCheck();
+        }
+    }
 }
-
-void ValueFunction::updateValue(vector<pair<Eigen::Vector4d, double>> valueAtThisSimulation, bool startApproximate)
-{
-    double realValue = 0;
-    double errorThisSimulation = 0.0;
-    for (auto iter = valueAtThisSimulation.rbegin(); iter != valueAtThisSimulation.rend(); ++iter)
-    {
-        realValue += iter->second;
-        //cout << "real value: " << realValue << endl;
-        //cout << "estimated value(before update):" << this->attributesWeight.transpose() * iter->first << endl;
-        double gammaN = this->lambda + iter->first.transpose() * this->matrixBeta * iter->first,
-               error = abs(this->attributesWeight.transpose() * iter->first - realValue);
-        this->matrixBeta = 1.0 / this->lambda * (this->matrixBeta - 1.0 / gammaN * (this->matrixBeta * iter->first * iter->first.transpose() * this->matrixBeta));
-        this->attributesWeight = this->attributesWeight - 1 / gammaN * this->matrixBeta.inverse().inverse() * iter->first * error;
-        //cout << "estimated value(after update):" << this->attributesWeight.transpose() * iter->first << endl;
-        errorThisSimulation += error;
-    }
-    cout << errorThisSimulation << endl;
-}*/

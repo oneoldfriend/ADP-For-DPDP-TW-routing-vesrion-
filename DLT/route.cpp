@@ -81,14 +81,26 @@ void Route::routeUpdate()
 
 void Route::removeOrder(PointOrder p)
 {
-    p->prior->next = p->next;
-    p->next->prior = p->prior;
+    if (p->prior != nullptr)
+    {
+        p->prior->next = p->next;
+    }
+    if (p->next != nullptr)
+    {
+        p->next->prior = p->prior;
+    }
 }
 
 void Route::insertOrder(PointOrder p)
 {
-    p->prior->next = p;
-    p->next->prior = p;
+    if (p->prior != nullptr)
+    {
+        p->prior->next = p;
+    }
+    if (p->next != nullptr)
+    {
+        p->next->prior = p;
+    }
 }
 
 void Route::routeCopy(Route source)

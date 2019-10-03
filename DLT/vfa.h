@@ -23,20 +23,21 @@ class LookupTable
 public:
   double averageN, averageTheta;
   map<int, double> entryValue;
-  vector<vector<int> > entryIndex;
-  map<int, pair<double, double> > entryPosition;
-  map<int, pair<double, double> > entryRange;
+  vector<vector<int>> entryIndex;
+  map<int, pair<double, double>> entryPosition;
+  map<int, pair<double, double>> entryRange;
   map<int, double[3]> entryInfo;
   double lookup(Aggregation postDecisionState);
   void partitionCheck();
   void partition(int entryNum);
+  void updateTable(Aggregation postDecisionState, double value);
   LookupTable();
 };
 class ValueFunction
 {
 public:
-  LookupTable lookupTable;
-  double getValue(State S, Action a, bool approx);
-  void updateValue(vector<pair<Aggregation, double> > valueAtThisSimulation, bool startApproximate);
+  LookupTable assignmentLookupTable, routingLookupTable;
+  double getValue(State S, Action a, bool assignment, bool myopic);
+  void updateValue(vector<pair<Aggregation, double>> assignmentValueAtThisSimulation, vector<pair<Aggregation, double>> routingValueAtThisSimulation, bool startApproximate);
   ValueFunction();
 };
