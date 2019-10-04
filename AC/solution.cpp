@@ -15,23 +15,14 @@ Solution::Solution()
     this->penalty = 0;
 }
 
-bool Solution::greedyInsertion(Action a)
+bool Solution::greedyInsertion(vector<pair<Order *, Order *> > orderWaitToBeInserted)
 {
-    vector<Customer *> customerToBeInserted;
-    //获得需要插入的顾客信息
-    for (auto iter = a.customerConfirmation.begin(); iter != a.customerConfirmation.end(); ++iter)
-    {
-        if (iter->second)
-        {
-            customerToBeInserted.push_back(iter->first);
-        }
-    }
-    for (auto customerIter = customerToBeInserted.begin(); customerIter != customerToBeInserted.end(); ++customerIter)
+    for (auto customerIter = orderWaitToBeInserted.begin(); customerIter != orderWaitToBeInserted.end(); ++customerIter)
     {
         //找到每个顾客在解中的最优位置进行插入
         bool feasibility = false;
-        PointOrder origin = new Order(*customerIter, true);
-        PointOrder dest = new Order(*customerIter, false);
+        PointOrder origin = customerIter->first;
+        PointOrder dest = customerIter->second;
         pair<PointOrder, PointOrder> bestOriginPos, bestDestPos;
         PointRoute bestRoute = nullptr;
         double bestCost = MAX_COST;
@@ -56,8 +47,6 @@ bool Solution::greedyInsertion(Action a)
         if (feasibility == false)
         {
             //若有一个顾客无法在当前解中找到合法位置，则该动作非法，并返回合法性
-            delete origin;
-            delete dest;
             return feasibility;
         }
         else
@@ -78,15 +67,18 @@ bool Solution::greedyInsertion(Action a)
 
 double Solution::calcCost()
 {
-    double cost = 0;
+    this->cost = 0.0;
+    this->penalty = 0.0;
+    this->travelTime = 0.0;
+    this->waitTime = 0.0;
     for (auto iter = this->routes.begin(); iter != this->routes.end(); ++iter)
     {
         this->cost += iter->cost;
         this->penalty += iter->penalty;
-        this->travelTime = iter->travelTime;
-        this->waitTime = iter->waitTime;
+        this->travelTime += iter->travelTime;
+        this->waitTime += iter->waitTime;
     }
-    return cost;
+    return this->cost;
 }
 
 void Solution::solutionCopy(Solution *source)
@@ -111,26 +103,31 @@ void Solution::solutionDelete()
 void Solution::calcInfo()
 {
     this->info[0] = MAX_EDGE;
-    int deliveredParcels = 0, availableVehicle = 0;
+    double deliveredWeights = 0, servicedCustomers = 0;
     double availableTime = 0.0;
     for (auto routeIter = this->routes.begin(); routeIter != this->routes.end(); routeIter++)
     {
         availableTime += MAX_WORK_TIME - routeIter->tail->arrivalTime;
-        if (routeIter->currentPos != routeIter->tail)
-        {
-            availableVehicle++;
-        }
         PointOrder p = routeIter->head;
-        while (p != routeIter->currentPos->next)
+        while (p != routeIter->currentPos)
         {
             if (!p->isOrigin)
             {
-                deliveredParcels++;
+                servicedCustomers += 1;
+                deliveredWeights += p->customer->weight;
             }
             p = p->next;
         }
     }
     this->info[1] = availableTime;
-    this->info[2] = deliveredParcels;
-    this->info[3] = availableVehicle;
+    this->info[3] = deliveredWeights;
+    this->info[2] = servicedCustomers;
+}
+
+void Solution::solutionUpdate()
+{
+    for (auto iter = this->routes.begin(); iter != this->routes.end(); ++iter)
+    {
+        iter->routeUpdate();
+    }
 }

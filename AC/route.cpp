@@ -81,14 +81,26 @@ void Route::routeUpdate()
 
 void Route::removeOrder(PointOrder p)
 {
-    p->prior->next = p->next;
-    p->next->prior = p->prior;
+    if (p->prior != nullptr)
+    {
+        p->prior->next = p->next;
+    }
+    if (p->next != nullptr)
+    {
+        p->next->prior = p->prior;
+    }
 }
 
 void Route::insertOrder(PointOrder p)
 {
-    p->prior->next = p;
-    p->next->prior = p;
+    if (p->prior != nullptr)
+    {
+        p->prior->next = p;
+    }
+    if (p->next != nullptr)
+    {
+        p->next->prior = p;
+    }
 }
 
 void Route::routeCopy(Route source)
@@ -208,7 +220,7 @@ double Route::calcCost()
     while (p != this->tail)
     {
         //若当前位置为顾客点，则查看是否迟到并进行相应惩罚
-        if (p->arrivalTime > p->customer->endTime)
+        if (!p->isOrigin && p->arrivalTime > p->customer->endTime)
         {
             penalty += p->customer->priority * PENALTY_FACTOR * (p->arrivalTime - p->customer->endTime);
         }
