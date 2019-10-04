@@ -1,8 +1,6 @@
 #include "mdp.h"
 #include "route.h"
 #include "generator.h"
-#include "pca/ap.h"
-#include "pca/dataanalysis.h"
 
 using namespace std;
 
@@ -24,48 +22,6 @@ State::State()
     this->cumOutsourcedCost = 0.0;
     this->currentTime = 0;
     this->currentRoute = nullptr;
-    this->attributes = Eigen::VectorXd(ATTRIBUTES_NUMBER);
-}
-
-void State::calcAttribute(Action a, bool assignment)
-{
-    if (assignment)
-    {
-        int acceptNum = 0;
-        for (auto iter = a.customerConfirmation.begin(); iter != a.customerConfirmation.end(); iter++)
-        {
-            if (iter->second)
-            {
-                acceptNum++;
-            }
-        }
-        this->pointSolution->calcInfo();
-        this->attributes[0] = 100;
-        this->attributes[1] = this->currentRoute->currentPos->departureTime;
-        this->attributes[2] = this->pointSolution->info[2];
-        this->attributes[3] = this->notServicedCustomer.size() + acceptNum;
-        this->attributes[4] = this->cumOutsourcedCost / (double)MAX_WORK_TIME + (double)a.customerConfirmation.size() - (double)acceptNum;
-    }
-    else
-    {
-        this->pointSolution->calcInfo();
-        this->attributes[0] = 100;
-        this->attributes[1] = this->currentRoute->currentPos->departureTime;
-        this->attributes[2] = this->pointSolution->info[2];
-        if (a.positionToVisit != nullptr && a.positionToVisit->isOrigin)
-        {
-            this->attributes[3] = this->notServicedCustomer.size() + 1;
-        }
-        else
-        {
-            this->attributes[3] = this->notServicedCustomer.size();
-            if (a.positionToVisit != nullptr)
-            {
-                this->attributes[2] = this->pointSolution->info[2] + 1;
-            }
-        }
-        this->attributes[4] = this->pointSolution->info[1];
-    }
 }
 
 void MDP::executeAction(Action a)

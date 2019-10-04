@@ -5,12 +5,10 @@
 #include "util.h"
 #include "Eigen/Dense"
 #include <vector>
-#define PARTITION_THRESHOLD 1.0
-#define LOOKUP_TABLE_INITIAL 10.0
 #define ATTRIBUTES_NUMBER 5
 #define LAMBDA 1.0
 #define NOISE_DEDUCTION 0.8
-#define ALPHA 1e-6
+#define ALPHA 1e-5
 
 class ValueFunction
 {

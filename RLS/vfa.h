@@ -10,7 +10,7 @@
 #define ATTRIBUTES_NUMBER 5
 #define LAMBDA 1.0
 #define NOISE_DEDUCTION 0.8
-#define ALPHA 1e-6
+#define ALPHA 1e-7
 
 class Aggregation
 {

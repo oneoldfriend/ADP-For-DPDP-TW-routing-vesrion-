@@ -5,9 +5,8 @@
 #include "util.h"
 #include <vector>
 #define STEP_SIZE 0.3
-#define PARTITION_THRESHOLD 1.5
+#define PARTITION_THRESHOLD 1.2
 #define DYNAMIC_LOOKUP_TABLE 1
-#define ATTRIBUTES_NUMBER 4
 #define LAMBDA 0.8
 
 class Aggregation

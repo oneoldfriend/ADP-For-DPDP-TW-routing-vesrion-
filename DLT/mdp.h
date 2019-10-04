@@ -30,11 +30,9 @@ public:
   double currentTime;
   Solution *pointSolution;
   double cumOutsourcedCost;
-  Eigen::VectorXd attributes;
   vector<Customer*> newCustomers;
   map<string, pair<PointOrder, PointOrder> > notServicedCustomer;
   vector<PointOrder> reachableCustomer;
-  void calcAttribute(Action a, bool assignment);
   State();
 };
 

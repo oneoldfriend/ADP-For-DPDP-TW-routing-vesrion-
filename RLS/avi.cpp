@@ -68,7 +68,7 @@ void AVI::approximation(ValueFunction *valueFunction)
         cout << totalSimulationCount << " ";
         if (totalSimulationCount % REVIEW_MAX == 0)
         {
-            valueFunction->reObservationUpdate(routingReplayBuffer, assignmentReplayBuffer);
+            //valueFunction->reObservationUpdate(routingReplayBuffer, assignmentReplayBuffer);
             routingReplayBuffer.clear();
             assignmentReplayBuffer.clear();
         }

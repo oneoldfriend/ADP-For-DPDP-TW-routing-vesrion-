@@ -10,8 +10,8 @@ LookupTable::LookupTable()
     int entryCount = 0, xEntryNum, yEntryNum;
     if (DYNAMIC_LOOKUP_TABLE)
     {
-        xEntryNum = 10;
-        yEntryNum = 10;
+        xEntryNum = 10 * MAX_VEHICLE;
+        yEntryNum = 10 * MAX_VEHICLE;
         xTick = ceil(MAX_WORK_TIME / xEntryNum);
         yTick = ceil(MAX_VEHICLE * MAX_WORK_TIME / yEntryNum);
     }
@@ -79,9 +79,6 @@ void LookupTable::partitionCheck()
         double factor2 = entryTheta / this->averageTheta;
         if (factor1 * factor2 > (double)PARTITION_THRESHOLD)
         {
-            //cout << factor1 << " " << factor2 << " " << PARTITION_THRESHOLD << endl;
-            //若该entry 达到threshold，则对entry 进行再划分
-            //cout << "partitioned entry: " << this->entryPosition[entryCount].first << " " << this->entryPosition[entryCount].second << endl;
             this->partition(entryCount);
             double i = 3.0;
             while (i-- > 0.0)

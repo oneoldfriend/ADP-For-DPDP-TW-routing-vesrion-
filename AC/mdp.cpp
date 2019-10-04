@@ -1,8 +1,6 @@
 #include "mdp.h"
 #include "route.h"
 #include "generator.h"
-#include "pca/ap.h"
-#include "pca/dataanalysis.h"
 
 using namespace std;
 
